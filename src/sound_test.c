@@ -3,7 +3,7 @@
 #include "sound_manager.h"
 #include "states.h"
 
-typedef struct {
+typedef struct SoundTestCtx{
     u16 currentID;
 } SoundTestCtx;
 

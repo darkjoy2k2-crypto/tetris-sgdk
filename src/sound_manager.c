@@ -1,7 +1,7 @@
 #include "sound_manager.h"
 #include "sounds.h" // Deine korrigierte Ressourcen-Header
 
-typedef struct {
+typedef struct SoundEntry{
     const u8* data;
     u32 size;
 } SoundEntry;

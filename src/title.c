@@ -3,58 +3,65 @@
 #include "states.h"
 
 // Lokaler Kontext für den Title-State
-typedef struct {
+typedef struct TitleContext{
     u16 blinkTimer;
     bool textVisible;
+    u16 idleTimer; // NEU: Zähler für Untätigkeit
 } TitleContext;
 
 static TitleContext* ctx = NULL;
 
 void title_init() {
-    // Speicher für diesen State reservieren
     ctx = MEM_alloc(sizeof(TitleContext));
     ctx->blinkTimer = 0;
     ctx->textVisible = true;
+    ctx->idleTimer = 0; // Initialisieren
 
-    // VDP (Video Display Processor) vorbereiten
     VDP_clearTextArea(0, 0, 40, 28);
-    
-    // Statischer Text
     VDP_drawText("TETRIS CLONE", 14, 10);
 }
 
 void title_update() {
-    // Sicherheitscheck: Falls der Kontext (Speicher) nicht existiert, abbrechen
     if (ctx == NULL) return;
 
-    // --- BLINK-LOGIK FÜR DEN TEXT ---
-    // Der Timer sorgt dafür, dass der Text alle 30 Frames (0,5 Sek) an/aus geht
+    // 1. Blink-Logik für Text
     ctx->blinkTimer++;
     if (ctx->blinkTimer >= 30) {
         ctx->blinkTimer = 0;
         ctx->textVisible = !ctx->textVisible;
-        
         if (ctx->textVisible) {
             VDP_drawText("PRESS START TO PLAY", 10, 16);
             VDP_drawText("PRESS C FOR SOUND TEST", 9, 18);
         } else {
-            // Löscht genau den Bereich der beiden Textzeilen
             VDP_clearTextArea(9, 16, 22, 3);
         }
     }
 
-    // --- INPUT-LOGIK (FLANKENERKENNUNG) ---
-    // Wir vergleichen den aktuellen Zustand (joyState) mit dem letzten Frame (lastJoyState).
-    // Nur wenn der Knopf JETZT gedrückt ist UND vorher NICHT gedrückt war, feuert das Event.
+    // 2. Idle-Logik: Automatischer Wechsel zum Highscore
+    // Wenn keine Taste gedrückt wird, zählt der Timer hoch
+    if (joyState == 0) {
+        ctx->idleTimer++;
+        // Nach ca. 7 Sekunden (420 Frames bei 60Hz) wechseln
+        if (ctx->idleTimer >= 420) {
+            currentState = STATE_HIGHSCORE;
+        }
+    } else {
+        // Bei jeglicher Aktivität Timer zurücksetzen
+        ctx->idleTimer = 0;
+    }
 
-    // START-Taste: Wechselt zum Auswahl-Screen
+    // 3. Manuelle Navigation (Flankenerkennung)
     if ((joyState & BUTTON_START) && !(lastJoyState & BUTTON_START)) {
         currentState = STATE_SELECT; 
     }
-
-    // C-Taste: Wechselt zum Soundtest
+    
     if ((joyState & BUTTON_C) && !(lastJoyState & BUTTON_C)) {
         currentState = STATE_SOUNDTEST;
+    }
+
+    // Manuell zur Highscore-Liste via B
+    if ((joyState & BUTTON_B) && !(lastJoyState & BUTTON_B)) {
+        currentState = STATE_HIGHSCORE;
     }
 }
 

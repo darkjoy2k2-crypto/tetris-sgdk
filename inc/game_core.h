@@ -12,7 +12,7 @@
 
 extern const s8 PIECES[7][4][4][2];
 
-typedef struct {
+typedef struct GameContext {
     u8 board[BOARD_WIDTH][BOARD_HEIGHT];
     s16 pieceX, pieceY;
     u16 type, rotation;

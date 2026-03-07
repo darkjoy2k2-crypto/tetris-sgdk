@@ -2,6 +2,32 @@
 #include "game_core.h"
 #include "states.h"
 #include "sound_manager.h" // WICHTIG: Den Manager inkludieren
+#include <genesis.h>
+#include <string.h>
+
+void check_and_update_highscore(u32 finalScore) {
+    int insertPos = -1;
+
+    // 1. Prüfen, an welcher Stelle der Score landet
+    for (int i = 0; i < 10; i++) {
+        if (finalScore > highscores[i].score) {
+            insertPos = i;
+            break;
+        }
+    }
+
+    // 2. Wenn eine Position gefunden wurde, Plätze nach unten schieben
+    if (insertPos != -1) {
+        for (int i = 9; i > insertPos; i--) {
+            highscores[i] = highscores[i - 1];
+        }
+
+        // 3. Neuen Eintrag einfügen
+        strncpy(highscores[insertPos].name, config.playerName, 3);
+        highscores[insertPos].name[3] = '\0';
+        highscores[insertPos].score = finalScore;
+    }
+}
 
 // Definition des Tetrimino-Arrays
 const s8 PIECES[7][4][4][2] = {

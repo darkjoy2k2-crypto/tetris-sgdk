@@ -4,7 +4,7 @@
 #include "sound_manager.h"
 #include <string.h>
 
-typedef struct {
+typedef struct SelectContext{
     u16 cursor;         // 0: Name, 1: Random, 2: Speed, 3: Garbage, 4: Shadow, 5: Hold, 6: Next
     char name[4];       
     u16 nameCharIdx;    

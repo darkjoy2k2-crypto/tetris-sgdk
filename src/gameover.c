@@ -1,51 +1,42 @@
 #include <genesis.h>
 #include "gameover.h"
 #include "states.h"
-
-// Lokaler Kontext für den GameOver-State
-typedef struct {
-    u16 timer;
-} GameOverContext;
-
-static GameOverContext* ctx = NULL;
+#include "game.h" // Um auf den Score zuzugreifen
 
 void gameover_init() {
-    // Speicher reservieren
-    ctx = MEM_alloc(sizeof(GameOverContext));
-    ctx->timer = 0;
-
-    // Bildschirm säubern (vom Spielfeld des Game-States)
     VDP_clearTextArea(0, 0, 40, 28);
+
+    VDP_setTextPalette(PAL1); // Gelb
+    VDP_drawText("--- GAME OVER ---", 11, 8);
     
-    // Zentrierte Texte anzeigen
-    VDP_drawText("G A M E   O V E R", 12, 10);
-    VDP_drawText("Press START to try again", 8, 14);
+    // Anzeige des Spielernamens und des Scores
+    char scoreTxt[20];
+    sprintf(scoreTxt, "SCORE: %ld", config.currentScore); // currentScore muss im GameContext/Global liegen
+
+    VDP_setTextPalette(PAL0); // Weiß
+    VDP_drawText("PLAYER:", 12, 12);
+    VDP_setTextPalette(PAL2); // Rot
+    VDP_drawText(config.playerName, 20, 12);
+
+    VDP_setTextPalette(PAL0);
+    VDP_drawText(scoreTxt, 12, 14);
+
+    VDP_setTextPalette(PAL1);
+    VDP_drawText("PRESS START FOR RANKING", 8, 22);
 }
 
 void gameover_update() {
-    if (ctx == NULL) return;
-
-    // Ein kleiner Timer, um versehentliches Überspringen 
-    // direkt nach dem Game Over zu verhindern (Input-Delay)
-    ctx->timer++;
-    
-    if (ctx->timer > 30) {
-        u16 joy = JOY_readJoypad(JOY_1);
+    // Bei Druck auf START oder A: Highscore aktualisieren und State wechseln
+    if ((joyState & (BUTTON_START | BUTTON_A)) && !(lastJoyState & (BUTTON_START | BUTTON_A))) {
         
-        if (joy & BUTTON_START) {
-            // Zurück zum Titel-Bildschirm wechseln
-            currentState = STATE_TITLE;
-        }
+        // Hier rufen wir die Sortierung auf
+        check_and_update_highscore(config.currentScore);
+        
+        // Direkt zum Highscore-Screen wechseln
+        currentState = STATE_HIGHSCORE;
     }
 }
 
 void gameover_cleanup() {
-    // Bildschirm für den nächsten State leeren
     VDP_clearTextArea(0, 0, 40, 28);
-
-    // Kontext-Speicher freigeben
-    if (ctx != NULL) {
-        MEM_free(ctx);
-        ctx = NULL;
-    }
 }

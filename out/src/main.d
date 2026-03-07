@@ -52,5 +52,5 @@ out/src/main.o: src/main.c \
  C:/Users/peter/Documents/_Genesis/sgdk211/inc/string.h \
  C:/Users/peter/Documents/_Genesis/sgdk211/inc/maths.h \
  C:/Users/peter/Documents/_Genesis/sgdk211/inc/dma.h inc/states.h \
- inc/title.h inc/states.h inc/game_select.h inc/game.h inc/sound_test.h \
- inc/gameover.h
+ inc/title.h inc/game_select.h inc/game.h inc/sound_test.h inc/gameover.h \
+ inc/highscore.h

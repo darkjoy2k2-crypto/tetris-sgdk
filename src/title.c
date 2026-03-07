@@ -12,6 +12,7 @@ typedef struct TitleContext{
 static TitleContext* ctx = NULL;
 
 void title_init() {
+    menu_bg_set_active(true);
     ctx = MEM_alloc(sizeof(TitleContext));
     ctx->blinkTimer = 0;
     ctx->textVisible = true;

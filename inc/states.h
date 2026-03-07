@@ -22,8 +22,8 @@ typedef enum GameState{
 } GameState;
 
 typedef struct HighscoreEntry{
-    char name[4];
     u32 score;
+    char name[4];
 } HighscoreEntry;
 
 // NEU: Die Struktur für deine globalen Spieleinstellungen

@@ -11,6 +11,12 @@ typedef struct HighscoreContext{
 static HighscoreContext* hCtx = NULL;
 
 void highscore_init() {
+
+    if (hCtx != NULL) {
+        MEM_free(hCtx);
+        hCtx = NULL;
+    }
+    
     hCtx = MEM_alloc(sizeof(HighscoreContext));
     hCtx->displayTimer = 0;
 
@@ -21,9 +27,11 @@ void highscore_init() {
     VDP_drawText("RANK  NAME  SCORE", 8, 7);
     
     VDP_setTextPalette(PAL0); // Weiß
+
+    char txtRank[4];
+    char txtScore[12];
+
     for (u16 i = 0; i < 10; i++) {
-        char txtRank[4];
-        char txtScore[12];
         sprintf(txtRank, "%2d.", i + 1);
         sprintf(txtScore, "%6ld", highscores[i].score);
         

@@ -1,4 +1,4 @@
-out/src/game.o: src/game.c \
+out/src/menu_bg.o: src/menu_bg.c inc/menu_bg.h \
  C:/Users/peter/Documents/_Genesis/sgdk211/inc/genesis.h \
  C:/Users/peter/Documents/_Genesis/sgdk211/inc/types.h \
  C:/Users/peter/Documents/_Genesis/sgdk211/inc/config.h \
@@ -51,6 +51,4 @@ out/src/game.o: src/game.c \
  C:/Users/peter/Documents/_Genesis/sgdk211/inc/config.h \
  C:/Users/peter/Documents/_Genesis/sgdk211/inc/string.h \
  C:/Users/peter/Documents/_Genesis/sgdk211/inc/maths.h \
- C:/Users/peter/Documents/_Genesis/sgdk211/inc/dma.h inc/game_core.h \
- inc/game_logic.h inc/game_view.h inc/gfx.h inc/sound_manager.h \
- inc/states.h
+ C:/Users/peter/Documents/_Genesis/sgdk211/inc/dma.h inc/game_core.h

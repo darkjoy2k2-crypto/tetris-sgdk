@@ -52,4 +52,4 @@ out/src/game_select.o: src/game_select.c \
  C:/Users/peter/Documents/_Genesis/sgdk211/inc/string.h \
  C:/Users/peter/Documents/_Genesis/sgdk211/inc/maths.h \
  C:/Users/peter/Documents/_Genesis/sgdk211/inc/dma.h inc/game_select.h \
- inc/states.h inc/sound_manager.h
+ inc/states.h inc/sound_manager.h inc/menu_bg.h

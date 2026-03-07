@@ -4,6 +4,7 @@
 #include "game.h" // Um auf den Score zuzugreifen
 
 void gameover_init() {
+    menu_bg_set_active(true);
     VDP_clearTextArea(0, 0, 40, 28);
 
     VDP_setTextPalette(PAL1); // Gelb

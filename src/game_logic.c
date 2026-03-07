@@ -8,7 +8,7 @@
 void check_and_update_highscore(u32 finalScore) {
     int insertPos = -1;
 
-    // 1. Prüfen, an welcher Stelle der Score landet
+    // 1. Finde heraus, ob der Score gut genug ist
     for (int i = 0; i < 10; i++) {
         if (finalScore > highscores[i].score) {
             insertPos = i;
@@ -16,16 +16,17 @@ void check_and_update_highscore(u32 finalScore) {
         }
     }
 
-    // 2. Wenn eine Position gefunden wurde, Plätze nach unten schieben
+    // 2. Wenn ja, schiebe alles ab insertPos eins nach unten
     if (insertPos != -1) {
         for (int i = 9; i > insertPos; i--) {
-            highscores[i] = highscores[i - 1];
+            highscores[i].score = highscores[i-1].score;
+            strncpy(highscores[i].name, highscores[i-1].name, 4);
         }
 
-        // 3. Neuen Eintrag einfügen
+        // 3. Neuen Score eintragen
+        highscores[insertPos].score = finalScore;
         strncpy(highscores[insertPos].name, config.playerName, 3);
         highscores[insertPos].name[3] = '\0';
-        highscores[insertPos].score = finalScore;
     }
 }
 
@@ -80,6 +81,7 @@ void addGarbageLine() {
         if (!checkCollision(ctx->pieceX, ctx->pieceY - 1, ctx->rotation)) {
             ctx->pieceY--;
         } else {
+            SOUND_play(SND_GAME_OVER);
             currentState = STATE_GAMEOVER;
         }
     }
@@ -205,10 +207,17 @@ void refillBag() {
 
 void spawnPiece() {
     ctx->type = ctx->nextType;
-    ctx->nextType = ctx->bag[ctx->bagIndex];
-    ctx->bagIndex++;
 
-    if (ctx->bagIndex >= 7) refillBag();
+    if (config.randMode == 0) {
+        // --- FAIR MODE (7-Bag) ---
+        ctx->nextType = ctx->bag[ctx->bagIndex];
+        ctx->bagIndex++;
+        if (ctx->bagIndex >= 7) refillBag();
+    } else {
+        // --- CHAOS MODE (Purer Zufall) ---
+        // Hier kann theoretisch 10x der gleiche Stein kommen
+        ctx->nextType = random() % 7;
+    }
 
     ctx->rotation = 0;
     ctx->pieceX = 3;
@@ -216,15 +225,16 @@ void spawnPiece() {
     ctx->canHold = true;
 
     if (checkCollision(ctx->pieceX, ctx->pieceY, ctx->rotation)) {
-        // SOUND: Game Over
         SOUND_play(SND_GAME_OVER);
+        config.currentScore = ctx->score;
         currentState = STATE_GAMEOVER;
     }
 }
 
 void performHold() {
-    if (!ctx->canHold) return;
+    if (!config.allowHold) return; 
 
+    if (!ctx->canHold) return;
     // SOUND: Hold Aktion
     SOUND_play(SND_HOLD);
 

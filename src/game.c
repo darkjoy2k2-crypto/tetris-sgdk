@@ -4,24 +4,36 @@
 #include "game_view.h"
 #include "gfx.h"
 #include "sound_manager.h"
-#include "states.h" // WICHTIG: Zugriff auf config
+#include "states.h"
+#include "menu_bg.h"
+#include <string.h>
 
-GameContext* ctx = NULL;
-
-// Hilfs-Arrays für die Intervalle basierend auf deinen Menü-Optionen
-// Speed: None (9999), Slow (60), Med (30), Fast (15)
+// --- DEKLARATIONEN (Damit der Compiler weiß, dass diese existieren) ---
+// Diese Arrays müssen irgendwo definiert sein (meistens game_core.c oder game.c oben)
 const u16 GRAVITY_SPEEDS[] = { 9999, 60, 30, 15 };
-
-// Garbage: None (0), Slow (1200), Med (600), Fast (300)
 const u16 GARBAGE_INTERVALS[] = { 0, 1200, 600, 300 };
+
+// Context Pointer (aus game_core.h)
+GameContext* ctx = NULL;
 
 void game_init() {
     menu_bg_set_active(false);
+
+    if (ctx != NULL) MEM_free(ctx); 
     ctx = MEM_alloc(sizeof(GameContext));
-    memset(ctx, 0, sizeof(GameContext)); // Gesamten Context nullen
+    memset(ctx, 0, sizeof(GameContext)); 
     
     SOUND_init();
     gfx_init();
+
+    // Cache-Werte für die Performance-Heilung
+    ctx->lastScore = 0xFFFFFFFF; 
+    ctx->lastLevel = 0xFFFF;
+    ctx->lastNextType = -2;
+    ctx->lastHoldType = -2;
+
+    // Diese Funktion muss in game_view.h deklariert sein!
+    view_init_cache(); 
 
     ctx->score = 0;
     ctx->level = 1;
@@ -29,36 +41,32 @@ void game_init() {
     ctx->moveTimer = 0;
     ctx->holdType = -1;
     ctx->canHold = true;
-    ctx->comboCount = 0;
-    ctx->b2bActive = false;
-    ctx->commentTimer = 0;
-    memset(ctx->lastComment, 0, sizeof(ctx->lastComment));
-
-    // Garbage-Initialisierung basierend auf Config
+    
+    // Garbage Initialisierung
     ctx->garbageTimer = 0;
     if (config.garbageFreq > 0) {
-        // Wir nehmen den Basiswert und addieren etwas Zufall (± 1 Sekunde)
         u16 base = GARBAGE_INTERVALS[config.garbageFreq];
         ctx->garbageNextThreshold = base + (random() % 120) - 60;
     }
 
-    // Bag-System vorbereiten
     refillBag();
-    
-    // Ersten Stein vorbereiten
     ctx->nextType = ctx->bag[ctx->bagIndex];
     ctx->bagIndex++;
     
-    // Spiel starten
-    spawnPiece();
-
     VDP_clearTextArea(0, 0, 40, 28);
+    VDP_setTextPalette(PAL0);
+    VDP_drawText("SCORE:", 1, 1);
+    VDP_drawText("LEVEL:", 1, 3);
+
+    spawnPiece();
+    drawBoard();
 }
 
 void game_update() {
     if (ctx == NULL) return;
 
-    // --- PAUSE BEI LÖSCH-ANIMATION ---
+    // 1. PAUSE BEI LÖSCH-ANIMATION
+    // Während die Zeilen blinken, wird keine Eingabe verarbeitet
     if (ctx->clearTimer > 0) {
         ctx->clearTimer--;
         if (ctx->clearTimer == 0) {
@@ -69,19 +77,17 @@ void game_update() {
         return;
     }
 
-    // Input lesen
-    u16 joy = JOY_readJoypad(JOY_1);
-    static u16 lastJoy = 0;
-    u16 changed = joy & ~lastJoy;
-    lastJoy = joy;
+    // 2. INPUT-BERECHNUNG
+    // 'changed' enthält Tasten, die in diesem Frame NEU gedrückt wurden
+    u16 changed = joyState & ~lastJoyState;
 
-    // --- SEITLICHE BEWEGUNG (DAS - Delayed Auto Shift) ---
+    // 3. SEITLICHE BEWEGUNG (DAS - Delayed Auto Shift)
     const u16 dasDelay = 10;
     const u16 dasRepeat = 3;
-
     u16 currentDir = 0;
-    if (joy & BUTTON_LEFT) currentDir = BUTTON_LEFT;
-    else if (joy & BUTTON_RIGHT) currentDir = BUTTON_RIGHT;
+
+    if (joyState & BUTTON_LEFT) currentDir = BUTTON_LEFT;
+    else if (joyState & BUTTON_RIGHT) currentDir = BUTTON_RIGHT;
 
     if (currentDir != 0) {
         if (changed & currentDir) {
@@ -109,57 +115,58 @@ void game_update() {
         ctx->dasDir = 0;
     }
 
-    // --- ROTATION ---
-    if (changed & BUTTON_A) { 
-        u16 nr = (ctx->rotation + 3) % 4; // Links
+    // 4. ROTATION
+    if (changed & BUTTON_A) { // Links herum
+        u16 nr = (ctx->rotation + 3) % 4;
         if (!checkCollision(ctx->pieceX, ctx->pieceY, nr)) {
             ctx->rotation = nr;
             SOUND_play(SND_ROTATE);
         }
     }
-    if (changed & BUTTON_B) { 
-        u16 nr = (ctx->rotation + 1) % 4; // Rechts
+    if (changed & BUTTON_B) { // Rechts herum
+        u16 nr = (ctx->rotation + 1) % 4;
         if (!checkCollision(ctx->pieceX, ctx->pieceY, nr)) {
             ctx->rotation = nr;
             SOUND_play(SND_ROTATE);
         }
     }
 
-    // --- HOLD ---
-    if (changed & BUTTON_C) performHold();
+    // 5. HOLD-FUNKTION
+    if (config.allowHold && (changed & BUTTON_C)) {
+        performHold();
+    }
     
-    // --- HARD DROP ---
+    // 6. HARD DROP
     if (changed & BUTTON_UP) {
         SOUND_play(SND_HARD_DROP);
         while (!checkCollision(ctx->pieceX, ctx->pieceY + 1, ctx->rotation)) {
             ctx->pieceY++;
         }
         lockPiece();
+        // Wenn keine Zeilen gelöscht wurden, sofort neues Teil spawnen
         if (clearLines() == 0) spawnPiece();
     }
 
-    // --- SCHWERKRAFT / SOFT DROP (SPEED-CONFIG) ---
+    // 7. SCHWERKRAFT & SOFT DROP
     ctx->moveTimer++;
 
-    // Basis-Geschwindigkeit aus Config holen
+    // Basis-Geschwindigkeit aus Config
     s16 baseThreshold = (s16)GRAVITY_SPEEDS[config.speedLevel];
-    
-    // Mit steigendem Level wird es schneller (außer bei Speed: None)
     s16 threshold = baseThreshold;
+    
+    // Level-Steigerung verrechnen (wird schneller)
     if (config.speedLevel > 0) {
         threshold = baseThreshold - ((ctx->level - 1) * 4);
     }
-    
-    // Untergrenze einhalten (Minimum 2 Frames pro Fall)
-    if (threshold < 2) threshold = 2;
+    if (threshold < 2) threshold = 2; // Minimum Fall-Intervall
 
-    // Soft Drop überschreibt das Intervall
-    u16 finalThreshold = (joy & BUTTON_DOWN) ? 2 : (u16)threshold;
+    // Soft-Drop (Runter gedrückt halten)
+    u16 finalThreshold = (joyState & BUTTON_DOWN) ? 2 : (u16)threshold;
 
     if (ctx->moveTimer >= finalThreshold) {
         if (!checkCollision(ctx->pieceX, ctx->pieceY + 1, ctx->rotation)) {
             ctx->pieceY++;
-            if (joy & BUTTON_DOWN) SOUND_play(SND_SOFT_DROP); 
+            if (joyState & BUTTON_DOWN) SOUND_play(SND_SOFT_DROP); 
         } else {
             lockPiece();
             if (clearLines() == 0) spawnPiece();
@@ -167,20 +174,20 @@ void game_update() {
         ctx->moveTimer = 0;
     }
 
-    // --- GARBAGE LOGIK (GARBAGE-CONFIG) ---
+    // 8. GARBAGE LOGIK
     if (config.garbageFreq > 0 && ctx->clearTimer == 0) {
         ctx->garbageTimer++;
-        
         if (ctx->garbageTimer >= ctx->garbageNextThreshold) {
             addGarbageLine();
-            
-            // Timer zurücksetzen und neues Intervall würfeln (± 1 Sekunde Variation)
             ctx->garbageTimer = 0;
+            // Neues Intervall berechnen
             u16 base = GARBAGE_INTERVALS[config.garbageFreq];
             ctx->garbageNextThreshold = base + (random() % 120) - 60;
         }
     }
 
+    // 9. RENDERING
+    // drawBoard kümmert sich um HUD, Schatten und das Grid
     drawBoard();
 }
 
@@ -189,6 +196,7 @@ void game_cleanup() {
         MEM_free(ctx);
         ctx = NULL;
     }
-    SOUND_stopMusic();
+    // Falls SOUND_stopMusic nicht existiert, nutze XGM_stopPlay() oder ähnliches
+    XGM_stopPlay(); 
     VDP_clearTextArea(0, 0, 40, 28);
 }

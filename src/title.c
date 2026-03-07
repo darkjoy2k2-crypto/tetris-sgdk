@@ -24,35 +24,35 @@ void title_init() {
 }
 
 void title_update() {
-    // Sicherheitscheck: Falls der Kontext nicht existiert, abbrechen
+    // Sicherheitscheck: Falls der Kontext (Speicher) nicht existiert, abbrechen
     if (ctx == NULL) return;
 
-    // --- BLINK-LOGIK ---
-    // Der Timer zählt die Frames (60 FPS). Alle 30 Frames wechselt die Sichtbarkeit.
+    // --- BLINK-LOGIK FÜR DEN TEXT ---
+    // Der Timer sorgt dafür, dass der Text alle 30 Frames (0,5 Sek) an/aus geht
     ctx->blinkTimer++;
     if (ctx->blinkTimer >= 30) {
         ctx->blinkTimer = 0;
         ctx->textVisible = !ctx->textVisible;
         
         if (ctx->textVisible) {
-            // Text wieder anzeigen
             VDP_drawText("PRESS START TO PLAY", 10, 16);
             VDP_drawText("PRESS C FOR SOUND TEST", 9, 18);
         } else {
-            // Textbereich löschen (X: 9, Y: 16, Breite: 22, Höhe: 3)
+            // Löscht genau den Bereich der beiden Textzeilen
             VDP_clearTextArea(9, 16, 22, 3);
         }
     }
 
     // --- INPUT-LOGIK (FLANKENERKENNUNG) ---
-    // Wir prüfen: Knopf ist JETZT aktiv (joyState) UND war im LETZTEN Frame INAKTIV (!lastJoyState)
+    // Wir vergleichen den aktuellen Zustand (joyState) mit dem letzten Frame (lastJoyState).
+    // Nur wenn der Knopf JETZT gedrückt ist UND vorher NICHT gedrückt war, feuert das Event.
 
-    // START-Knopf: Wechselt zum Auswahlmenü
+    // START-Taste: Wechselt zum Auswahl-Screen
     if ((joyState & BUTTON_START) && !(lastJoyState & BUTTON_START)) {
         currentState = STATE_SELECT; 
     }
 
-    // C-Knopf: Wechselt zum Soundtest
+    // C-Taste: Wechselt zum Soundtest
     if ((joyState & BUTTON_C) && !(lastJoyState & BUTTON_C)) {
         currentState = STATE_SOUNDTEST;
     }

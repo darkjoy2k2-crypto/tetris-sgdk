@@ -3,14 +3,14 @@
 
 #include <genesis.h>
 
-// 1. DER BAUPLAN (Die Struct muss zuerst kommen!)
+// Der Bauplan für die State-Maschine
 typedef struct {
     void (*init)();
     void (*update)();
     void (*cleanup)();
 } StateHandler;
 
-// 2. DIE ZUSTÄNDE
+// Die Zustands-Liste
 typedef enum {
     STATE_NONE = 0,
     STATE_TITLE = 1,
@@ -20,10 +20,22 @@ typedef enum {
     STATE_GAMEOVER = 5
 } GameState;
 
-// 3. GLOBALE VARIABLEN (Extern-Deklarationen)
+// NEU: Die Struktur für deine globalen Spieleinstellungen
+typedef struct {
+    char playerName[4]; // 3 Buchstaben + \0
+    u16 randMode;       // 0: Fair, 1: Chaos
+    u16 speedLevel;     // 0-3
+    u16 garbageFreq;    // 0-3
+    bool showShadow;
+    bool allowHold;
+    bool showNext;
+} GlobalConfig;
+
+// Globale Variablen (Deklaration)
 extern GameState currentState;
 extern GameState lastState;
 extern u16 joyState;
 extern u16 lastJoyState;
+extern GlobalConfig config; // <--- Das fehlte dem Compiler!
 
 #endif

@@ -1,0 +1,84 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build project",
+            "type": "shell",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "make",
+                "run"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "run",
+            "type": "shell",
+            "command": "${env:GDK}\\kega\\fusion.exe",
+            "args": [
+                "${workspaceFolder}\\out\\rom.bin"
+            ],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "panel": "shared",
+                "clear": false
+            }
+        },
+        {
+            "label": "make",
+            "type": "shell",
+            "command": "${env:GDK}\\bin\\make",
+            "args": [
+                "-f",
+                "${env:GDK}\\makefile.gen"
+            ],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true
+            }
+        },
+        {
+            "label": "clean",
+            "type": "shell",
+            "command": "${env:GDK}\\bin\\make",
+            "args": [
+                "clean",
+                "-f",
+                "${env:GDK}\\makefile.gen"
+            ]
+        },
+        {
+            "label": "Tile Check",
+            "type": "shell",
+            "command": "python",
+            "args": ["${workspaceFolder}\\py\\tilecheck.py"]
+        },
+        {
+            "label": "Transform_csv",
+            "type": "shell",
+            "command": "python",
+            "args": ["${workspaceFolder}\\py\\transform\\transform.py"]
+        },
+        {
+            "label": "smartfix",
+            "type": "shell",
+            "command": "python",
+            "args": ["${workspaceFolder}\\py\\smartfix.py"]
+        },
+        {
+            "label": "python_Convert Colors",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "${workspaceFolder}\\py\\colorconvert.py",
+                "${workspaceFolder}\\res"
+            ]
+        }
+    ]
+}

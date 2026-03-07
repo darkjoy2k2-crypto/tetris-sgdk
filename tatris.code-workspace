@@ -1,0 +1,16 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"genesis.h": "c",
+			"collision.h": "c",
+			"entity_list.h": "c",
+			"*.oldc": "c",
+			"*.oldh": "c"
+		}
+	}
+}

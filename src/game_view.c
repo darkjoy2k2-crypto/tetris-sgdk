@@ -46,6 +46,14 @@ void drawBoard() {
         ctx->lastLevel = ctx->level;
     }
 
+    u16 linesNext = 10 - (ctx->linesTotal % 10);
+    if (linesNext != ctx->lastLinesNext) {
+        char buf[5];
+        uintToStr(linesNext, buf, 2);
+        VDP_drawText(buf, 11, 5);
+        ctx->lastLinesNext = linesNext;
+    }
+
     if (config.showNext && ctx->nextType != ctx->lastNextType) {
         drawPreview(ctx->nextType, UI_X, NEXT_Y);
         ctx->lastNextType = ctx->nextType;
@@ -89,6 +97,20 @@ void drawBoard() {
         }
     }
 
+// Combo-Anzeige (korrigiert für SGDK 2.x)
+    if (ctx->comboCount != ctx->lastComboCount) {
+        if (ctx->comboCount == 0) {
+            // Text löschen (Ebene A nutzen)
+            VDP_drawTextBG(VDP_BG_A, "          ", UI_X, 18); 
+        } else {
+            char str[16];
+            sprintf(str, "COMBO X%d", ctx->comboCount);
+            // Text zeichnen auf Ebene A
+            VDP_drawTextBG(VDP_BG_A, str, UI_X, 18);
+        }
+        ctx->lastComboCount = ctx->comboCount;
+    }
+    
     if (ctx->clearTimer == 0) {
         for (u16 i = 0; i < 4; i++) {
             s16 px = ctx->pieceX + PIECES[ctx->type][ctx->rotation][i][0];

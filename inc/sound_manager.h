@@ -14,7 +14,7 @@ typedef enum {
     SND_LEVEL_UP    = 90,
     SND_GAME_OVER   = 40,
     SND_HOLD        = 13,
-    SND_COMBO       = 89,
+    SND_COMBO       = 52,
     SND_GARBAGE     = 99
 } SoundEvent;
 

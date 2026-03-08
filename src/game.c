@@ -29,13 +29,21 @@ void game_init() {
 
     ctx->lastScore = 0xFFFFFFFF; 
     ctx->lastLevel = 0xFFFF;
+    ctx->lastLinesNext = 0xFFFF;
+    ctx->lastComboCount = 0xFFFF;
     ctx->lastNextType = -2;
     ctx->lastHoldType = -2;
 
     view_init_cache(); 
 
     ctx->score = 0;
-    ctx->level = 1;
+    if (config.speedLevel == 0) ctx->startLevel = 1;
+        else if (config.speedLevel == 1) ctx->startLevel = 1;
+        else if (config.speedLevel == 2) ctx->startLevel = 5;
+        else ctx->startLevel = 10;
+
+
+    ctx->level = ctx->startLevel;
     ctx->linesTotal = 0;
     ctx->moveTimer = 0;
     ctx->holdType = -1;
@@ -54,6 +62,7 @@ void game_init() {
     VDP_clearTextArea(0, 0, 40, 28);
     VDP_drawText("SCORE:", 1, 1);
     VDP_drawText("LEVEL:", 1, 3);
+    VDP_drawText("NEXT LVL:", 1, 5);
 
     if (config.showNext) {
         VDP_drawText("NEXT:", UI_X, NEXT_Y - 1);
@@ -69,6 +78,7 @@ void game_init() {
 void game_update() {
     if (ctx == NULL) return;
 
+    // 1. Line-Clear Animation Timer
     if (ctx->clearTimer > 0) {
         ctx->clearTimer--;
         if (ctx->clearTimer == 0) {
@@ -86,6 +96,7 @@ void game_update() {
     u16 changed = joyState & ~lastJoyState;
     bool moved = false;
 
+    // 2. DAS & Horizontale Bewegung
     const u16 dasDelay = 10;
     const u16 dasRepeat = 3;
     u16 currentDir = 0;
@@ -121,20 +132,44 @@ void game_update() {
         ctx->dasDir = 0;
     }
 
+    // 3. Rotation (mit Wall Kicks)
     if (changed & (BUTTON_A | BUTTON_B)) {
         u16 nr = (changed & BUTTON_A) ? (ctx->rotation + 3) % 4 : (ctx->rotation + 1) % 4;
+        
         if (!checkCollision(ctx->pieceX, ctx->pieceY, nr)) {
+            ctx->rotation = nr;
+            moved = true;
+            SOUND_play(SND_ROTATE);
+        } else if (!checkCollision(ctx->pieceX + 1, ctx->pieceY, nr)) {
+            ctx->pieceX += 1;
+            ctx->rotation = nr;
+            moved = true;
+            SOUND_play(SND_ROTATE);
+        } else if (!checkCollision(ctx->pieceX - 1, ctx->pieceY, nr)) {
+            ctx->pieceX -= 1;
+            ctx->rotation = nr;
+            moved = true;
+            SOUND_play(SND_ROTATE);
+        } else if (!checkCollision(ctx->pieceX + 2, ctx->pieceY, nr)) {
+            ctx->pieceX += 2;
+            ctx->rotation = nr;
+            moved = true;
+            SOUND_play(SND_ROTATE);
+        } else if (!checkCollision(ctx->pieceX - 2, ctx->pieceY, nr)) {
+            ctx->pieceX -= 2;
             ctx->rotation = nr;
             moved = true;
             SOUND_play(SND_ROTATE);
         }
     }
 
+    // 4. Hold Funktion
     if (config.allowHold && (changed & BUTTON_C)) {
         performHold();
         moved = true; 
     }
 
+    // 5. Hard Drop
     if (changed & BUTTON_UP) {
         SOUND_play(SND_HARD_DROP);
         while (!checkCollision(ctx->pieceX, ctx->pieceY + 1, ctx->rotation)) {
@@ -145,15 +180,12 @@ void game_update() {
             spawnPiece();
             moved = true;
         }
-    } else {
+    } 
+    // 6. Gravity & Soft Drop
+    else {
         ctx->moveTimer++;
-        s16 baseThreshold = (s16)GRAVITY_SPEEDS[config.speedLevel];
-        s16 threshold = baseThreshold;
-        if (config.speedLevel > 0) {
-            threshold = baseThreshold - ((ctx->level - 1) * 4);
-        }
+        s16 threshold = 60 - ((ctx->level - 1) * 3);
         if (threshold < 2) threshold = 2;
-
         u16 finalThreshold = (joyState & BUTTON_DOWN) ? 2 : (u16)threshold;
 
         if (ctx->moveTimer >= finalThreshold) {
@@ -172,13 +204,7 @@ void game_update() {
         }
     }
 
-    if (moved && config.showShadow) {
-        ctx->ghostY = ctx->pieceY;
-        while (!checkCollision(ctx->pieceX, ctx->ghostY + 1, ctx->rotation)) {
-            ctx->ghostY++;
-        }
-    }
-
+    // 7. Garbage Line (Verschiebt das Board nach oben)
     if (config.garbageFreq > 0 && ctx->clearTimer == 0) {
         ctx->garbageTimer++;
         if (ctx->garbageTimer >= ctx->garbageNextThreshold) {
@@ -186,12 +212,22 @@ void game_update() {
             ctx->garbageTimer = 0;
             u16 base = GARBAGE_INTERVALS[config.garbageFreq];
             ctx->garbageNextThreshold = base + (random() % 120) - 60;
-            moved = true;
+            moved = true; // Triggert Schatten-Update
         }
     }
 
+    // 8. Schatten-Update (Erst wenn alles andere berechnet ist)
+    if (moved && config.showShadow) {
+        ctx->ghostY = ctx->pieceY;
+        while (!checkCollision(ctx->pieceX, ctx->ghostY + 1, ctx->rotation)) {
+            ctx->ghostY++;
+        }
+    }
+
+    // 9. Rendering
     drawBoard();
 }
+
 
 void game_cleanup() {
     if (ctx != NULL) {

@@ -7,19 +7,12 @@
 
 void check_and_update_highscore(u32 score) {
     s16 insertIdx = -1;
-
     for (u16 i = 0; i < 10; i++) {
         highscores[i].isNew = false;
-        if (insertIdx == -1 && score > highscores[i].score) {
-            insertIdx = i;
-        }
+        if (insertIdx == -1 && score > highscores[i].score) insertIdx = i;
     }
-
     if (insertIdx != -1) {
-        for (u16 i = 9; i > insertIdx; i--) {
-            highscores[i] = highscores[i - 1];
-        }
-
+        for (u16 i = 9; i > insertIdx; i--) highscores[i] = highscores[i - 1];
         strncpy(highscores[insertIdx].name, config.playerName, 3);
         highscores[insertIdx].name[3] = '\0';
         highscores[insertIdx].score = score;
@@ -88,6 +81,18 @@ void addGarbageLine() {
     SOUND_play(SND_GARBAGE); 
 }
 
+bool tryRotate(u16 newRotation) {
+    s16 kicks[] = {0, 1, -1, 2, -2};
+    for (u16 i = 0; i < 5; i++) {
+        if (!checkCollision(ctx->pieceX + kicks[i], ctx->pieceY, newRotation)) {
+            ctx->pieceX += kicks[i];
+            ctx->rotation = newRotation;
+            return true;
+        }
+    }
+    return false;
+}
+
 bool checkCollision(s16 nx, s16 ny, u16 nr) {
     for (u16 i = 0; i < 4; i++) {
         s16 px = nx + PIECES[ctx->type][nr][i][0];
@@ -137,7 +142,7 @@ u16 clearLines() {
         
         // SOUND: Combo-Sound ab der zweiten gelöschten Reihe in Folge
         if (ctx->comboCount >= 1) {
-            SOUND_play(SND_COMBO);
+            SOUND_play(SND_COMBO + ctx->comboCount);
         }
 
         u32 points = 0;
@@ -160,7 +165,7 @@ u16 clearLines() {
 
         ctx->score += points * ctx->level;
         ctx->linesTotal += cleared;
-        ctx->level = 1 + (ctx->linesTotal / 10);
+        ctx->level = ctx->startLevel + (ctx->linesTotal / 10);
         ctx->comboCount++;
         ctx->commentTimer = 60;
 

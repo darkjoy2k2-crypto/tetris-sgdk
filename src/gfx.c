@@ -20,7 +20,21 @@ void gfx_init() {
     PAL_setColor(26, RGB24_TO_VDPCOLOR(0xFFFFFF)); // 10 (A): Reinweiß (Lichtkante)
 
     // 2. Leer-Tile laden (Hintergrund-Punkt für die Orientierung)
-    const u32 empty_tile[8] = {0,0,0,0x00033000,0x00033000,0,0,0};
+    const u32 empty_tile[8] = {
+        0xBBBBBBBB, // Zeile 0: Oberer Rand komplett Blau
+        0x0000000B, // Zeile 1: Schwarz mit blauem Pixel rechts
+        0x0000000B, // Zeile 2: Schwarz mit blauem Pixel rechts
+        0x0000000B, // Zeile 3: Schwarz mit blauem Pixel rechts
+        0x0000000B, // Zeile 4: Schwarz mit blauem Pixel rechts
+        0x0000000B, // Zeile 5: Schwarz mit blauem Pixel rechts
+        0x0000000B, // Zeile 6: Schwarz mit blauem Pixel rechts
+        0x0000000B  // Zeile 7: Schwarz mit blauem Pixel rechts
+    };
+
+
+
+
+
     VDP_loadTileData(empty_tile, TILE_EMPTY_INDEX, 1, CPU);
 
     // 3. 7 Block-Tiles mit 3D-Bevel generieren (Ohne schwarzen Rand)

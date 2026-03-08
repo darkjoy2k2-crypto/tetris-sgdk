@@ -1,7 +1,6 @@
 #pragma once
 #include <genesis.h>
 
-// --- BILDSCHIRM-LAYOUT ---
 #define BOARD_WIDTH  10
 #define BOARD_HEIGHT 20
 #define RENDER_X     12 
@@ -15,18 +14,19 @@ extern const s8 PIECES[7][4][4][2];
 typedef struct GameContext {
     u8 board[BOARD_WIDTH][BOARD_HEIGHT];
     s16 pieceX, pieceY;
+    s16 ghostY;        // <--- DAS FEHLTE: Der berechnete Schatten-Y-Wert
     u16 type, rotation;
     
     s16 nextType, holdType;
     bool canHold;
 
     u16 moveTimer;
-    u32 score;         // 32-bit unsigned integer (entspricht long)
+    u32 score;         
     u16 level;
     u16 linesTotal;
 
-    // --- CACHING FÜR PERFORMANCE (HUD) ---
-    u32 lastScore;     // Verhindert unnötiges VDP_drawText
+    // Caching für Performance
+    u32 lastScore;     
     u16 lastLevel;
     s16 lastNextType;
     s16 lastHoldType;

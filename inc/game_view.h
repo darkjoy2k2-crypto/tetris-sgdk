@@ -9,3 +9,4 @@ void drawPreview(s16 type, u16 x, u16 y);
 
 // Zeichnet die statischen UI-Elemente wie "SCORE", "NEXT" etc.
 void initUI();
+void view_init_cache(); // <--- DAS FEHLTE: Bekanntmachung der Cache-Init-Funktion

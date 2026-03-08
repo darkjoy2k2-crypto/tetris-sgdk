@@ -65,23 +65,28 @@ void game_init() {
 void game_update() {
     if (ctx == NULL) return;
 
-    // 1. PAUSE BEI LÖSCH-ANIMATION
-    // Während die Zeilen blinken, wird keine Eingabe verarbeitet
+    // 1. ANIMATIONS-PAUSE (Line Clear)
+    // Wenn Zeilen gelöscht werden, steht die Spiellogik still.
     if (ctx->clearTimer > 0) {
         ctx->clearTimer--;
         if (ctx->clearTimer == 0) {
             finishLineClear();
             spawnPiece();
+            // Nach dem Spawn Schatten einmalig berechnen
+            ctx->ghostY = ctx->pieceY;
+            while (!checkCollision(ctx->pieceX, ctx->ghostY + 1, ctx->rotation)) {
+                ctx->ghostY++;
+            }
         }
         drawBoard();
         return;
     }
 
-    // 2. INPUT-BERECHNUNG
-    // 'changed' enthält Tasten, die in diesem Frame NEU gedrückt wurden
+    // 2. INPUT & BEWEGUNG
     u16 changed = joyState & ~lastJoyState;
+    bool moved = false;
 
-    // 3. SEITLICHE BEWEGUNG (DAS - Delayed Auto Shift)
+    // --- Seitliche Bewegung (DAS) ---
     const u16 dasDelay = 10;
     const u16 dasRepeat = 3;
     u16 currentDir = 0;
@@ -94,6 +99,7 @@ void game_update() {
             s16 step = (currentDir == BUTTON_LEFT) ? -1 : 1;
             if (!checkCollision(ctx->pieceX + step, ctx->pieceY, ctx->rotation)) {
                 ctx->pieceX += step;
+                moved = true;
                 SOUND_play(SND_MOVE);
             }
             ctx->dasTimer = 0;
@@ -105,6 +111,7 @@ void game_update() {
                     s16 step = (currentDir == BUTTON_LEFT) ? -1 : 1;
                     if (!checkCollision(ctx->pieceX + step, ctx->pieceY, ctx->rotation)) {
                         ctx->pieceX += step;
+                        moved = true;
                         SOUND_play(SND_MOVE);
                     }
                 }
@@ -115,79 +122,84 @@ void game_update() {
         ctx->dasDir = 0;
     }
 
-    // 4. ROTATION
-    if (changed & BUTTON_A) { // Links herum
-        u16 nr = (ctx->rotation + 3) % 4;
+    // --- Rotation ---
+    if (changed & (BUTTON_A | BUTTON_B)) {
+        u16 nr = (changed & BUTTON_A) ? (ctx->rotation + 3) % 4 : (ctx->rotation + 1) % 4;
         if (!checkCollision(ctx->pieceX, ctx->pieceY, nr)) {
             ctx->rotation = nr;
-            SOUND_play(SND_ROTATE);
-        }
-    }
-    if (changed & BUTTON_B) { // Rechts herum
-        u16 nr = (ctx->rotation + 1) % 4;
-        if (!checkCollision(ctx->pieceX, ctx->pieceY, nr)) {
-            ctx->rotation = nr;
+            moved = true;
             SOUND_play(SND_ROTATE);
         }
     }
 
-    // 5. HOLD-FUNKTION
+    // --- Hold ---
     if (config.allowHold && (changed & BUTTON_C)) {
         performHold();
+        moved = true; 
     }
-    
-    // 6. HARD DROP
+
+    // --- Hard Drop ---
     if (changed & BUTTON_UP) {
         SOUND_play(SND_HARD_DROP);
         while (!checkCollision(ctx->pieceX, ctx->pieceY + 1, ctx->rotation)) {
             ctx->pieceY++;
         }
         lockPiece();
-        // Wenn keine Zeilen gelöscht wurden, sofort neues Teil spawnen
-        if (clearLines() == 0) spawnPiece();
-    }
-
-    // 7. SCHWERKRAFT & SOFT DROP
-    ctx->moveTimer++;
-
-    // Basis-Geschwindigkeit aus Config
-    s16 baseThreshold = (s16)GRAVITY_SPEEDS[config.speedLevel];
-    s16 threshold = baseThreshold;
-    
-    // Level-Steigerung verrechnen (wird schneller)
-    if (config.speedLevel > 0) {
-        threshold = baseThreshold - ((ctx->level - 1) * 4);
-    }
-    if (threshold < 2) threshold = 2; // Minimum Fall-Intervall
-
-    // Soft-Drop (Runter gedrückt halten)
-    u16 finalThreshold = (joyState & BUTTON_DOWN) ? 2 : (u16)threshold;
-
-    if (ctx->moveTimer >= finalThreshold) {
-        if (!checkCollision(ctx->pieceX, ctx->pieceY + 1, ctx->rotation)) {
-            ctx->pieceY++;
-            if (joyState & BUTTON_DOWN) SOUND_play(SND_SOFT_DROP); 
-        } else {
-            lockPiece();
-            if (clearLines() == 0) spawnPiece();
+        if (clearLines() == 0) {
+            spawnPiece();
+            moved = true; // Schatten für neuen Stein berechnen
         }
-        ctx->moveTimer = 0;
+        // Bei Hard Drop springen wir hier raus, drawBoard() erfolgt am Ende
+    } else {
+        // --- Schwerkraft & Soft Drop ---
+        ctx->moveTimer++;
+        s16 baseThreshold = (s16)GRAVITY_SPEEDS[config.speedLevel];
+        s16 threshold = baseThreshold;
+        if (config.speedLevel > 0) {
+            threshold = baseThreshold - ((ctx->level - 1) * 4);
+        }
+        if (threshold < 2) threshold = 2;
+
+        u16 finalThreshold = (joyState & BUTTON_DOWN) ? 2 : (u16)threshold;
+
+        if (ctx->moveTimer >= finalThreshold) {
+            if (!checkCollision(ctx->pieceX, ctx->pieceY + 1, ctx->rotation)) {
+                ctx->pieceY++;
+                moved = true;
+                if (joyState & BUTTON_DOWN) SOUND_play(SND_SOFT_DROP);
+            } else {
+                // Stein setzt auf -> Prüfung auf volle Zeilen NUR hier
+                lockPiece();
+                if (clearLines() == 0) {
+                    spawnPiece();
+                    moved = true;
+                }
+            }
+            ctx->moveTimer = 0;
+        }
     }
 
-    // 8. GARBAGE LOGIK
+    // 3. SCHATTEN NUR BEI RELEVANZ AKTUALISIEREN
+    if (moved && config.showShadow) {
+        ctx->ghostY = ctx->pieceY;
+        while (!checkCollision(ctx->pieceX, ctx->ghostY + 1, ctx->rotation)) {
+            ctx->ghostY++;
+        }
+    }
+
+    // 4. GARBAGE LOGIK
     if (config.garbageFreq > 0 && ctx->clearTimer == 0) {
         ctx->garbageTimer++;
         if (ctx->garbageTimer >= ctx->garbageNextThreshold) {
             addGarbageLine();
             ctx->garbageTimer = 0;
-            // Neues Intervall berechnen
             u16 base = GARBAGE_INTERVALS[config.garbageFreq];
             ctx->garbageNextThreshold = base + (random() % 120) - 60;
+            moved = true; // Da sich das Board verschiebt, Schatten neu berechnen
         }
     }
 
-    // 9. RENDERING
-    // drawBoard kümmert sich um HUD, Schatten und das Grid
+    // 5. RENDERING
     drawBoard();
 }
 

@@ -7,6 +7,7 @@
 #include "gameover.h"
 #include "highscore.h"
 #include "menu_bg.h" // WICHTIG: Das neue Hintergrund-Modul
+#include "fonts.h" // Dein Header mit dem Ressourcen-Verweis
 
 // Hier wird der Speicher für die globalen Variablen reserviert
 GameState currentState = STATE_TITLE;
@@ -51,11 +52,12 @@ void initHighscores() {
 int main() {
     // 1. Hardware-Basis-Inits
     JOY_init();
-    
-    // 2. Spiel-Logik Inits
+    VDP_loadFont(&TS_FONT_CLEAR, CPU);    // 2. Spiel-Logik Inits
+    PAL_setPalette(PAL3, PAL_FONT_CLEAR.data, CPU);
+    VDP_setTextPalette(PAL3);
     initHighscores();
     initStateMachine();
-SYS_showFrameLoad(TRUE);
+    SYS_showFrameLoad(TRUE);
     // 3. Grafik-Hintergrund vorbereiten
     menu_bg_init(); 
     // Da wir mit STATE_TITLE starten, schalten wir ihn hier direkt aktiv

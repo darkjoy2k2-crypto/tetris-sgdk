@@ -4,6 +4,7 @@
 #include "game_logic.h"
 #include "states.h"
 #include "gfx.h"
+#include "fonts.h"
 
 static u16 tileCache[BOARD_WIDTH][BOARD_HEIGHT];
 
@@ -16,7 +17,7 @@ void view_init_cache() {
 }
 
 void drawPreview(s16 type, u16 x, u16 y) {
-    VDP_fillTileMapRect(BG_A, TILE_ATTR_FULL(PAL0, 0, 0, 0, TILE_EMPTY_INDEX), x, y, 4, 4);
+    VDP_fillTileMapRect(BG_A, TILE_ATTR_FULL(PAL3, 0, 0, 0, TILE_EMPTY_INDEX), x, y, 4, 4);
     if (type < 0) return;
 
     for (u16 i = 0; i < 4; i++) {
@@ -29,7 +30,8 @@ void drawPreview(s16 type, u16 x, u16 y) {
 void drawBoard() {
     if (ctx == NULL) return;
 
-    // 1. HUD-UPDATES (Nur bei Änderung)
+    VDP_setTextPalette(PAL3);
+
     if (ctx->score != ctx->lastScore) {
         char buf[12];
         uintToStr(ctx->score, buf, 7); 
@@ -44,7 +46,6 @@ void drawBoard() {
         ctx->lastLevel = ctx->level;
     }
 
-    // 2. VORSCHAU-FENSTER (Nur bei neuem Stein)
     if (config.showNext && ctx->nextType != ctx->lastNextType) {
         drawPreview(ctx->nextType, UI_X, NEXT_Y);
         ctx->lastNextType = ctx->nextType;
@@ -55,16 +56,13 @@ void drawBoard() {
         ctx->lastHoldType = ctx->holdType;
     }
 
-    // 3. DAS STATISCHE SPIELFELD (Grid)
-    // Hier iterieren wir NUR über das Board-Array. Keine Piece-Prüfung mehr!
     for (u16 y = 0; y < BOARD_HEIGHT; y++) {
-        // Sonderfall: Blink-Animation bei Line Clear
         if (ctx->pendingLines[y] && ctx->clearTimer > 0) {
             bool blinkOn = (ctx->clearTimer % 4 < 2);
             for (u16 x = 0; x < BOARD_WIDTH; x++) {
                 u16 tile = blinkOn ? (TILE_BLOCK_BASE + (ctx->board[x][y] - 1)) : TILE_EMPTY_INDEX;
                 VDP_setTileMapXY(BG_A, TILE_ATTR_FULL(PAL1, 0, 0, 0, tile), RENDER_X + x, RENDER_Y + y);
-                tileCache[x][y] = 0xFFFF; // Cache nach Animation zwingend erneuern
+                tileCache[x][y] = 0xFFFF;
             }
             continue; 
         }
@@ -75,7 +73,6 @@ void drawBoard() {
                 tile = TILE_BLOCK_BASE + (ctx->board[x][y] - 1);
             }
 
-            // Zeichnen nur bei tatsächlicher Änderung im statischen Board
             if (tile != tileCache[x][y]) {
                 VDP_setTileMapXY(BG_A, TILE_ATTR_FULL(PAL1, 0, 0, 0, tile), RENDER_X + x, RENDER_Y + y);
                 tileCache[x][y] = tile;
@@ -83,23 +80,15 @@ void drawBoard() {
         }
     }
 
-    // 4. DYNAMISCHE OBJEKTE (Piece & Ghost)
-    // Wir malen diese 8 Tiles direkt über das statische Grid.
-    
-    // Zuerst den Schatten (Ghost)
     if (config.showShadow && ctx->clearTimer == 0) {
         for (u16 i = 0; i < 4; i++) {
             s16 gx = ctx->pieceX + PIECES[ctx->type][ctx->rotation][i][0];
             s16 gy = ctx->ghostY + PIECES[ctx->type][ctx->rotation][i][1];
             VDP_setTileMapXY(BG_A, TILE_ATTR_FULL(PAL1, 0, 0, 0, TILE_GHOST_INDEX), RENDER_X + gx, RENDER_Y + gy);
-            
-            // WICHTIG: Cache auf einen ungültigen Wert setzen. 
-            // Dadurch "reinigt" der statische Zeichner im nächsten Frame diese Stelle automatisch.
             tileCache[gx][gy] = 0xFFFF; 
         }
     }
 
-    // Dann das aktive Piece
     if (ctx->clearTimer == 0) {
         for (u16 i = 0; i < 4; i++) {
             s16 px = ctx->pieceX + PIECES[ctx->type][ctx->rotation][i][0];
@@ -109,7 +98,6 @@ void drawBoard() {
         }
     }
 
-    // 5. KOMMENTARE
     if (ctx->commentTimer > 0) {
         VDP_drawText(ctx->lastComment, RENDER_X, RENDER_Y + BOARD_HEIGHT + 1);
         ctx->commentTimer--;

@@ -38,7 +38,7 @@ static void update_palette_fade() {
         u16 fg = F16_toInt(F16_mul(FIX16(g), fade_level));
         u16 fb = F16_toInt(F16_mul(FIX16(b), fade_level));
 
-        PAL_setColor(49 + i, (fb << 9) | (fg << 5) | (fr << 1));
+    PAL_setColor(1 + i, (fb << 9) | (fg << 5) | (fr << 1));
     }
 }
 
@@ -57,14 +57,14 @@ static void draw_bg_shape(u16 x, u16 y) {
     for (u16 i = 0; i < 4; i++) {
         s16 px = (x + PIECES[type][rotation][i][0]) % 64;
         s16 py = (y + PIECES[type][rotation][i][1]) % 32;
-        VDP_setTileMapXY(BG_B, TILE_ATTR_FULL(PAL3, 0, 0, 0, TILE_MENU_BLOCK_BASE + type), px, py);
+        VDP_setTileMapXY(BG_B, TILE_ATTR_FULL(PAL0, 0, 0, 0, TILE_MENU_BLOCK_BASE + type), px, py);
     }
 }
 
 // --- Hauptfunktionen ---
 
 void menu_bg_init() {
-    PAL_setColor(48, 0x0000); 
+    PAL_setColor(0, 0x0000); // Schwarz/Transparent auf PAL0 Index 0
     for (u16 i = 1; i <= 7; i++) load_colored_tile(i);
     is_active = false;
     fade_level = F16_0;

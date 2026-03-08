@@ -52,4 +52,4 @@ out/src/gameover.o: src/gameover.c \
  C:/Users/peter/Documents/_Genesis/sgdk211/inc/string.h \
  C:/Users/peter/Documents/_Genesis/sgdk211/inc/maths.h \
  C:/Users/peter/Documents/_Genesis/sgdk211/inc/dma.h inc/gameover.h \
- inc/states.h inc/game.h
+ inc/states.h inc/game.h res/fonts.h inc/highscore.h inc/menu_bg.h

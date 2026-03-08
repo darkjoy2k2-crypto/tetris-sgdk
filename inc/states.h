@@ -24,6 +24,7 @@ typedef enum GameState{
 typedef struct HighscoreEntry{
     u32 score;
     char name[4];
+    bool isNew; // Dieses Feld wird oben genutzt
 } HighscoreEntry;
 
 // NEU: Die Struktur für deine globalen Spieleinstellungen

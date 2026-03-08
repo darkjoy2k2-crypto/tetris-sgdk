@@ -5,28 +5,25 @@
 #include <genesis.h>
 #include <string.h>
 
-void check_and_update_highscore(u32 finalScore) {
-    int insertPos = -1;
+void check_and_update_highscore(u32 score) {
+    s16 insertIdx = -1;
 
-    // 1. Finde heraus, ob der Score gut genug ist
-    for (int i = 0; i < 10; i++) {
-        if (finalScore > highscores[i].score) {
-            insertPos = i;
-            break;
+    for (u16 i = 0; i < 10; i++) {
+        highscores[i].isNew = false;
+        if (insertIdx == -1 && score > highscores[i].score) {
+            insertIdx = i;
         }
     }
 
-    // 2. Wenn ja, schiebe alles ab insertPos eins nach unten
-    if (insertPos != -1) {
-        for (int i = 9; i > insertPos; i--) {
-            highscores[i].score = highscores[i-1].score;
-            strncpy(highscores[i].name, highscores[i-1].name, 4);
+    if (insertIdx != -1) {
+        for (u16 i = 9; i > insertIdx; i--) {
+            highscores[i] = highscores[i - 1];
         }
 
-        // 3. Neuen Score eintragen
-        highscores[insertPos].score = finalScore;
-        strncpy(highscores[insertPos].name, config.playerName, 3);
-        highscores[insertPos].name[3] = '\0';
+        strncpy(highscores[insertIdx].name, config.playerName, 3);
+        highscores[insertIdx].name[3] = '\0';
+        highscores[insertIdx].score = score;
+        highscores[insertIdx].isNew = true;
     }
 }
 

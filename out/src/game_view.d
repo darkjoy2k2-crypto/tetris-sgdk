@@ -52,4 +52,4 @@ out/src/game_view.o: src/game_view.c \
  C:/Users/peter/Documents/_Genesis/sgdk211/inc/string.h \
  C:/Users/peter/Documents/_Genesis/sgdk211/inc/maths.h \
  C:/Users/peter/Documents/_Genesis/sgdk211/inc/dma.h inc/game_view.h \
- inc/game_core.h inc/game_logic.h inc/states.h inc/gfx.h
+ inc/game_core.h inc/game_logic.h inc/states.h inc/gfx.h res/fonts.h

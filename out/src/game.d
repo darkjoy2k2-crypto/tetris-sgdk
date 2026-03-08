@@ -53,4 +53,4 @@ out/src/game.o: src/game.c \
  C:/Users/peter/Documents/_Genesis/sgdk211/inc/maths.h \
  C:/Users/peter/Documents/_Genesis/sgdk211/inc/dma.h inc/game_core.h \
  inc/game_logic.h inc/game_view.h inc/gfx.h inc/sound_manager.h \
- inc/states.h inc/menu_bg.h
+ inc/states.h inc/menu_bg.h res/fonts.h

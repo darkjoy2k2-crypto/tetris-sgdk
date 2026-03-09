@@ -72,22 +72,48 @@ ctx->heartTriggered = false; // Sicherstellen, dass beim Start alles auf Null is
 }
 
 void game_update() {
-    if (ctx == NULL) return;
+if (ctx == NULL) return;
 
-    // 1. Animation abwarten
+    // --- PHASE 1: LINE CLEAR ANIMATION ---
     if (ctx->clearTimer > 0) {
         ctx->clearTimer--;
         if (ctx->clearTimer == 0) {
             finishLineClear();
-            spawnPiece();
-            ctx->ghostY = ctx->pieceY;
-            while (!checkCollision(ctx->pieceX, ctx->ghostY + 1, ctx->rotation)) {
-                ctx->ghostY++;
-            }
+            // Nur spawnen, wenn KEINE Sortierung gestartet wurde
+            if (ctx->sortingRow == -1) spawnPiece();
         }
         drawBoard();
         return;
     }
+
+    // --- PHASE 2: SORTIER ANIMATION (Herz-Effekt) ---
+    if (ctx->sortingRow != -1) {
+        u16 y = ctx->sortingRow;
+        u8 tempRow[10];
+        u16 filled = 0;
+
+        // Zeile kompaktieren (alle Blöcke nach links schieben)
+        for (u16 x = 0; x < BOARD_WIDTH; x++) {
+            if (ctx->board[x][y] != 0) {
+                tempRow[filled++] = ctx->board[x][y];
+            }
+        }
+        for (u16 x = 0; x < filled; x++) ctx->board[x][y] = tempRow[x];
+        for (u16 x = filled; x < BOARD_WIDTH; x++) ctx->board[x][y] = 0;
+
+        ctx->sortingRow++;
+        
+        // Wenn alle Zeilen (0-19) durch sind
+        if (ctx->sortingRow >= BOARD_HEIGHT) {
+            ctx->sortingRow = -1;
+            spawnPiece(); // Jetzt erst darf der nächste Stein kommen
+        }
+        
+        drawBoard();
+        return; // Frame beenden, während sortiert wird
+    }
+
+
 
     // --- INPUT MAPPING PHASE ---
     u16 currentJoy = joyState;

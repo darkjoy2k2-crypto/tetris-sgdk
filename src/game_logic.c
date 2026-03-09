@@ -139,25 +139,54 @@ bool checkCollision(s16 nx, s16 ny, u16 nr) {
 }
 
 void triggerGoodEffect() {
-    // 1. Negativen Effekt sofort stoppen
+    // 1. Heilung: Negative Effekte stoppen
     ctx->activeBadEffect = EFFECT_NONE;
     ctx->badEffectTimer = 0;
+    ctx->lastActiveBadEffect = 99;
 
-    // 2. Unterste Zeile (Row 19) löschen und alles nachrücken
-    for (s16 y = BOARD_HEIGHT - 1; y > 0; y--) {
-        for (u16 x = 0; x < BOARD_WIDTH; x++) {
-            ctx->board[x][y] = ctx->board[x][y - 1];
+    // 2. Zufallswert für 3 Möglichkeiten (0, 1, 2)
+    u16 chance = random() % 3;
+
+    if (chance == 0) {
+        // --- CHANCE 1: Unterste Zeile löschen ---
+        for (s16 y = BOARD_HEIGHT - 1; y > 0; y--) {
+            for (u16 x = 0; x < BOARD_WIDTH; x++) {
+                ctx->board[x][y] = ctx->board[x][y - 1];
+            }
         }
+        for (u16 x = 0; x < BOARD_WIDTH; x++) ctx->board[x][0] = 0;
+        
+        strncpy(ctx->lastComment, "HEAL & CLEAR!", 20);
+    } 
+    else if (chance == 1) {
+        // --- CHANCE 2: Sortier-Animation triggern ---
+        ctx->sortingRow = 0; 
+        strncpy(ctx->lastComment, "HEAL & SORT!", 20);
+    } 
+    else {
+        // --- CHANCE 3: Alle Skulls vom Brett auflösen ---
+        for (u16 y = 0; y < BOARD_HEIGHT; y++) {
+            for (u16 x = 0; x < BOARD_WIDTH; x++) {
+                if (ctx->board[x][y] == ITEM_ID_SKULL) {
+                    ctx->board[x][y] = 0;
+                }
+            }
+        }
+        strncpy(ctx->lastComment, "SKULLS PURGED!", 20);
     }
-    // Die oberste Zeile leeren
-    for (u16 x = 0; x < BOARD_WIDTH; x++) {
-        ctx->board[x][0] = 0;
+
+    // --- GENERELLE REGEL: Alle verbliebenen Herzchen vom Brett entfernen ---
+    // (Damit man den Effekt nicht sofort wieder triggern kann)
+    for (u16 y = 0; y < BOARD_HEIGHT; y++) {
+        for (u16 x = 0; x < BOARD_WIDTH; x++) {
+            if (ctx->board[x][y] == ITEM_ID_HEART) {
+                ctx->board[x][y] = 0;
+            }
+        }
     }
 
     SOUND_play(SND_GOOD_ITEM);
-    
-    // UI Refresh erzwingen
-    ctx->lastActiveBadEffect = 99;
+    ctx->commentTimer = 60;
 }
 
 void triggerBadEffect() {

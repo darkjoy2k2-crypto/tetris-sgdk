@@ -57,7 +57,7 @@ typedef struct GameContext {
     bool holdBlocked;
     bool nextHidden;
     bool heartTriggered; // Neues Flag
-    
+
     u8 board[BOARD_WIDTH][BOARD_HEIGHT];
     u8 bag[7];
     u8 bagIndex;
@@ -72,5 +72,10 @@ typedef struct GameContext {
 #define EFFECT_NO_ROTATE    4
 #define EFFECT_HOLD_LOCK    5
 #define EFFECT_HIDE_NEXT    6
+#define EFFECT_I_RAIN       7
+#define EFFECT_FREEZE       8
+#define EFFECT_MULTIPLIER   9
+#define EFFECT_RAINBOW      10
+#define EFFECT_SHADOW_BOARD 11
 
 extern GameContext* ctx;

@@ -86,31 +86,54 @@ if (ctx == NULL) return;
         return;
     }
 
-    // --- PHASE 2: SORTIER ANIMATION (Herz-Effekt) ---
+// --- PHASE 2: ANIMATIONEN (Herz/Skull Effekte) ---
     if (ctx->sortingRow != -1) {
         u16 y = ctx->sortingRow;
-        u8 tempRow[10];
-        u16 filled = 0;
 
-        // Zeile kompaktieren (alle Blöcke nach links schieben)
-        for (u16 x = 0; x < BOARD_WIDTH; x++) {
-            if (ctx->board[x][y] != 0) {
-                tempRow[filled++] = ctx->board[x][y];
+        if (ctx->activeBadEffect == EFFECT_RAINBOW) {
+            // REGENBOGEN: Jede Zeile bekommt eine eigene Farbe (1-7)
+            u8 rowColor = (y % 7) + 1;
+            for (u16 x = 0; x < BOARD_WIDTH; x++) {
+                if (ctx->board[x][y] != 0 && ctx->board[x][y] < 10) {
+                    ctx->board[x][y] = rowColor;
+                }
+            }
+        } 
+        else if (ctx->activeBadEffect == EFFECT_SHADOW_BOARD) {
+            // SCHATTEN-FLUCH: Alle Blöcke werden grau (Schatten-Farbe ID 9)
+            for (u16 x = 0; x < BOARD_WIDTH; x++) {
+                if (ctx->board[x][y] != 0 && ctx->board[x][y] < 10) {
+                    ctx->board[x][y] = 8; // 9 = Graues Tile
+                }
             }
         }
-        for (u16 x = 0; x < filled; x++) ctx->board[x][y] = tempRow[x];
-        for (u16 x = filled; x < BOARD_WIDTH; x++) ctx->board[x][y] = 0;
+        else {
+            // DEIN ALTER SORT-EFFEKT: Blöcke nach links schieben
+            u8 tempRow[10];
+            u16 filled = 0;
+            for (u16 x = 0; x < BOARD_WIDTH; x++) {
+                if (ctx->board[x][y] != 0) tempRow[filled++] = ctx->board[x][y];
+            }
+            for (u16 x = 0; x < filled; x++) ctx->board[x][y] = tempRow[x];
+            for (u16 x = filled; x < BOARD_WIDTH; x++) ctx->board[x][y] = 0;
+        }
 
         ctx->sortingRow++;
         
-        // Wenn alle Zeilen (0-19) durch sind
+        // Wenn die Animation unten (Zeile 19) angekommen ist
         if (ctx->sortingRow >= BOARD_HEIGHT) {
             ctx->sortingRow = -1;
-            spawnPiece(); // Jetzt erst darf der nächste Stein kommen
+            
+            // WICHTIG: Rainbow und Shadow sind "Einmal-Animationen", 
+            // danach setzen wir den Effekt wieder auf NONE.
+            if (ctx->activeBadEffect == EFFECT_RAINBOW || ctx->activeBadEffect == EFFECT_SHADOW_BOARD) {
+                ctx->activeBadEffect = EFFECT_NONE;
+            }
+            spawnPiece(); // Jetzt erst den nächsten Stein bringen
         }
         
         drawBoard();
-        return; // Frame beenden, während sortiert wird
+        return; // Frame beenden
     }
 
 
@@ -225,6 +248,7 @@ if (ctx == NULL) return;
     } 
     
     // --- GRAVITATION / SOFT DROP ---
+// --- GRAVITATION / SOFT DROP ---
     else {
         ctx->moveTimer++;
         
@@ -233,10 +257,15 @@ if (ctx == NULL) return;
         if (ctx->activeBadEffect == EFFECT_FULLSPEED) threshold = 2;
 
         u16 finalThreshold;
+        
         if (currentJoy & vBtnSoftDrop) {
             finalThreshold = (u16)(threshold / 12); 
             if (finalThreshold < 4) finalThreshold = 4;
-        } else {
+        } 
+        else if (ctx->activeBadEffect == EFFECT_FREEZE) {
+            finalThreshold = 9999; // Time Freeze: Stein bleibt stehen
+        } 
+        else {
             finalThreshold = (u16)threshold;
         }
 
@@ -257,7 +286,9 @@ if (ctx == NULL) return;
             }
             ctx->moveTimer = 0;
         }
-    }
+    } // <--- Diese Klammer schließt den Gravitations-ELSE-Block
+
+    // --- LOGIK NACH DER BEWEGUNG ---
 
     // Garbage-Logik
     if (config.garbageFreq > 0 && ctx->clearTimer == 0) {
@@ -279,14 +310,20 @@ if (ctx == NULL) return;
         }
     }
 
-    // Timer Update (Zeit-basierte Effekte)
+    // Timer Update (Zeit-basierte Effekte ab ID 3)
     if (ctx->badEffectTimer > 0 && ctx->activeBadEffect >= 3) {
         ctx->badEffectTimer--;
-        if (ctx->badEffectTimer == 0) ctx->activeBadEffect = EFFECT_NONE;
+        if (ctx->badEffectTimer == 0) {
+            ctx->activeBadEffect = EFFECT_NONE;
+            SOUND_play(SND_GOOD_ITEM);
+        }
     }
 
-    drawBoard();
-}
+    // Ganz wichtig: Input merken und Zeichnen
+    lastJoyState = joyState; 
+    drawBoard(); 
+
+} // <--- Diese Klammer schließt die Funktion game_update()
 
 void game_cleanup() {
     if (ctx != NULL) {
@@ -295,3 +332,4 @@ void game_cleanup() {
     }
     VDP_clearPlane(BG_A, TRUE);
 }
+

@@ -139,44 +139,59 @@ bool checkCollision(s16 nx, s16 ny, u16 nr) {
 }
 
 void triggerGoodEffect() {
-    // 1. Heilung: Negative Effekte stoppen
+    // 1. Grund-Heilung: Alle negativen Effekte sofort stoppen
     ctx->activeBadEffect = EFFECT_NONE;
     ctx->badEffectTimer = 0;
-    ctx->lastActiveBadEffect = 99;
+    ctx->lastActiveBadEffect = 99; // Erzwingt UI-Update
 
-    // 2. Zufallswert für 3 Möglichkeiten (0, 1, 2)
-    u16 chance = random() % 3;
+    // 2. Zufallswert für 6 Möglichkeiten (0 bis 5)
+    u16 chance = random() % 6;
 
     if (chance == 0) {
-        // --- CHANCE 1: Unterste Zeile löschen ---
+        // --- CHANCE 0: Unterste Zeile löschen & Board absenken ---
         for (s16 y = BOARD_HEIGHT - 1; y > 0; y--) {
             for (u16 x = 0; x < BOARD_WIDTH; x++) {
                 ctx->board[x][y] = ctx->board[x][y - 1];
             }
         }
         for (u16 x = 0; x < BOARD_WIDTH; x++) ctx->board[x][0] = 0;
-        
         strncpy(ctx->lastComment, "HEAL & CLEAR!", 20);
     } 
     else if (chance == 1) {
-        // --- CHANCE 2: Sortier-Animation triggern ---
+        // --- CHANCE 1: Sortier-Animation (Links-Bündig) ---
         ctx->sortingRow = 0; 
         strncpy(ctx->lastComment, "HEAL & SORT!", 20);
     } 
-    else {
-        // --- CHANCE 3: Alle Skulls vom Brett auflösen ---
+    else if (chance == 2) {
+        // --- CHANCE 2: Alle Skulls vom Brett auflösen ---
         for (u16 y = 0; y < BOARD_HEIGHT; y++) {
             for (u16 x = 0; x < BOARD_WIDTH; x++) {
-                if (ctx->board[x][y] == ITEM_ID_SKULL) {
-                    ctx->board[x][y] = 0;
-                }
+                if (ctx->board[x][y] == ITEM_ID_SKULL) ctx->board[x][y] = 0;
             }
         }
         strncpy(ctx->lastComment, "SKULLS PURGED!", 20);
     }
+    else if (chance == 3) {
+        // --- CHANCE 3: I-Beam Rain (Nächste 4 Steine sind Stäbe) ---
+        ctx->activeBadEffect = EFFECT_I_RAIN;
+        ctx->badEffectTimer = 4;
+        strncpy(ctx->lastComment, "I-BEAM RAIN!", 20);
+    }
+    else if (chance == 4) {
+        // --- CHANCE 4: Time Freeze (Gravitation stoppt) ---
+        ctx->activeBadEffect = EFFECT_FREEZE;
+        ctx->badEffectTimer = 600; // 10 Sekunden
+        strncpy(ctx->lastComment, "TIME FREEZE!", 20);
+    }
+    else {
+        // --- CHANCE 5: Rainbow Power (Board wird bunt eingefärbt) ---
+        ctx->activeBadEffect = EFFECT_RAINBOW;
+        ctx->sortingRow = 0; // Animation von oben nach unten
+        strncpy(ctx->lastComment, "RAINBOW POWER!", 20);
+    }
 
     // --- GENERELLE REGEL: Alle verbliebenen Herzchen vom Brett entfernen ---
-    // (Damit man den Effekt nicht sofort wieder triggern kann)
+    // Verhindert Kettenreaktionen und Missbrauch des Effekts
     for (u16 y = 0; y < BOARD_HEIGHT; y++) {
         for (u16 x = 0; x < BOARD_WIDTH; x++) {
             if (ctx->board[x][y] == ITEM_ID_HEART) {
@@ -190,34 +205,59 @@ void triggerGoodEffect() {
 }
 
 void triggerBadEffect() {
-    ctx->activeBadEffect = (random() % 6) + 1; 
+    // 1. Zufallswert für 7 Möglichkeiten (1 bis 7)
+    // Wir nehmen % 7 und addieren 1, damit wir im Bereich 1-7 landen
+    u16 roll = (random() % 7) + 1; 
 
+    // 2. Den gewürfelten Effekt zuweisen
+    if (roll <= 6) {
+        ctx->activeBadEffect = roll; // Die Standard-Debuffs 1-6
+    } else {
+        ctx->activeBadEffect = EFFECT_SHADOW_BOARD; // Der neue Schatten-Fluch (ID 11)
+    }
+
+    // 3. Timer und Spezial-Logik je nach Effekt setzen
     switch(ctx->activeBadEffect) {
         case EFFECT_FULLSPEED:  
         case EFFECT_SAME_TILES: 
-            ctx->badEffectTimer = 5;    // 5 Steine
+            ctx->badEffectTimer = 5;     // Hält 5 Steine lang
+            strncpy(ctx->lastComment, "SPEED / SAME!", 20);
             break;
             
         case EFFECT_NO_ROTATE:  
-            ctx->badEffectTimer = 180;  // 3 Sek * 60 Frames
+            ctx->badEffectTimer = 180;   // 3 Sek * 60 Frames
+            strncpy(ctx->lastComment, "NO ROTATE!", 20);
             break;
             
         case EFFECT_REVERSED:   
-            ctx->badEffectTimer = 240;  // 4 Sek * 60 Frames
+            ctx->badEffectTimer = 240;   // 4 Sek * 60 Frames
+            strncpy(ctx->lastComment, "REVERSED!", 20);
             break;
             
         case EFFECT_HOLD_LOCK:  
+            ctx->badEffectTimer = 300;   // 5 Sek * 60 Frames
+            ctx->holdType = -1; 
+            ctx->canHold = false;
+            ctx->lastHoldType = -2;      // UI Refresh erzwingen
+            strncpy(ctx->lastComment, "HOLD LOCKED!", 20);
+            break;
+
         case EFFECT_HIDE_NEXT:  
-            ctx->badEffectTimer = 300;  // 5 Sek * 60 Frames
+            ctx->badEffectTimer = 300;   // 5 Sek * 60 Frames
+            strncpy(ctx->lastComment, "NEXT HIDDEN!", 20);
+            break;
+
+        case EFFECT_SHADOW_BOARD:
+            ctx->sortingRow = 0;         // Startet die "Verschatten"-Animation
+            ctx->badEffectTimer = 0;     // Animation endet von selbst
+            strncpy(ctx->lastComment, "DARK CURSE!", 20);
             break;
     }
 
+    // 4. Feedback (Sound & UI)
     SOUND_play(SND_BAD_ITEM);
-    
-    if (ctx->activeBadEffect == EFFECT_HOLD_LOCK) {
-        ctx->holdType = -1; 
-        ctx->canHold = false;
-    }
+    ctx->commentTimer = 60;
+    ctx->lastActiveBadEffect = 99; // Erzwingt Refresh der UI-Anzeige unten rechts
 }
 
 u16 clearLines() {
@@ -300,12 +340,27 @@ void refillBag() {
 }
 
 void spawnPiece() {
-    if (ctx->badEffectTimer > 0 && ctx->activeBadEffect <= 2) {
+    // 1. Zähler für STÜCK-basierte Effekte (1=Fullspeed, 2=SameTiles, 7=I-Rain)
+    if (ctx->badEffectTimer > 0 && (ctx->activeBadEffect <= 2 || ctx->activeBadEffect == EFFECT_I_RAIN)) {
         ctx->badEffectTimer--;
-        if (ctx->badEffectTimer == 0) ctx->activeBadEffect = EFFECT_NONE;
+        if (ctx->badEffectTimer == 0) {
+            ctx->activeBadEffect = EFFECT_NONE;
+            ctx->lastActiveBadEffect = 99; // UI Refresh
+        }
     }
 
-    if (ctx->activeBadEffect != EFFECT_SAME_TILES) {
+    // 2. Stein-Auswahl Logik
+    if (ctx->activeBadEffect == EFFECT_I_RAIN) {
+        // Effekt: Erzwungene Stäbe (ID 0)
+        ctx->type = 0; 
+        // Wir ändern ctx->nextType NICHT, damit die Vorschau nach dem Effekt stimmt
+    } 
+    else if (ctx->activeBadEffect == EFFECT_SAME_TILES) {
+        // Effekt: Das gleiche Teil wie vorher nochmal
+        // ctx->type bleibt unverändert
+    } 
+    else {
+        // Normaler Ablauf: Aus "Next" übernehmen und Bag/Random nachfüllen
         ctx->type = ctx->nextType;
         if (config.randMode == 0) {
             ctx->nextType = ctx->bag[ctx->bagIndex];
@@ -316,6 +371,7 @@ void spawnPiece() {
         }
     }
 
+    // --- Ab hier dein bestehender Code für Position & Items ---
     ctx->rotation = 0;
     ctx->pieceX = 3;
     ctx->pieceY = 0;
@@ -335,6 +391,7 @@ void spawnPiece() {
         }
     }
 
+    // Collision Check
     if (checkCollision(ctx->pieceX, ctx->pieceY, ctx->rotation)) {
         SOUND_play(SND_GAME_OVER);
         view_animate_grayscale();

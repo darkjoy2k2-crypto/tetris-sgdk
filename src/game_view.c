@@ -199,31 +199,36 @@ if (ctx->clearTimer == 0) {
             char statusMsg[20];
             char timerBuf[8];
 
-            // 1. Text festlegen
+// 1. Text festlegen (Jetzt inklusive der guten Effekte)
             switch(ctx->activeBadEffect) {
+                // Negative Effekte
                 case EFFECT_FULLSPEED:  strncpy(statusMsg, " SPEED", 12); break;
                 case EFFECT_SAME_TILES: strncpy(statusMsg, "SAME T", 12); break;
                 case EFFECT_REVERSED:   strncpy(statusMsg, " SILLY", 12); break;
                 case EFFECT_NO_ROTATE:  strncpy(statusMsg, " NOROT", 12); break;
                 case EFFECT_HOLD_LOCK:  strncpy(statusMsg, "NOHOLD", 12); break;
                 case EFFECT_HIDE_NEXT:  strncpy(statusMsg, "NONEXT", 12); break;
-                default:                strncpy(statusMsg, "DEBUFF", 12); break;
+                
+                // Positive Effekte (Neu hinzugefügt)
+                case EFFECT_I_RAIN:     strncpy(statusMsg, "I-RAIN", 12); break;
+                case EFFECT_FREEZE:     strncpy(statusMsg, "FREEZE", 12); break;
+                
+                default:                strncpy(statusMsg, "ACTIVE", 12); break;
             }
 
-            // 2. Timer-Format wählen (Stücke oder Sekunden)
-            if (ctx->activeBadEffect <= 2) {
-                // Stück-Anzeige (EFFECT_FULLSPEED und EFFECT_SAME_TILES)
+            // 2. Timer-Format wählen (P für Steine, S für Sekunden)
+            // I_RAIN (7) und SAME_TILES/SPEED (1,2) sind steinbasiert
+            if (ctx->activeBadEffect <= 2 || ctx->activeBadEffect == EFFECT_I_RAIN) {
                 sprintf(timerBuf, "%d P", ctx->badEffectTimer);
             } else {
-                // Zeit-Anzeige (Frames in Sekunden umrechnen)
+                // Frames in Sekunden umrechnen
                 u16 sec = (ctx->badEffectTimer + 59) / 60;
                 sprintf(timerBuf, "%d S", sec);
             }
 
-            // 3. Zeichnen (Klammern sind jetzt korrekt!)
+            // 3. Zeichnen
             VDP_drawTextBG(VDP_BG_A, statusMsg, UI_X - 1, 24);
-            VDP_drawTextBG(VDP_BG_A, timerBuf, UI_X + 10, 24);
-        }
+            VDP_drawTextBG(VDP_BG_A, timerBuf, UI_X + 10, 24);        }
 
         ctx->lastActiveBadEffect = ctx->activeBadEffect;
         ctx->lastBadEffectTimer = ctx->badEffectTimer;

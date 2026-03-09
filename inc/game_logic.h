@@ -4,6 +4,8 @@
 
 #define ITEM_ID_SKULL 10
 #define ITEM_ID_HEART 11
+#define EFFECT_RAINBOW 10
+#define EFFECT_SHADOW_BOARD 11
 
 extern const s8 PIECES[7][4][4][2];
 

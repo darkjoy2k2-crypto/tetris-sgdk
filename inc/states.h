@@ -34,6 +34,7 @@ typedef struct GlobalConfig{
     u16 randMode;       // 0: Fair, 1: Chaos
     u16 speedLevel;     // 0-3
     u16 garbageFreq;    // 0-3
+    u16 itemMode;
     bool showShadow;
     bool allowHold;
     bool showNext;

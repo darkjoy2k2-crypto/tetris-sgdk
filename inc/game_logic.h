@@ -1,7 +1,9 @@
-#ifndef _GAME_LOGIC_H_
-#define _GAME_LOGIC_H_
+#pragma once
 
 #include <genesis.h>
+
+#define ITEM_ID_SKULL 10
+#define ITEM_ID_HEART 11
 
 extern const s8 PIECES[7][4][4][2];
 
@@ -15,4 +17,3 @@ void performHold();
 void addGarbageLine();
 bool tryRotate(u16 newRotation);
 
-#endif

@@ -1,0 +1,1 @@
+IMAGE game_bg "bg/game.png" BEST

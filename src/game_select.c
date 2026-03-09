@@ -13,6 +13,7 @@ typedef struct SelectContext {
     u16 randMode;
     u16 speedLevel;
     u16 garbageFreq;
+    u16 itemMode;      // 0=All, 1=None, 2=Good, 3=Bad
     bool showShadow;
     bool allowHold;
     bool showNext;
@@ -73,6 +74,7 @@ void select_init() {
     ctx->randMode = config.randMode;
     ctx->speedLevel = config.speedLevel;
     ctx->garbageFreq = config.garbageFreq;
+    ctx->itemMode = config.itemMode; // Aus globaler Config laden
     ctx->showShadow = config.showShadow;
     ctx->allowHold = config.allowHold;
     ctx->showNext = config.showNext;
@@ -94,7 +96,7 @@ void select_init() {
     VDP_setTextPalette(PAL1);
     VDP_drawText("--- GAME SETTINGS ---", 10, 4);
     VDP_setTextPalette(PAL3);
-    VDP_drawText("START TO BEGIN", 13, 25);
+    VDP_drawText("START TO BEGIN", 13, 27); // Etwas tiefer wegen der neuen Zeile
 
     ctx->needsRedraw = true;
     menu_bg_set_active(true);
@@ -103,13 +105,14 @@ void select_init() {
 void select_update() {
     if (ctx == NULL) return;
 
+    // Navigation auf 8 Zeilen (0-7)
     if ((joyState & BUTTON_DOWN) && !(lastJoyState & BUTTON_DOWN)) {
-        ctx->cursor = (ctx->cursor + 1) % 7;
+        ctx->cursor = (ctx->cursor + 1) % 8;
         SOUND_play(SND_MOVE);
         ctx->needsRedraw = true;
     }
     if ((joyState & BUTTON_UP) && !(lastJoyState & BUTTON_UP)) {
-        ctx->cursor = (ctx->cursor == 0) ? 6 : ctx->cursor - 1;
+        ctx->cursor = (ctx->cursor == 0) ? 7 : ctx->cursor - 1;
         SOUND_play(SND_MOVE);
         ctx->needsRedraw = true;
     }
@@ -141,6 +144,7 @@ void select_update() {
                 case 4: ctx->showShadow = !ctx->showShadow; break;
                 case 5: ctx->allowHold = !ctx->allowHold; break;
                 case 6: ctx->showNext = !ctx->showNext; break;
+                case 7: ctx->itemMode = (ctx->itemMode + dir + 4) % 4; break;
             }
         }
     }
@@ -150,12 +154,16 @@ void select_update() {
         char* optsRand[] = {"Fair", "Chaos"};
         char* optsLevels[] = {"None", "Slow", "Med", "Fast"};
         char* optsOnOff[] = {"Off", "On"};
+        char* optsItems[] = {"None", "All", "Good", "Bad"};
+
         draw_menu_line(1, "Random:", ctx->randMode, optsRand, 2, (ctx->cursor == 1));
         draw_menu_line(2, "Speed:", ctx->speedLevel, optsLevels, 4, (ctx->cursor == 2));
         draw_menu_line(3, "Garbage:", ctx->garbageFreq, optsLevels, 4, (ctx->cursor == 3));
         draw_menu_line(4, "Shadow:", ctx->showShadow, optsOnOff, 2, (ctx->cursor == 4));
         draw_menu_line(5, "Hold:", ctx->allowHold, optsOnOff, 2, (ctx->cursor == 5));
         draw_menu_line(6, "Next:", ctx->showNext, optsOnOff, 2, (ctx->cursor == 6));
+        draw_menu_line(7, "Items:", ctx->itemMode, optsItems, 4, (ctx->cursor == 7));
+        
         ctx->needsRedraw = false;
     }
 
@@ -165,6 +173,7 @@ void select_update() {
         config.randMode = ctx->randMode;
         config.speedLevel = ctx->speedLevel;
         config.garbageFreq = ctx->garbageFreq;
+        config.itemMode = ctx->itemMode;
         config.showShadow = ctx->showShadow;
         config.allowHold = ctx->allowHold;
         config.showNext = ctx->showNext;

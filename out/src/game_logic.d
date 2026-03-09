@@ -52,4 +52,4 @@ out/src/game_logic.o: src/game_logic.c inc/game_logic.h \
  C:/Users/peter/Documents/_Genesis/sgdk211/inc/string.h \
  C:/Users/peter/Documents/_Genesis/sgdk211/inc/maths.h \
  C:/Users/peter/Documents/_Genesis/sgdk211/inc/dma.h inc/game_core.h \
- inc/states.h inc/sound_manager.h
+ inc/game_view.h inc/menu_bg.h inc/states.h inc/sound_manager.h

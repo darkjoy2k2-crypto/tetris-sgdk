@@ -7,7 +7,7 @@
 #include "menu_bg.h"
 
 void gameover_init() {
-    menu_bg_set_active(true);
+    menu_bg_set_mode(BG_MODE_MENU);
     VDP_clearTextArea(0, 0, 40, 28);
 
     PAL_setPalette(PAL3, PAL_FONT_CLEAR.data, CPU);

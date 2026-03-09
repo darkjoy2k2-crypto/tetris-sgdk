@@ -45,7 +45,7 @@ static const SoundEntry sfx_bank[100] = {
 };
 
 void SOUND_init() {
-    // XGM2 wird bei der ersten Wiedergabe automatisch aktiv
+    Z80_loadDriver(Z80_DRIVER_XGM2, 0);
 }
 
 // Hilfsfunktion: Jetzt strikt mit 3 Argumenten für XGM2_playPCM
@@ -62,7 +62,7 @@ void SOUND_play(SoundEvent event) {
 }
 
 void SOUND_playMusic() {
-    // XGM2_play(music_theme);
+    //XGM2_play(&track1);
 }
 
 void SOUND_stopMusic() {

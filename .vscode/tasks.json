@@ -12,7 +12,8 @@
             "group": {
                 "kind": "build",
                 "isDefault": true
-            }
+            },
+            "problemMatcher": []
         },
         {
             "label": "run",
@@ -57,19 +58,25 @@
             "label": "Tile Check",
             "type": "shell",
             "command": "python",
-            "args": ["${workspaceFolder}\\py\\tilecheck.py"]
+            "args": [
+                "${workspaceFolder}\\py\\tilecheck.py"
+            ]
         },
         {
             "label": "Transform_csv",
             "type": "shell",
             "command": "python",
-            "args": ["${workspaceFolder}\\py\\transform\\transform.py"]
+            "args": [
+                "${workspaceFolder}\\py\\transform\\transform.py"
+            ]
         },
         {
             "label": "smartfix",
             "type": "shell",
             "command": "python",
-            "args": ["${workspaceFolder}\\py\\smartfix.py"]
+            "args": [
+                "${workspaceFolder}\\py\\smartfix.py"
+            ]
         },
         {
             "label": "python_Convert Colors",

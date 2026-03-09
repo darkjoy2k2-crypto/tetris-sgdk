@@ -1,12 +1,18 @@
-#pragma once
+#ifndef _GAME_VIEW_H_
+#define _GAME_VIEW_H_
+
 #include <genesis.h>
 
-// Zeichnet das komplette Spielfeld inklusive Schatten (Ghost Piece)
+void load_background();
+void view_init_cache();
 void drawBoard();
-
-// Zeichnet eine kleine Vorschau (für Next oder Hold Fenster)
 void drawPreview(s16 type, u16 x, u16 y);
+void view_fade_in_frame();
+void view_fade_out_frame();
+void view_animate_grayscale();
+void gfx_load_extra_tiles(u16 start_index);
 
-// Zeichnet die statischen UI-Elemente wie "SCORE", "NEXT" etc.
-void initUI();
-void view_init_cache(); // <--- DAS FEHLTE: Bekanntmachung der Cache-Init-Funktion
+extern u16 BG_TILE_START;
+extern u16 GAME_TILE_START;
+
+#endif

@@ -1,77 +1,72 @@
 #include "gfx.h"
 
-void gfx_init() {
-    // 1. Farben in Palette 1 (Indizes 17-31)
-    // Wir behalten die kräftigen Grundfarben
-    PAL_setColor(17, RGB24_TO_VDPCOLOR(0x00FFFF)); // 1: Cyan (I)
-    PAL_setColor(18, RGB24_TO_VDPCOLOR(0xFFFF00)); // 2: Gelb (O)
-    PAL_setColor(19, RGB24_TO_VDPCOLOR(0xFF00FF)); // 3: Lila (T)
-    PAL_setColor(20, RGB24_TO_VDPCOLOR(0x00FF00)); // 4: Grün (S)
-    PAL_setColor(21, RGB24_TO_VDPCOLOR(0xFF0000)); // 5: Rot (Z)
-    PAL_setColor(22, RGB24_TO_VDPCOLOR(0x5555FF)); // 6: Blau (J)
-    PAL_setColor(23, RGB24_TO_VDPCOLOR(0xFFA500)); // 7: Orange (L)
-    
-    PAL_setColor(24, RGB24_TO_VDPCOLOR(0x444444)); // 8: Dunkleres Grau (Ghost)
-    
-    // Wir nutzen Index 25 für einen sanften Schatten (Dunklere Nuance der Steine)
-    PAL_setColor(25, RGB24_TO_VDPCOLOR(0x222222)); // 9: Tiefer Schatten
-    
-    // Index 26 ist unser "Licht"
-    PAL_setColor(26, RGB24_TO_VDPCOLOR(0xFFFFFF)); // 10 (A): Reinweiß (Lichtkante)
+const u32 tile_skull[8] = {
+    0x00666600, //   XXXX  
+    0x06666660, //  XXXXXX 
+    0x66066066, // XX XX XX (Augenhöhlen)
+    0x66066066, // XX XX XX
+    0x06666660, //  XXXXXX
+    0x00666600, //   XXXX
+    0x00600600, //   X  X  (Zähne/Kiefer)
+    0x00666600  //   XXXX
+};
 
-    // 2. Leer-Tile laden (Hintergrund-Punkt für die Orientierung)
+const u32 tile_heart[8] = {
+    0x0CC00CC0, //  RR  RR 
+    0xCCCCCCCC, // RRRRRRRR
+    0xCCCCCCCC, // RRRRRRRR
+    0xCCCCCCCC, // RRRRRRRR
+    0x0CCCCCC0, //  RRRRRR 
+    0x00CCCC00, //   RRRR  
+    0x000CC000, //    RR   
+    0x00000000  //          
+};
+
+void gfx_load_tiles(u16 offset) {
+    PAL_setColor(32 + 7, RGB24_TO_VDPCOLOR(0x000044)); 
+    
+    PAL_setColor(40, RGB24_TO_VDPCOLOR(0x0000FF)); 
+    PAL_setColor(41, RGB24_TO_VDPCOLOR(0xFFFF00)); 
+    PAL_setColor(42, RGB24_TO_VDPCOLOR(0xFF00FF)); 
+    PAL_setColor(43, RGB24_TO_VDPCOLOR(0x00FF00)); 
+    PAL_setColor(44, RGB24_TO_VDPCOLOR(0xFF0000)); 
+    PAL_setColor(45, RGB24_TO_VDPCOLOR(0x5555FF)); 
+    PAL_setColor(46, RGB24_TO_VDPCOLOR(0xFFA500)); 
+    
+    PAL_setColor(47, RGB24_TO_VDPCOLOR(0x444444)); 
+    PAL_setColor(32 + 5, RGB24_TO_VDPCOLOR(0x222222)); 
+    PAL_setColor(32 + 6, RGB24_TO_VDPCOLOR(0xFFFFFF)); 
+
     const u32 empty_tile[8] = {
-        0xBBBBBBBB, // Zeile 0: Oberer Rand komplett Blau
-        0x0000000B, // Zeile 1: Schwarz mit blauem Pixel rechts
-        0x0000000B, // Zeile 2: Schwarz mit blauem Pixel rechts
-        0x0000000B, // Zeile 3: Schwarz mit blauem Pixel rechts
-        0x0000000B, // Zeile 4: Schwarz mit blauem Pixel rechts
-        0x0000000B, // Zeile 5: Schwarz mit blauem Pixel rechts
-        0x0000000B, // Zeile 6: Schwarz mit blauem Pixel rechts
-        0x0000000B  // Zeile 7: Schwarz mit blauem Pixel rechts
+        0x77777777, 0x00000007, 0x00000007, 0x00000007,
+        0x00000007, 0x00000007, 0x00000007, 0x00000007
     };
 
 
 
 
+    VDP_loadTileData(empty_tile, offset, 1, CPU);
 
-    VDP_loadTileData(empty_tile, TILE_EMPTY_INDEX, 1, CPU);
-
-    // 3. 7 Block-Tiles mit 3D-Bevel generieren (Ohne schwarzen Rand)
-    // A = Weiß (Licht), 9 = Schatten, c = Grundfarbe
     for (u8 i = 0; i < 7; i++) {
-        u8 c = i + 1; // Grundfarbe
-        
-        // Zeile 0: Obere Lichtkante (Komplett Weiß)
-        u32 row_top = 0xAAAAAAAA; 
-        
-        // Zeile 1-6: Lichtkante links (A), Farbe in der Mitte (c), Schatten rechts (9)
-        u32 row_mid = (10 << 28) | (c << 24) | (c << 20) | (c << 16) | 
-                      (c << 12) | (c << 8)  | (c << 4)  | 9; 
-
-        // Zeile 7: Untere Schattenkante
-        u32 row_bottom = 0x99999999;
+        u8 c = i + 8;
+        u32 row_top = 0x66666666;
+        u32 row_mid = (6 << 28) | (c << 24) | (c << 20) | (c << 16) | 
+                      (c << 12) | (c << 8)  | (c << 4)  | 5;
+        u32 row_bottom = 0x55555555;
 
         u32 crystal_tile[8] = {
-            row_top,    // Oben: Licht
-            row_mid,    // Mitte: Licht links, Farbe, Schatten rechts
-            row_mid,
-            row_mid,
-            row_mid,
-            row_mid,
-            row_mid,
-            row_bottom  // Unten: Schatten
+            row_top, row_mid, row_mid, row_mid, 
+            row_mid, row_mid, row_mid, row_bottom
         };
-        
-        VDP_loadTileData(crystal_tile, TILE_BLOCK_BASE + i, 1, CPU);
+        VDP_loadTileData(crystal_tile, offset + 1 + i, 1, CPU);
     }
 
-    // 4. Ghost-Tile (Schattenstein) 
-    // Er bekommt nur eine dezente Lichtkante oben links, um "immateriell" zu wirken
-    u32 g = 8; // Ghost-Grau
-    u32 ghost_top = 0x88888888;
-    u32 ghost_mid = 0x80000008;
-    u32 ghost_tile[8] = {ghost_top, ghost_mid, ghost_mid, ghost_mid, 
-                         ghost_mid, ghost_mid, ghost_mid, ghost_top};
-    VDP_loadTileData(ghost_tile, TILE_GHOST_INDEX, 1, CPU);
+    u32 g = 15; 
+    u32 ghost_mid = (g << 28) | (0 << 24) | (0 << 20) | (0 << 16) | 
+                    (0 << 12) | (0 << 8)  | (0 << 4)  | g;
+    u32 ghost_tile[8] = {
+        0xFFFFFFFF, ghost_mid, ghost_mid, ghost_mid, 
+        ghost_mid, ghost_mid, ghost_mid, 0xFFFFFFFF
+    };
+    VDP_loadTileData(ghost_tile, offset + 8, 1, CPU);
 }

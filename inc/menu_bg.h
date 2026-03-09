@@ -2,12 +2,12 @@
 
 #include <genesis.h>
 
-// Einmaliges Setup beim Spielstart (lädt Tiles/Paletten)
+#define BG_MODE_MENU  0
+#define BG_MODE_SPACE 1
+
 void menu_bg_init();
-
-// Schaltet den Hintergrund aktiv/inaktiv und kümmert sich um das Zeichnen/Löschen
+void menu_bg_set_mode(u8 mode);
 void menu_bg_set_active(bool active);
-
-// Führt die Animation aus (nur wenn aktiv)
 void menu_bg_update();
-
+// Geändert auf u8, um mit der .c Datei übereinzustimmen
+void menu_bg_set_intensity(u8 intensity);

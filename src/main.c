@@ -22,6 +22,7 @@ GlobalConfig config = {
     0,              // randMode: 0 = Fair, 1 = Chaos
     1,              // speedLevel: 1 = Slow
     1,              // garbageFreq: 1 = Slow
+    1,              // itemMode: On
     true,           // showShadow: On
     true,           // allowHold: On
     true            // showNext: On
@@ -62,10 +63,14 @@ int main() {
     menu_bg_init(); 
     // Da wir mit STATE_TITLE starten, schalten wir ihn hier direkt aktiv
     menu_bg_set_active(true);
-
+    menu_bg_set_mode(BG_MODE_MENU);
     // Kaltstart-Fix: Input synchronisieren
     joyState = JOY_readJoypad(JOY_1);
     lastJoyState = joyState; 
+SOUND_init(); 
+    
+    // 2. Musik starten
+    SOUND_playMusic();
 
     while(1) {
         // Input lesen

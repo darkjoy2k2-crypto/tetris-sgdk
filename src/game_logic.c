@@ -138,6 +138,28 @@ bool checkCollision(s16 nx, s16 ny, u16 nr) {
     return false;
 }
 
+void triggerGoodEffect() {
+    // 1. Negativen Effekt sofort stoppen
+    ctx->activeBadEffect = EFFECT_NONE;
+    ctx->badEffectTimer = 0;
+
+    // 2. Unterste Zeile (Row 19) löschen und alles nachrücken
+    for (s16 y = BOARD_HEIGHT - 1; y > 0; y--) {
+        for (u16 x = 0; x < BOARD_WIDTH; x++) {
+            ctx->board[x][y] = ctx->board[x][y - 1];
+        }
+    }
+    // Die oberste Zeile leeren
+    for (u16 x = 0; x < BOARD_WIDTH; x++) {
+        ctx->board[x][0] = 0;
+    }
+
+    SOUND_play(SND_GOOD_ITEM);
+    
+    // UI Refresh erzwingen
+    ctx->lastActiveBadEffect = 99;
+}
+
 void triggerBadEffect() {
     ctx->activeBadEffect = (random() % 6) + 1; 
 
@@ -171,84 +193,51 @@ void triggerBadEffect() {
 
 u16 clearLines() {
     u16 cleared = 0;
-    u16 oldLevel = ctx->level; 
-    s16 heartsInLines = 0;
-    s16 skullsInLines = 0;
+    s16 hFound = 0;
+    s16 sFound = 0;
 
     for(u16 y=0; y<BOARD_HEIGHT; y++) ctx->pendingLines[y] = false;
 
     for (s16 y = BOARD_HEIGHT - 1; y >= 0; y--) {
         bool full = true;
-        u16 heartsRow = 0;
-        u16 skullsRow = 0;
-
+        u16 hInRow = 0, sInRow = 0;
         for (u16 x = 0; x < BOARD_WIDTH; x++) {
             if (ctx->board[x][y] == 0) { full = false; break; }
-            if (ctx->board[x][y] == ITEM_ID_HEART) heartsRow++;
-            if (ctx->board[x][y] == ITEM_ID_SKULL) skullsRow++;
+            if (ctx->board[x][y] == ITEM_ID_HEART) hInRow++;
+            if (ctx->board[x][y] == ITEM_ID_SKULL) sInRow++;
         }
         if (full) {
             cleared++;
             ctx->pendingLines[y] = true;
-            heartsInLines += heartsRow;
-            skullsInLines += skullsRow;
+            hFound += hInRow;
+            sFound += sInRow;
         }
     }
 
     if (cleared > 0) {
-        // --- ITEM LOGIK VERRECHNUNG ---
-        s16 balance = heartsInLines - skullsInLines;
+        // --- BALANCE CHECK ---
+        s16 balance = hFound - sFound;
         if (balance < 0) {
             triggerBadEffect(); 
         } else if (balance > 0) {
             ctx->score += (balance * 500); 
+            // WICHTIG: Nur den Merker setzen!
+            ctx->heartTriggered = true; 
         }
 
         ctx->clearTimer = 8; 
-        
         if (cleared == 4) SOUND_play(SND_TETRIS);
         else SOUND_play(SND_LINE_CLEAR);
         
-        if (ctx->comboCount >= 1) SOUND_play(SND_COMBO + ctx->comboCount);
-
-        u32 points = 0;
-        bool isTetris = (cleared == 4);
-        if (cleared == 1) { points = 100; strncpy(ctx->lastComment, "SINGLE", 20); }
-        else if (cleared == 2) { points = 300; strncpy(ctx->lastComment, "DOUBLE!!", 20); }
-        else if (cleared == 3) { points = 500; strncpy(ctx->lastComment, "TRIPLE!!!", 20); }
-        else if (isTetris) {
-            points = 800;
-            if (ctx->b2bActive) { points = (points * 3) / 2; strncpy(ctx->lastComment, "B2B TETRIS!", 20); }
-            else strncpy(ctx->lastComment, "TETRIS!!!!", 20);
-            ctx->b2bActive = true;
-        }
-        if (!isTetris) ctx->b2bActive = false;
-        
-        if (ctx->comboCount > 0) {
-            points += (50 * ctx->comboCount * ctx->level);
-            if (ctx->comboCount >= 2) sprintf(ctx->lastComment, "COMBO X%d", ctx->comboCount);
-        }
-
-        ctx->score += points * ctx->level;
+        ctx->score += (100 * cleared * ctx->level);
         ctx->linesTotal += cleared;
         ctx->level = ctx->startLevel + (ctx->linesTotal / 10);
-        ctx->comboCount++;
-        ctx->commentTimer = 60;
-
-        if (ctx->level > oldLevel) {
-            SOUND_play(SND_LEVEL_UP);
-            menu_bg_set_intensity(1); 
-        } else {
-            u16 intensity = (ctx->linesTotal % 10) + 1;
-            menu_bg_set_intensity(intensity);
-        }
-    } else {
-        ctx->comboCount = 0;
     }
     return cleared;
 }
 
 void finishLineClear() {
+    // 1. Volle Zeilen physikalisch löschen (Dein Standard-Code)
     for (s16 y = BOARD_HEIGHT - 1; y >= 0; y--) {
         if (ctx->pendingLines[y]) {
             for (s16 yy = y; yy > 0; yy--) {
@@ -261,6 +250,12 @@ void finishLineClear() {
             ctx->pendingLines[0] = false;
             y++; 
         }
+    }
+
+    // 2. WICHTIG: Herz-Effekt ausführen und Merker RESETTEN
+    if (ctx->heartTriggered) {
+        triggerGoodEffect();
+        ctx->heartTriggered = false; // <-- Das verhindert das Dauer-Feuern!
     }
 }
 

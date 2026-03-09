@@ -62,8 +62,8 @@ void game_init() {
         u16 base = GARBAGE_INTERVALS[config.garbageFreq];
         ctx->garbageNextThreshold = base + (random() % 120) - 60;
     }
-
-    refillBag();
+ctx->heartTriggered = false; // Sicherstellen, dass beim Start alles auf Null ist
+    ctx->sortingRow = -1;    refillBag();
     ctx->nextType = ctx->bag[ctx->bagIndex];
     ctx->bagIndex++;
     spawnPiece();

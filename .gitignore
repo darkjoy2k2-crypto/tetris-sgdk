@@ -1,0 +1,20 @@
+# Alles blockieren
+/*
+
+# Verzeichnisse explizit zulassen (inklusive aller Unterordner)
+!/src/
+!/src/**
+!/res/
+!/res/**
+!/inc/
+!/inc/**
+
+# Den Ordner /out grundsätzlich zulassen, aber den Inhalt ignorieren...
+!/out/
+/out/*
+
+# ...bis auf die spezifische rom.bin
+!/out/rom.bin
+
+# Die .gitignore selbst muss natürlich auch sichtbar bleiben
+!/.gitignore

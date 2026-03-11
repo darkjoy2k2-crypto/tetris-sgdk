@@ -100,9 +100,12 @@ bool controls_update(GameContext *ctx) {
         moved = true;
     }
 
-    // Soft-Drop Gravitation wird weiterhin in game_update gehandelt, 
-    // da sie direkt mit dem moveTimer verknüpft ist. 
-    // Aber wir geben das Mapping für SoftDrop zurück, falls nötig.
+    // --- 6. SELECT TRIGGER (Manual Sort) ---
+    if ((joyState & BUTTON_START) && (changed & BUTTON_START)) {
+        triggerManualSort();
+        // moved auf true setzen, damit das Board-Redraw eventuell getriggert wird
+        moved = true; 
+    }
 
     return moved;
 }

@@ -57,6 +57,7 @@ typedef struct GameContext {
     s16 sortingRow;         // Der "Celeste"-Marker für die Reihen-Animationen
     bool needsBoardDraw;    // Das Dirty-Flag für flüssige 60 FPS
     bool heartTriggered; 
+    bool skullTriggered; // Diese Zeile hier ergänzen
 
     // --- Flags ---
     bool canHold;
@@ -67,7 +68,7 @@ typedef struct GameContext {
     bool holdBlocked;
     bool nextHidden;
 
-    // --- World Data ---
+        // --- World Data ---
     u8 board[BOARD_WIDTH][BOARD_HEIGHT];
     u8 bag[7];
     u8 bagIndex;

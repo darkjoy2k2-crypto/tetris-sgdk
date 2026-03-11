@@ -6,7 +6,9 @@
 // Der Bauplan für die State-Maschine
 typedef struct StateHandler{
     void (*init)();
+    void (*init_draw)();
     void (*update)();
+    void (*draw)();
     void (*cleanup)();
 } StateHandler;
 

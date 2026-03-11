@@ -1,11 +1,12 @@
 #include <genesis.h>
-#include "states.h"
-#include "title.h"
-#include "game_select.h"
-#include "game.h"
-#include "sound_test.h"
-#include "gameover.h"
-#include "highscore.h"
+#include "states/states.h"
+#include "states/title.h"
+#include "states/game_select.h"
+#include "states/game.h"
+#include "sound_manager.h"
+#include "states/sound_test.h"
+#include "states/gameover.h"
+#include "states/highscore.h"
 #include "menu_bg.h" // WICHTIG: Das neue Hintergrund-Modul
 #include "fonts.h" // Dein Header mit dem Ressourcen-Verweis
 
@@ -31,12 +32,12 @@ GlobalConfig config = {
 StateHandler states[7]; 
 
 void initStateMachine() {
-    states[STATE_TITLE]     = (StateHandler){ title_init, title_update, title_cleanup };
-    states[STATE_SELECT]    = (StateHandler){ select_init, select_update, select_cleanup };
-    states[STATE_GAME]      = (StateHandler){ game_init, game_update, game_cleanup };
-    states[STATE_SOUNDTEST] = (StateHandler){ sound_test_init, sound_test_update, sound_test_cleanup };
-    states[STATE_GAMEOVER]  = (StateHandler){ gameover_init, gameover_update, gameover_cleanup };
-    states[STATE_HIGHSCORE] = (StateHandler){ highscore_init, highscore_update, highscore_cleanup };
+    states[STATE_TITLE]     = (StateHandler){      title_init,      title_init_draw,      title_update,      title_draw,      title_cleanup };
+    states[STATE_SELECT]    = (StateHandler){     select_init,     select_init_draw,     select_update,     select_draw,     select_cleanup };
+    states[STATE_GAME]      = (StateHandler){       game_init,       game_init_draw,       game_update,       game_draw,       game_cleanup };
+    states[STATE_SOUNDTEST] = (StateHandler){ sound_test_init, sound_test_init_draw, sound_test_update, sound_test_draw, sound_test_cleanup };
+    states[STATE_GAMEOVER]  = (StateHandler){   gameover_init,   gameover_init_draw,   gameover_update,   gameover_draw,   gameover_cleanup };
+    states[STATE_HIGHSCORE] = (StateHandler){  highscore_init,  highscore_init_draw,  highscore_update,  highscore_draw,  highscore_cleanup };
 }
 
 HighscoreEntry highscores[10]; 
@@ -67,7 +68,7 @@ int main() {
     // Kaltstart-Fix: Input synchronisieren
     joyState = JOY_readJoypad(JOY_1);
     lastJoyState = joyState; 
-SOUND_init(); 
+    SOUND_init(); 
     
     // 2. Musik starten
     SOUND_playMusic();
@@ -88,6 +89,7 @@ SOUND_init();
             
             // Neuen State starten
             states[currentState].init();
+            states[currentState].init_draw();
             lastState = currentState;
         }
 
@@ -95,6 +97,8 @@ SOUND_init();
         
         // Aktuellen Spiel-Zustand (Titel, Menü, Game) updaten
         states[currentState].update();
+        states[currentState].draw();
+        
         
         // Hintergrund-Animation (läuft autark, wenn menu_bg_set_active(true) ist)
         menu_bg_update();

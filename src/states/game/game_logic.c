@@ -1,8 +1,8 @@
-#include "game_logic.h"
-#include "game_core.h"
-#include "game_view.h"
+#include "states/game/game_logic.h"
+#include "states/game/game_core.h"
+#include "states/game/game_view.h"
 #include "menu_bg.h"
-#include "states.h"
+#include "states/states.h"
 #include "sound_manager.h" 
 #include <genesis.h>
 #include <string.h>

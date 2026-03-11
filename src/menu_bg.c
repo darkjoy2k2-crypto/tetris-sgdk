@@ -1,5 +1,5 @@
 #include "menu_bg.h"
-#include "game_core.h"
+#include "states/game/game_core.h"
 #include <string.h>
 
 #define TILE_MENU_BLOCK_BASE 510 
@@ -68,7 +68,9 @@ static void update_palette_fade() {
             u16 fr = F16_toInt(F16_mul(FIX16(r), fade_level));
             u16 fg = F16_toInt(F16_mul(FIX16(g), fade_level));
             u16 fb = F16_toInt(F16_mul(FIX16(b), fade_level));
-            if (fr > 7) fr = 7; if (fg > 7) fg = 7; if (fb > 7) fb = 7;
+            if (fr > 7) fr = 7; 
+            if (fg > 7) fg = 7; 
+            if (fb > 7) fb = 7;
             PAL_setColor(1 + i, (fb << 9) | (fg << 5) | (fr << 1));
             if (i == 0) PAL_setColor(0, 0x0000); 
         }
@@ -155,16 +157,22 @@ void menu_bg_set_active(bool active) {
     is_fading = true;
     if (is_active) {
         if (bg_mode == BG_MODE_MENU) {
-            target_dx = FIX16(0.2); target_dy = FIX16(0.1); draw_menu_shapes();
+            target_dx = FIX16(0.2); 
+            target_dy = FIX16(0.1); 
+            draw_menu_shapes();
         } else {
-            target_dx = F16_0; target_dy = STARFIELD_BASE_SP; update_star_tiles(1); draw_stars_dynamic(1);
+            target_dx = F16_0; 
+            target_dy = STARFIELD_BASE_SP; 
+            update_star_tiles(1); 
+            draw_stars_dynamic(1);
         }
     }
 }
 
 void menu_bg_set_intensity(u8 level) {
     if (bg_mode != BG_MODE_SPACE) return;
-    if (level < 1) level = 1; if (level > 10) level = 10;
+    if (level < 1) level = 1; 
+    if (level > 10) level = 10;
 
     // Trigger Flash bei Level-Up / Reset
     if (level == 1 && current_intensity > 5) {

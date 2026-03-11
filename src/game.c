@@ -253,8 +253,8 @@ if (ctx == NULL) return;
         ctx->moveTimer++;
         
         s16 threshold = 60 - ((ctx->level - 1) * 3);
-        if (threshold < 2) threshold = 2;
-        if (ctx->activeBadEffect == EFFECT_FULLSPEED) threshold = 2;
+        if (threshold < 2) threshold = 3;
+        if (ctx->activeBadEffect == EFFECT_FULLSPEED) threshold = 3;
 
         u16 finalThreshold;
         

@@ -1,7 +1,7 @@
 # Alles blockieren
 /*
 
-# Verzeichnisse explizit zulassen (inklusive aller Unterordner)
+# Verzeichnisse explizit zulassen
 !/src/
 !/src/**
 !/res/
@@ -9,12 +9,16 @@
 !/inc/
 !/inc/**
 
-# Den Ordner /out grundsätzlich zulassen, aber den Inhalt ignorieren...
+# Spezialfall /out:
+# Wir erlauben den Ordner, ignorieren aber sofort ALLES darin rekursiv
 !/out/
-/out/*
+/out/**
 
-# ...bis auf die spezifische rom.bin
+# Jetzt die einzige Ausnahme für die ROM
 !/out/rom.bin
 
-# Die .gitignore selbst muss natürlich auch sichtbar bleiben
+# Gitignore selbst
 !/.gitignore
+out/rom.out
+out/rom.out
+out/src/gameover.o

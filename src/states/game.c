@@ -16,35 +16,11 @@ const u16 GARBAGE_INTERVALS[] = { 0, 1200, 600, 300 };
 
 GameContext* ctx = NULL;
 
-static bool handle_active_animations(GameContext* ctx) {
-    // --- PHASE 1: LINE CLEAR ---
-    if (ctx->clearTimer > 0) {
-        ctx->clearTimer--;
-        if (ctx->clearTimer == 0) {
-            finishLineClear();
-            if (ctx->sortingRow == -1) spawnPiece();
-        }
-        ctx->needsBoardDraw = true;
-        return true; // Blockiert
-    }
+// Ganz am Ende von game_logic.c einfügen:
 
-    // --- PHASE 2: SORTIEREN ---
-    if (ctx->sortingRow != -1) {
-        u16 y = ctx->sortingRow;
-        // Rainbow/Shadow/Sort Logik (hier deine ~25 Zeilen einfügen)
-        // ...
-        ctx->sortingRow++;
-        if (ctx->sortingRow >= BOARD_HEIGHT) {
-            ctx->sortingRow = -1;
-            if (ctx->activeBadEffect == EFFECT_RAINBOW || ctx->activeBadEffect == EFFECT_SHADOW_BOARD) 
-                ctx->activeBadEffect = EFFECT_NONE;
-            spawnPiece();
-        }
-        ctx->needsBoardDraw = true;
-        return true; // Blockiert
-    }
-    return false; // Nichts blockiert, weiter im Text
-}
+
+
+
 
 static bool handle_gravity(GameContext* ctx) {
     u16 vBtnSoftDrop = (ctx->activeBadEffect == EFFECT_REVERSED) ? BUTTON_LEFT : BUTTON_DOWN;

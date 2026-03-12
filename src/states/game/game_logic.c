@@ -12,6 +12,9 @@
 void triggerBadEffect();
 static void handle_item_spawn_logic();
 void play_game_over_animation();
+static void handle_rainbow_row(u16 y);
+static void handle_shadow_row(u16 y);
+static void handle_sort_row(u16 y);
 
 // Hier das PIECES Array einfügen (wie gehabt)
 const s8 PIECES[7][4][4][2] = {
@@ -24,19 +27,49 @@ const s8 PIECES[7][4][4][2] = {
     { {{0,0}, {0,1}, {1,1}, {2,1}}, {{2,0}, {1,0}, {1,1}, {1,2}}, {{2,2}, {2,1}, {1,1}, {0,1}}, {{0,2}, {1,2}, {1,1}, {1,0}} },
     { {{2,0}, {2,1}, {1,1}, {0,1}}, {{2,2}, {1,2}, {1,1}, {1,0}}, {{0,2}, {0,1}, {1,1}, {2,1}}, {{0,0}, {1,0}, {1,1}, {1,2}} }
 };
-
+// Sicherstellen, dass dies oben in game_logic.c steht:
+static u8 sortBuffer[BOARD_WIDTH][BOARD_HEIGHT];
 
 void triggerManualSort() {
-    // Nur starten, wenn nicht gerade schon eine Sortierung läuft
     if (ctx == NULL || ctx->sortingRow != -1) return;
 
-    ctx->sortingRow = 0; // Startet die Animation bei der obersten Zeile
-    strncpy(ctx->lastComment, "SELECT SORT!", 20);
-    ctx->commentTimer = 60;
+    // 1. Das gesamte Board (0 bis 19) in den Puffer
+    for (u16 y = 0; y < 20; y++) {
+        for (u16 x = 0; x < 10; x++) {
+            sortBuffer[x][y] = ctx->board[x][y];
+        }
+    }
+
+    // 2. Selection Sort: Wir füllen das Board von UNTEN (19) nach OBEN (0)
+    for (s16 targetY = 19; targetY >= 0; targetY--) {
+        u16 maxBlocksIndex = 0;
+        u16 maxBlocksCount = 0;
+
+        // Suche im verbleibenden oberen Teil die vollste Reihe
+        for (u16 currentY = 0; currentY <= (u16)targetY; currentY++) {
+            u16 currentCount = 0;
+            for (u16 x = 0; x < 10; x++) {
+                if (sortBuffer[x][currentY] != 0) currentCount++;
+            }
+
+            if (currentCount >= maxBlocksCount) {
+                maxBlocksCount = currentCount;
+                maxBlocksIndex = currentY;
+            }
+        }
+
+        // Tausch der Reihen im Puffer
+        for (u16 x = 0; x < 10; x++) {
+            u8 temp = sortBuffer[x][targetY];
+            sortBuffer[x][targetY] = sortBuffer[x][maxBlocksIndex];
+            sortBuffer[x][maxBlocksIndex] = temp;
+        }
+    }
+
+    // 3. Animation bei 0 starten (läuft dann bis 19 durch)
+    ctx->sortingRow = 0; 
     SOUND_play(SND_TETRIS);
 }
-
-
 bool checkCollision(s16 nx, s16 ny, u16 nr) {
     for (u16 i = 0; i < 4; i++) {
         s16 px = nx + PIECES[ctx->type][nr][i][0];
@@ -344,6 +377,51 @@ if (checkCollision(ctx->pieceX, ctx->pieceY, ctx->rotation)) {
     }
 }
 
+bool handle_active_animations(GameContext* ctx) {
+    if (ctx == NULL) return false;
+
+    // Phase 1: Zeilen löschen (Blinken)
+    if (ctx->clearTimer > 0) {
+        ctx->clearTimer--;
+        if (ctx->clearTimer == 0) {
+            finishLineClear();
+            if (ctx->sortingRow == -1) spawnPiece();
+        }
+        ctx->needsBoardDraw = true;
+        return true; 
+    }
+
+    // Phase 2: Board-Effekte (Sortieren, Rainbow, etc.)
+    if (ctx->sortingRow != -1) {
+        u16 y = ctx->sortingRow;
+        
+        // Da wir in derselben Datei sind, findet er diese Funktionen jetzt:
+        if (ctx->activeBadEffect == EFFECT_RAINBOW) {
+            handle_rainbow_row(y);
+        } else if (ctx->activeBadEffect == EFFECT_SHADOW_BOARD) {
+            handle_shadow_row(y);
+        } else {
+            handle_sort_row(y); // Dein Select-Effekt
+        }
+
+        ctx->sortingRow++;
+
+        if (ctx->sortingRow >= BOARD_HEIGHT) {
+            ctx->sortingRow = -1;
+            if (ctx->activeBadEffect == EFFECT_RAINBOW || ctx->activeBadEffect == EFFECT_SHADOW_BOARD) {
+                ctx->activeBadEffect = EFFECT_NONE;
+            }
+            spawnPiece();
+        }
+        
+        ctx->needsBoardDraw = true;
+        return true; 
+    }
+
+    return false; 
+}
+
+
 void finishLineClear() {
     for (s16 y = BOARD_HEIGHT - 1; y >= 0; y--) {
         if (ctx->pendingLines[y]) {
@@ -483,25 +561,31 @@ void trigger_line_items(u16 y) {
 }
 
 void update_board_animations() {
-    if (ctx->sortingRow == -1) return;
+    // Sicherstellen, dass wir in einer gültigen Reihe sind
+    if (ctx->sortingRow == -1 || ctx->sortingRow > 19) return;
 
     u16 y = ctx->sortingRow;
-    if (ctx->activeBadEffect == EFFECT_RAINBOW) {
-        handle_rainbow_row(y);
-    } else if (ctx->activeBadEffect == EFFECT_SHADOW_BOARD) {
-        handle_shadow_row(y);
-    } else {
-        handle_sort_row(y);
+
+    // Wir schreiben die Zeile vom Puffer ins Board
+    for (u16 x = 0; x < 10; x++) {
+        ctx->board[x][y] = sortBuffer[x][y];
     }
 
+    // Optional: Horizontal aufräumen
+    handle_sort_row(y);
+
+    // Erhöhe den Index für den nächsten Frame
     ctx->sortingRow++;
-    if (ctx->sortingRow >= BOARD_HEIGHT) {
-        ctx->sortingRow = -1;
-        if (ctx->activeBadEffect == EFFECT_RAINBOW || ctx->activeBadEffect == EFFECT_SHADOW_BOARD) {
-            ctx->activeBadEffect = EFFECT_NONE;
+
+    // Erst wenn wir Reihe 19 fertig geschrieben haben, beenden wir
+    if (ctx->sortingRow >= 20) {
+        ctx->sortingRow = -1; // Animation Ende
+        
+        if (clearLines() == 0) {
+            spawnPiece();
         }
-        spawnPiece();
     }
+
     ctx->needsBoardDraw = true;
 }
 

@@ -42,6 +42,7 @@ void gfx_load_tiles(u16 offset) {
         0x00000007, 0x00000007, 0x00000007, 0x00000007
     };
 
+    
 
 
 
@@ -69,4 +70,31 @@ void gfx_load_tiles(u16 offset) {
         ghost_mid, ghost_mid, ghost_mid, 0xFFFFFFFF
     };
     VDP_loadTileData(ghost_tile, offset + 8, 1, CPU);
+}
+
+#include <genesis.h>
+#include "fonts.h"
+
+void UI_init_fonts_and_palettes() {
+    // 1. Font laden (einmalig für VDP)
+    VDP_loadFont(&TS_FONT_CLEAR, CPU);
+    VDP_setTextPalette(PAL3); // Standardmäßig auf Weiß setzen
+
+    // 2. PAL3: Standard Text (Weiß/Grau)
+    PAL_setPalette(PAL3, PAL_FONT_CLEAR.data, CPU);
+
+    // 3. PAL1: Highlight (Gold/Gelb)
+    PAL_setPalette(PAL1, PAL_FONT_CLEAR.data, CPU);
+    PAL_setColor(16 + 5, RGB24_TO_VDPCOLOR(0x666600)); // Schatten/Dunkel
+    PAL_setColor(16 + 6, RGB24_TO_VDPCOLOR(0xFFFF00)); // Hauptfarbe Gelb
+    PAL_setColor(16 + 7, RGB24_TO_VDPCOLOR(0x666600));
+
+    // 4. PAL2: Warnung/Selektion (Rot)
+    PAL_setPalette(PAL2, PAL_FONT_CLEAR.data, CPU);
+    PAL_setColor(32 + 1, RGB24_TO_VDPCOLOR(0x440000)); // Sehr Dunkel
+    PAL_setColor(32 + 5, RGB24_TO_VDPCOLOR(0x880000)); // Mittel
+    PAL_setColor(32 + 6, RGB24_TO_VDPCOLOR(0xFF0000)); // Hellrot
+    PAL_setColor(32 + 7, RGB24_TO_VDPCOLOR(0xFF8888)); // Rosa/Highlight
+
+VDP_setTextPalette(PAL1);
 }

@@ -1,6 +1,7 @@
 #include "menu_bg.h"
 #include "states/game/game_core.h"
 #include <string.h>
+#include "states/states.h"
 
 #define TILE_MENU_BLOCK_BASE 510 
 #define TILE_STAR_BASE       520
@@ -152,9 +153,17 @@ void menu_bg_set_mode(u8 mode) {
 }
 
 void menu_bg_set_active(bool active) {
+    // Wenn wir aktivieren wollen, aber das globale Flag dagegen spricht: Abbruch.
+    if (active && !GET_FLAG(config.flags, FLAG_BG)) {
+        is_active = false;
+        is_fading = true; // Sorgt dafür, dass Reste ausgeblendet werden
+        return;
+    }
+
     if (active == is_active) return; 
     is_active = active;
     is_fading = true;
+    
     if (is_active) {
         if (bg_mode == BG_MODE_MENU) {
             target_dx = FIX16(0.2); 

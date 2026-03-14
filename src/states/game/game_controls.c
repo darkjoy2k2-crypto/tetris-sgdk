@@ -80,8 +80,8 @@ bool controls_update(GameContext *ctx) {
     }
 
     // --- 4. HOLD ---
-    if (config.allowHold && (changed & BUTTON_C)) {
-        if (ctx->activeBadEffect != EFFECT_HOLD_LOCK) {
+if (GET_FLAG(config.flags, FLAG_HOLD) && (changed & BUTTON_C)) {
+            if (ctx->activeBadEffect != EFFECT_HOLD_LOCK) {
             performHold();
             moved = true; 
         } else {

@@ -4,6 +4,7 @@
 
 // Mapping der Spiel-Ereignisse auf deine WAV-Nummern (1-99)
 typedef enum {
+    SND_MENU_SELECT = 53,
     SND_MOVE        = 21,   // 65 Entspricht WAV_001
     SND_ROTATE      = 22,   // Entspricht WAV_002
     SND_SOFT_DROP   = 15,

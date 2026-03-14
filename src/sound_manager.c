@@ -1,7 +1,8 @@
 #include "sound_manager.h"
-#include "sounds.h" // Deine korrigierte Ressourcen-Header
+#include "sounds.h"
+#include "states/states.h" // WICHTIG: Für den Zugriff auf config.flags
 
-typedef struct SoundEntry{
+typedef struct SoundEntry {
     const u8* data;
     u32 size;
 } SoundEntry;
@@ -48,24 +49,26 @@ void SOUND_init() {
     Z80_loadDriver(Z80_DRIVER_XGM2, 0);
 }
 
-// Hilfsfunktion: Jetzt strikt mit 3 Argumenten für XGM2_playPCM
 static void play(u16 id, SoundPCMChannel channel) {
+    // Flag-Check für Sound-Effekte
+    if (!GET_FLAG(config.flags, FLAG_SOUND)) return;
+
     if (id > 0 && id < 100 && sfx_bank[id].data != NULL) {
         XGM2_playPCM(sfx_bank[id].data, sfx_bank[id].size, channel);
     }
 }
 
 void SOUND_play(SoundEvent event) {
-    // Da die Enum-Werte (z.B. SND_TETRIS = 11) direkt deiner 
-    // gewünschten WAV-ID entsprechen, geben wir den Wert einfach durch.
     play((u16)event, SOUND_PCM_CH_AUTO);
 }
 
 void SOUND_playMusic() {
-    //XGM2_play(&track1);
+    // Flag-Check für Musik
+    if (!GET_FLAG(config.flags, FLAG_MUSIC)) return;
+
+    // XGM2_play(&track1);
 }
 
 void SOUND_stopMusic() {
-    // Korrigierter Funktionsname für XGM2
     XGM2_stop();
 }

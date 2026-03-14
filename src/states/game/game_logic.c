@@ -130,8 +130,17 @@ static void apply_scoring(u16 lines) {
     
     ctx->score += gain;
     ctx->linesTotal += lines;
+
+    u16 oldLevel = ctx->level;
     ctx->level = ctx->startLevel + (ctx->linesTotal / 10);
+
+    if (ctx->level > oldLevel) {
+        menu_bg_set_intensity(1);
+    } else {
+        menu_bg_set_intensity((ctx->linesTotal % 10) + 1);
+    }
 }
+
 
 
 static void set_game_comment(const char* text, u16 duration) {
@@ -147,35 +156,37 @@ void triggerBadEffect() {
     switch(ctx->activeBadEffect) {
         // Suche diesen Case:
         case EFFECT_FULLSPEED: 
-            ctx->badEffectTimer = 5; 
+ctx->badEffectTimer = GET_TICKS(5);
             // Füge das hier ein:
             set_game_comment("FULL SPEED!", 90); 
             break;
             case EFFECT_SAME_TILES: 
-            ctx->badEffectTimer = 5; 
+ctx->badEffectTimer = GET_TICKS(5);
             strncpy(ctx->lastComment, "SPEED / SAME!", 20); 
             break;
         case EFFECT_NO_ROTATE:  
-            ctx->badEffectTimer = 180; 
+ctx->badEffectTimer = GET_TICKS(180);
             strncpy(ctx->lastComment, "NO ROTATE!", 20); 
             break;
         case EFFECT_REVERSED:   
-            ctx->badEffectTimer = 240; 
+ctx->badEffectTimer = GET_TICKS(240);
             strncpy(ctx->lastComment, "REVERSED!", 20); 
             break;
         case EFFECT_HOLD_LOCK:  
-            ctx->badEffectTimer = 300; 
+ctx->badEffectTimer = GET_TICKS(300);
             ctx->holdType = -1; 
             ctx->canHold = false; 
             strncpy(ctx->lastComment, "HOLD LOCKED!", 20); 
             break;
         case EFFECT_HIDE_NEXT:  
-            ctx->badEffectTimer = 300; 
+ctx->badEffectTimer = GET_TICKS(300);
             strncpy(ctx->lastComment, "NEXT HIDDEN!", 20); 
             break;
         case EFFECT_SHADOW_BOARD: 
-            ctx->sortingRow = 0; 
-            strncpy(ctx->lastComment, "DARK CURSE!", 20); 
+            ctx->activeBadEffect = EFFECT_SHADOW_BOARD;
+            ctx->badEffectTimer = GET_TICKS(300); // Die 5 Sekunden "Licht aus"
+            ctx->sortingRow = 0; // Startet die Verwandlung in Schatten-Farben
+            set_game_comment("DARK CURSE!", 90); 
             break;
     }
     SOUND_play(SND_BAD_ITEM);
@@ -187,17 +198,18 @@ void triggerBadEffect() {
 
 void lockPiece() {
     bool lockedAbove = false;
-    transfer_piece_to_board(); // Hier wird die Funktion jetzt benutzt -> Warnung weg!
-    
+    transfer_piece_to_board();
     for (u16 i = 0; i < 4; i++) {
         if (ctx->pieceY + PIECES[ctx->type][ctx->rotation][i][1] < 0) lockedAbove = true;
     }
-    
     SOUND_play(SND_PIECE_LOCK);
-    
     if (lockedAbove) {
         SOUND_play(SND_GAME_OVER);
         play_game_over_animation();
+    } else {
+        if (clearLines() == 0) {
+            spawnPiece();
+        }
     }
 }
 
@@ -218,19 +230,30 @@ void triggerGoodEffect() {
     else if (chance == 1) { ctx->sortingRow = 0; strncpy(ctx->lastComment, "HEAL & SORT!", 20); }
     else if (chance == 2) {
         for (u16 y = 0; y < BOARD_HEIGHT; y++) {
-            for (u16 x = 0; x < BOARD_WIDTH; x++) if (ctx->board[x][y] == ITEM_ID_SKULL) ctx->board[x][y] = 0;
+            for (u16 x = 0; x < BOARD_WIDTH; x++) {
+                if (ctx->board[x][y] == ITEM_ID_SKULL) {
+                    ctx->board[x][y] = 1 + (random() % 7);
+                }
+            }
         }
-        strncpy(ctx->lastComment, "SKULLS PURGED!", 20);
+        strncpy(ctx->lastComment, "SKULLS RECLAIMED!", 20);
     }
-    else if (chance == 3) { ctx->activeBadEffect = EFFECT_I_RAIN; ctx->badEffectTimer = 4; strncpy(ctx->lastComment, "I-BEAM RAIN!", 20); }
-    else if (chance == 4) { ctx->activeBadEffect = EFFECT_FREEZE; ctx->badEffectTimer = 600; strncpy(ctx->lastComment, "TIME FREEZE!", 20); }
+    else if (chance == 3) { ctx->activeBadEffect = EFFECT_I_RAIN; ctx->badEffectTimer = GET_TICKS(4); strncpy(ctx->lastComment, "I-BEAM RAIN!", 20); }
+    else if (chance == 4) { ctx->activeBadEffect = EFFECT_FREEZE; ctx->badEffectTimer = GET_TICKS(600); strncpy(ctx->lastComment, "TIME FREEZE!", 20); }
     else { ctx->activeBadEffect = EFFECT_RAINBOW; ctx->sortingRow = 0; strncpy(ctx->lastComment, "RAINBOW POWER!", 20); }
 
+    // Alle verbleibenden Herzen in bunte Steine verwandeln
     for (u16 y = 0; y < BOARD_HEIGHT; y++) {
-        for (u16 x = 0; x < BOARD_WIDTH; x++) if (ctx->board[x][y] == ITEM_ID_HEART) ctx->board[x][y] = 0;
+        for (u16 x = 0; x < BOARD_WIDTH; x++) {
+            if (ctx->board[x][y] == ITEM_ID_HEART) {
+                ctx->board[x][y] = 1 + (random() % 7);
+            }
+        }
     }
+
     SOUND_play(SND_GOOD_ITEM);
     ctx->commentTimer = 60;
+    ctx->needsBoardDraw = true;
 }
 
 
@@ -259,8 +282,9 @@ bool tryRotate(u16 newRotation) {
             ctx->rotation = newRotation;
             
             // Wenn der Schatten aktiv ist, müssen wir ihn neu berechnen
-            if (config.showShadow) calculate_ghost_y();
-            
+            if (GET_FLAG(config.flags, FLAG_SHADOW)) calculate_ghost_y();
+
+
             return true; // Rotation erfolgreich
         }
     }
@@ -270,48 +294,36 @@ bool tryRotate(u16 newRotation) {
 
 
 
-// In clearLines: Die Logik für das "Ghost"-Blinken (ID 0)
 u16 clearLines() {
     u16 linesCleared = 0;
     for (u16 y = 0; y < BOARD_HEIGHT; y++) {
         bool full = true;
         u16 h = 0, s = 0;
-
         for (u16 x = 0; x < BOARD_WIDTH; x++) {
             u8 t = ctx->board[x][y];
             if (t == 0) { full = false; break; }
             if (t == ITEM_ID_HEART) h++;
             else if (t == ITEM_ID_SKULL) s++;
         }
-
         if (full) {
             linesCleared++;
             ctx->pendingLines[y] = true;
-
             u8 f;
-            if (h == 0 && s == 0) {
-                f = 0; // Absolute Neutralität -> Ghost Tile (ID 0)
-            } else if (h > s) {
-                f = ITEM_ID_HEART; // 11
-                ctx->heartTriggered = true;
-            } else if (s > h) {
-                f = ITEM_ID_SKULL; // 10
-                ctx->skullTriggered = true;
-            } else {
-                f = TILE_ID_FLASH; // Gleichstand (z.B. 1:1) -> Flash (11)
-            }
-
+            if (h == 0 && s == 0) f = 0;
+            else if (h > s) { f = ITEM_ID_HEART; ctx->heartTriggered = true; }
+            else if (s > h) { f = ITEM_ID_SKULL; ctx->skullTriggered = true; }
+            else f = TILE_ID_FLASH;
             for (u16 x = 0; x < BOARD_WIDTH; x++) ctx->board[x][y] = f;
         }
     }
-
     if (linesCleared > 0) {
         apply_scoring(linesCleared);
         ctx->comboCount++;
-        ctx->clearTimer = 20;
-        SOUND_play(52 + ctx->comboCount); // Sound nur einmal beim Löschen
-    } else ctx->comboCount = 0;
-
+        ctx->clearTimer = GET_TICKS(20);
+        SOUND_play(52 + ctx->comboCount);
+    } else {
+        ctx->comboCount = 0;
+    }
     return linesCleared;
 }
 
@@ -369,8 +381,10 @@ void spawnPiece() {
     handle_item_spawn_logic();
 
     // 4. Ghost & Collision
-    if (config.showShadow) calculate_ghost_y();
-
+if (GET_FLAG(config.flags, FLAG_SHADOW)) {
+    calculate_ghost_y();
+    ctx->needsBoardDraw = true; // Wichtig: Board muss neu gemalt werden
+}
 if (checkCollision(ctx->pieceX, ctx->pieceY, ctx->rotation)) {
         SOUND_play(SND_GAME_OVER);
         play_game_over_animation(); // Animation hier ebenfalls einfügen
@@ -380,7 +394,7 @@ if (checkCollision(ctx->pieceX, ctx->pieceY, ctx->rotation)) {
 bool handle_active_animations(GameContext* ctx) {
     if (ctx == NULL) return false;
 
-    // Phase 1: Zeilen löschen (Blinken)
+    // 1. Line-Clear Blinken (Pausiert das Spiel)
     if (ctx->clearTimer > 0) {
         ctx->clearTimer--;
         if (ctx->clearTimer == 0) {
@@ -391,31 +405,36 @@ bool handle_active_animations(GameContext* ctx) {
         return true; 
     }
 
-    // Phase 2: Board-Effekte (Sortieren, Rainbow, etc.)
+    // 2. Board-Verwandlungen (Shadow oder Rainbow)
     if (ctx->sortingRow != -1) {
         u16 y = ctx->sortingRow;
-        
-        // Da wir in derselben Datei sind, findet er diese Funktionen jetzt:
-        if (ctx->activeBadEffect == EFFECT_RAINBOW) {
-            handle_rainbow_row(y);
-        } else if (ctx->activeBadEffect == EFFECT_SHADOW_BOARD) {
-            handle_shadow_row(y);
-        } else {
-            handle_sort_row(y); // Dein Select-Effekt
-        }
+        bool isVisual = (ctx->activeBadEffect == EFFECT_RAINBOW || ctx->activeBadEffect == EFFECT_SHADOW_BOARD);
+
+        if (ctx->activeBadEffect == EFFECT_RAINBOW) handle_rainbow_row(y);
+        else if (ctx->activeBadEffect == EFFECT_SHADOW_BOARD) handle_shadow_row(y);
+        else handle_sort_row(y);
 
         ctx->sortingRow++;
+        ctx->needsBoardDraw = true;
 
         if (ctx->sortingRow >= BOARD_HEIGHT) {
             ctx->sortingRow = -1;
-            if (ctx->activeBadEffect == EFFECT_RAINBOW || ctx->activeBadEffect == EFFECT_SHADOW_BOARD) {
-                ctx->activeBadEffect = EFFECT_NONE;
-            }
-            spawnPiece();
+            if (!isVisual) spawnPiece(); // Nur bei Sortierung pausieren
         }
+        if (!isVisual) return true; // Nur bei Sortierung Steuerung blockieren
+    }
+
+    // 3. Die Kette: Wenn Schatten aktiv ist, Timer runterzählen
+    if (ctx->activeBadEffect == EFFECT_SHADOW_BOARD && ctx->badEffectTimer > 0) {
+        ctx->badEffectTimer--;
         
-        ctx->needsBoardDraw = true;
-        return true; 
+        // Wenn die 5 Sekunden um sind -> Umschalten auf Rainbow
+        if (ctx->badEffectTimer == 0) {
+            ctx->activeBadEffect = EFFECT_RAINBOW;
+            ctx->sortingRow = 0; // Starte neue Animation: Licht kommt zurück
+            set_game_comment("RAINBOW REBIRTH!", 90);
+            SOUND_play(SND_GOOD_ITEM);
+        }
     }
 
     return false; 
@@ -449,7 +468,7 @@ void finishLineClear() {
 }
 
 void performHold() {
-    if (!config.allowHold || !ctx->canHold) return;
+if (!GET_FLAG(config.flags, FLAG_HOLD) || !ctx->canHold) return;
     if (ctx->itemSlot < 4 && ctx->itemType == ITEM_ID_SKULL) { triggerBadEffect(); ctx->itemSlot = 255; }
     if (ctx->activeBadEffect == EFFECT_SAME_TILES) {
         if (ctx->holdType != -1) { ctx->holdType = -1; ctx->lastHoldType = -2; SOUND_play(SND_BAD_ITEM); }
@@ -469,18 +488,16 @@ void addGarbageLine() {
     for (u16 y = 0; y < BOARD_HEIGHT - 1; y++) {
         for (u16 x = 0; x < BOARD_WIDTH; x++) ctx->board[x][y] = ctx->board[x][y + 1];
     }
-
     u8 randomColor = 1 + (random() % 7); 
     u16 holeX = random() % BOARD_WIDTH;
-
     for (u16 x = 0; x < BOARD_WIDTH; x++) {
         ctx->board[x][BOARD_HEIGHT - 1] = (x == holeX) ? 0 : randomColor;
     }
-
     if (checkCollision(ctx->pieceX, ctx->pieceY, ctx->rotation)) {
         if (!checkCollision(ctx->pieceX, ctx->pieceY - 1, ctx->rotation)) ctx->pieceY--;
         else currentState = STATE_GAMEOVER;
     }
+    if (GET_FLAG(config.flags, FLAG_SHADOW)) calculate_ghost_y();
     SOUND_play(SND_GARBAGE);
     ctx->needsBoardDraw = true;
 }
@@ -516,6 +533,7 @@ void reset_game_logic() {
     ctx->score = 0;
     ctx->linesTotal = 0;
     ctx->level = ctx->startLevel;
+    menu_bg_set_intensity(1);
     ctx->comboCount = 0;
     ctx->activeBadEffect = EFFECT_NONE;
     ctx->badEffectTimer = 0;
@@ -529,7 +547,8 @@ void reset_game_logic() {
 static void handle_rainbow_row(u16 y) {
     u8 rowColor = (y % 7) + 1;
     for (u16 x = 0; x < BOARD_WIDTH; x++) {
-        if (ctx->board[x][y] != 0 && ctx->board[x][y] < 10) {
+        // Jetzt werden auch graue Schatten-Tiles (ID 8) wieder bunt
+        if (ctx->board[x][y] != 0 && ctx->board[x][y] <= 10) {
             ctx->board[x][y] = rowColor;
         }
     }

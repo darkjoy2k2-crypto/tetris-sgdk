@@ -5,7 +5,9 @@
 #include <string.h>
 #include "menu_bg.h"
 #include "fonts.h"
+#include "gfx.h"
 
+// Der lokale Kontext für diesen State
 typedef struct SelectContext {
     u16 cursor;
     char name[4];
@@ -13,29 +15,30 @@ typedef struct SelectContext {
     u16 randMode;
     u16 speedLevel;
     u16 garbageFreq;
-    u16 itemMode;      // 0=All, 1=None, 2=Good, 3=Bad
-    bool showShadow;
-    bool allowHold;
-    bool showNext;
+    u16 itemMode;
+    u16 flags;          // Temporäre Flags für das Menü
     bool needsRedraw;
 } SelectContext;
 
 static SelectContext* ctx = NULL;
 
-// --- Private Zeichen-Helfer (werden nur von select_draw/init_draw genutzt) ---
+// --- Private Zeichen-Helfer ---
 
 static void draw_menu_line(u16 row, char* label, u16 currentVal, char* options[], u16 numOptions, bool isSelected) {
     u16 y = 8 + (row * 2);
     u16 x = 4;
 
-    VDP_setTextPalette(PAL1);
+    // Standard-Palette für das Label (Gelb/Gold bei Selektion)
+    VDP_setTextPalette(isSelected ? PAL1 : PAL3);
     VDP_drawText(isSelected ? ">" : " ", x, y);
     x += 2;
 
     VDP_drawText(label, x, y);
     x += 12;
 
+    // Optionen zeichnen
     for (u16 i = 0; i < numOptions; i++) {
+        // Selektierte Option leuchtet (PAL2 - Rot oder Highlight)
         if (i == currentVal) VDP_setTextPalette(PAL2);
         else VDP_setTextPalette(PAL3);
 
@@ -48,7 +51,7 @@ static void draw_name_entry(bool isSelected) {
     u16 y = 8;
     u16 x = 4;
 
-    VDP_setTextPalette(PAL1);
+    VDP_setTextPalette(isSelected ? PAL1 : PAL3);
     VDP_drawText(isSelected ? ">" : " ", x, y);
     x += 2;
 
@@ -56,6 +59,7 @@ static void draw_name_entry(bool isSelected) {
     x += 12;
 
     for (u16 i = 0; i < 3; i++) {
+        // Aktueller Buchstabe in der Bearbeitung wird hervorgehoben
         if (isSelected && ctx->nameCharIdx == i) VDP_setTextPalette(PAL2);
         else VDP_setTextPalette(PAL3);
 
@@ -68,20 +72,23 @@ static void draw_name_entry(bool isSelected) {
 // --- State System Funktionen ---
 
 void select_init() {
+    // Speicher reservieren und nullen
     ctx = MEM_alloc(sizeof(SelectContext));
-    
-    // Daten aus globaler Config laden
+    memset(ctx, 0, sizeof(SelectContext));
+
+    // Aktuelle Konfiguration in den lokalen Kontext spiegeln
     ctx->cursor = 0;
     strncpy(ctx->name, config.playerName, 3);
     ctx->name[3] = '\0';
     ctx->nameCharIdx = 0;
+    
     ctx->randMode = config.randMode;
     ctx->speedLevel = config.speedLevel;
     ctx->garbageFreq = config.garbageFreq;
     ctx->itemMode = config.itemMode;
-    ctx->showShadow = config.showShadow;
-    ctx->allowHold = config.allowHold;
-    ctx->showNext = config.showNext;
+    
+    // Kopie der Flags für die Bearbeitung im Menü
+    ctx->flags = config.flags;
 
     ctx->needsRedraw = true;
     menu_bg_set_active(true);
@@ -90,21 +97,10 @@ void select_init() {
 void select_init_draw() {
     if (ctx == NULL) return;
 
-    // Paletten-Setup
-    PAL_setPalette(PAL3, PAL_FONT_CLEAR.data, CPU);
+    // Zentrale Farb- und Font-Initialisierung aufrufen
+    UI_init_fonts_and_palettes();   
 
-    PAL_setPalette(PAL2, PAL_FONT_CLEAR.data, CPU);
-    PAL_setColor(33, RGB24_TO_VDPCOLOR(0x440000));
-    PAL_setColor(37, RGB24_TO_VDPCOLOR(0x880000));
-    PAL_setColor(38, RGB24_TO_VDPCOLOR(0xFF0000));
-    PAL_setColor(39, RGB24_TO_VDPCOLOR(0xFF8888));
-
-    PAL_setPalette(PAL1, PAL_FONT_CLEAR.data, CPU);
-    PAL_setColor(21, RGB24_TO_VDPCOLOR(0x666600));
-    PAL_setColor(22, RGB24_TO_VDPCOLOR(0xFFFF00));
-    PAL_setColor(23, RGB24_TO_VDPCOLOR(0x666600));
-
-    // Statische Elemente
+    // Statische UI-Elemente
     VDP_clearTextArea(0, 0, 40, 28);
     VDP_setTextPalette(PAL1);
     VDP_drawText("--- GAME SETTINGS ---", 10, 4);
@@ -127,54 +123,63 @@ void select_update() {
         ctx->needsRedraw = true;
     }
 
-    // 2. Werte-Manipulation
-    bool goRight = (joyState & BUTTON_RIGHT) && !(lastJoyState & BUTTON_RIGHT);
-    bool goLeft = (joyState & BUTTON_LEFT) && !(lastJoyState & BUTTON_LEFT);
-    bool pressedA = (joyState & BUTTON_A) && !(lastJoyState & BUTTON_A);
+    // 2. Werte-Manipulation (Links/Rechts oder A)
+    bool goRight  = (joyState & BUTTON_RIGHT) && !(lastJoyState & BUTTON_RIGHT);
+    bool goLeft   = (joyState & BUTTON_LEFT)  && !(lastJoyState & BUTTON_LEFT);
+    bool pressedA = (joyState & BUTTON_A)     && !(lastJoyState & BUTTON_A);
 
     if (goRight || goLeft || pressedA) {
         ctx->needsRedraw = true;
         
         if (ctx->cursor == 0) {
-            // Namenseingabe-Logik
+            // --- Namenseingabe ---
             char c = ctx->name[ctx->nameCharIdx];
-            if (goRight) c = (c == 'Z') ? 'A' : c + 1;
-            else if (goLeft) c = (c == 'A') ? 'Z' : c - 1;
+            if (goRight) {
+                c = (c == 'Z') ? 'A' : c + 1;
+                SOUND_play(SND_ROTATE);
+            } else if (goLeft) {
+                c = (c == 'A') ? 'Z' : c - 1;
+                SOUND_play(SND_ROTATE);
+            }
             ctx->name[ctx->nameCharIdx] = c;
             
             if (pressedA) {
                 ctx->nameCharIdx = (ctx->nameCharIdx + 1) % 3;
                 SOUND_play(SND_MOVE);
-            } else {
-                SOUND_play(SND_ROTATE);
             }
         } else {
-            // Menüpunkt-Auswahl
+            // --- Menü-Optionen ---
             SOUND_play(SND_ROTATE);
             s16 dir = goLeft ? -1 : 1;
             switch(ctx->cursor) {
-                case 1: ctx->randMode = (ctx->randMode + dir + 2) % 2; break;
-                case 2: ctx->speedLevel = (ctx->speedLevel + dir + 4) % 4; break;
+                case 1: ctx->randMode    = (ctx->randMode + dir + 2) % 2; break;
+                case 2: ctx->speedLevel  = (ctx->speedLevel + dir + 4) % 4; break;
                 case 3: ctx->garbageFreq = (ctx->garbageFreq + dir + 4) % 4; break;
-                case 4: ctx->showShadow = !ctx->showShadow; break;
-                case 5: ctx->allowHold = !ctx->allowHold; break;
-                case 6: ctx->showNext = !ctx->showNext; break;
-                case 7: ctx->itemMode = (ctx->itemMode + dir + 4) % 4; break;
+                
+                // Bit-Flags umschalten (Nutzt die neuen flexiblen Makros)
+                case 4: TOGGLE_FLAG(ctx->flags, FLAG_SHADOW); break; 
+                case 5: TOGGLE_FLAG(ctx->flags, FLAG_HOLD);   break;
+                case 6: TOGGLE_FLAG(ctx->flags, FLAG_NEXT);   break;
+                
+                case 7: ctx->itemMode    = (ctx->itemMode + dir + 4) % 4; break;
             }
         }
     }
 
-    // 3. State-Abschluss: Einstellungen in globale Config übernehmen
+    // 3. Übernahme in die globale Config und Start des Spiels
     if ((joyState & BUTTON_START) && !(lastJoyState & BUTTON_START)) {
         strncpy(config.playerName, ctx->name, 3);
         config.playerName[3] = '\0';
-        config.randMode = ctx->randMode;
-        config.speedLevel = ctx->speedLevel;
+        
+        config.randMode    = ctx->randMode;
+        config.speedLevel  = ctx->speedLevel;
         config.garbageFreq = ctx->garbageFreq;
-        config.itemMode = ctx->itemMode;
-        config.showShadow = ctx->showShadow;
-        config.allowHold = ctx->allowHold;
-        config.showNext = ctx->showNext;
+        config.itemMode    = ctx->itemMode;
+        
+        // Flags übertragen: Alle Gameplay-Flags vom Kontext, 
+        // aber das FLAG_IS_PAL bleibt fest im globalen config.flags
+        config.flags = (ctx->flags & ~FLAG_IS_PAL) | (config.flags & FLAG_IS_PAL);
+
         currentState = STATE_GAME;
     }
 }
@@ -182,21 +187,24 @@ void select_update() {
 void select_draw() {
     if (ctx == NULL || !ctx->needsRedraw) return;
 
-    // Gesamtes Menü-Overlay neu zeichnen
+    // UI zeichnen
     draw_name_entry(ctx->cursor == 0);
 
-    char* optsRand[] = {"Fair", "Chaos"};
+    char* optsRand[]   = {"Fair", "Chaos"};
     char* optsLevels[] = {"None", "Slow", "Med", "Fast"};
-    char* optsOnOff[] = {"Off", "On"};
-    char* optsItems[] = {"None", "All", "Good", "Bad"};
+    char* optsOnOff[]  = {"Off", "On"};
+    char* optsItems[]  = {"None", "All", "Good", "Bad"};
 
-    draw_menu_line(1, "Random:", ctx->randMode, optsRand, 2, (ctx->cursor == 1));
-    draw_menu_line(2, "Speed:", ctx->speedLevel, optsLevels, 4, (ctx->cursor == 2));
-    draw_menu_line(3, "Garbage:", ctx->garbageFreq, optsLevels, 4, (ctx->cursor == 3));
-    draw_menu_line(4, "Shadow:", ctx->showShadow, optsOnOff, 2, (ctx->cursor == 4));
-    draw_menu_line(5, "Hold:", ctx->allowHold, optsOnOff, 2, (ctx->cursor == 5));
-    draw_menu_line(6, "Next:", ctx->showNext, optsOnOff, 2, (ctx->cursor == 6));
-    draw_menu_line(7, "Items:", ctx->itemMode, optsItems, 4, (ctx->cursor == 7));
+    draw_menu_line(1, "Random:",   ctx->randMode,   optsRand,   2, (ctx->cursor == 1));
+    draw_menu_line(2, "Speed:",    ctx->speedLevel,  optsLevels, 4, (ctx->cursor == 2));
+    draw_menu_line(3, "Garbage:",  ctx->garbageFreq, optsLevels, 4, (ctx->cursor == 3));
+    
+    // Abfrage der Flags für die Anzeige (GET_FLAG Makro)
+    draw_menu_line(4, "Shadow:",   GET_FLAG(ctx->flags, FLAG_SHADOW) ? 1 : 0, optsOnOff, 2, (ctx->cursor == 4));
+    draw_menu_line(5, "Hold:",     GET_FLAG(ctx->flags, FLAG_HOLD)   ? 1 : 0, optsOnOff, 2, (ctx->cursor == 5));
+    draw_menu_line(6, "Next:",     GET_FLAG(ctx->flags, FLAG_NEXT)   ? 1 : 0, optsOnOff, 2, (ctx->cursor == 6));
+    
+    draw_menu_line(7, "Items:",    ctx->itemMode,    optsItems,  4, (ctx->cursor == 7));
     
     ctx->needsRedraw = false;
 }

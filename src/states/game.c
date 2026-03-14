@@ -25,16 +25,13 @@ GameContext* ctx = NULL;
 static bool handle_gravity(GameContext* ctx) {
     u16 vBtnSoftDrop = (ctx->activeBadEffect == EFFECT_REVERSED) ? BUTTON_LEFT : BUTTON_DOWN;
     bool moved = false;
-    
     ctx->moveTimer++;
-    s16 threshold = 60 - ((ctx->level - 1) * 3);
+    s16 threshold = GET_TICKS(60 - ((ctx->level - 1) * 3));
     if (threshold < 2) threshold = 3;
     if (ctx->activeBadEffect == EFFECT_FULLSPEED) threshold = 3;
-
     u16 finalThreshold = (joyState & vBtnSoftDrop) ? (threshold / 12) : 
                         ((ctx->activeBadEffect == EFFECT_FREEZE) ? 9999 : threshold);
     if (finalThreshold < 4 && (joyState & vBtnSoftDrop)) finalThreshold = 4;
-
     if (ctx->moveTimer >= finalThreshold) {
         if (!checkCollision(ctx->pieceX, ctx->pieceY + 1, ctx->rotation)) {
             ctx->pieceY++;
@@ -42,7 +39,6 @@ static bool handle_gravity(GameContext* ctx) {
             if (joyState & vBtnSoftDrop) { ctx->score++; SOUND_play(SND_SOFT_DROP); }
         } else {
             lockPiece();
-            if (clearLines() == 0) spawnPiece();
             moved = true;
         }
         ctx->moveTimer = 0;
@@ -57,14 +53,15 @@ static void handle_environment(GameContext* ctx, bool moved) {
         if (ctx->garbageTimer >= ctx->garbageNextThreshold) {
             addGarbageLine();
             ctx->garbageTimer = 0;
-            ctx->garbageNextThreshold = GARBAGE_INTERVALS[config.garbageFreq] + (random() % 120) - 60;
-            ctx->needsBoardDraw = true;
+ctx->garbageNextThreshold = GET_TICKS(GARBAGE_INTERVALS[config.garbageFreq] + (random() % 120) - 60);
+
+ctx->needsBoardDraw = true;
         }
     }
 
     // Shadow
-    if (moved && config.showShadow) {
-        ctx->ghostY = ctx->pieceY;
+if (moved && GET_FLAG(config.flags, FLAG_SHADOW)) {
+                ctx->ghostY = ctx->pieceY;
         while (!checkCollision(ctx->pieceX, ctx->ghostY + 1, ctx->rotation)) ctx->ghostY++;
     }
 
@@ -91,7 +88,8 @@ void game_init() {
     // 2. System-Zustände setzen
     SOUND_init();
     menu_bg_set_mode(BG_MODE_SPACE);
-
+    menu_bg_set_active(true);
+    
     // 3. UI Cache-Reset (Zwingt das UI beim ersten Frame zum Zeichnen)
     ctx->lastScore          = 0xFFFFFFFF; 
     ctx->lastLevel          = 0xFFFF;
@@ -113,8 +111,8 @@ void game_init() {
     ctx->linesTotal = 0;
     ctx->moveTimer  = 0;
     ctx->holdType   = -1; // -1 = Kein Stein im Speicher
-    ctx->canHold    = true;
-    
+ctx->canHold = GET_FLAG(config.flags, FLAG_HOLD);
+
     // 5. Effekt- & Animations-Initialisierung
     ctx->activeBadEffect = EFFECT_NONE;
     ctx->badEffectTimer  = 0;
@@ -126,7 +124,7 @@ void game_init() {
     ctx->garbageTimer = 0;
     if (config.garbageFreq > 0) {
         u16 base = GARBAGE_INTERVALS[config.garbageFreq];
-        ctx->garbageNextThreshold = base + (random() % 120) - 60;
+    ctx->garbageNextThreshold = GET_TICKS(base + (random() % 120) - 60);
     }
 
     // 7. Piece-Logik (Bag füllen & ersten Stein spawnen)
@@ -147,7 +145,6 @@ void game_init_draw() {
 
     // 1. VRAM Säuberung
     VDP_clearPlane(BG_A, TRUE);
-    VDP_clearPlane(BG_B, TRUE);
 
     // 2. Grafik-Ressourcen laden
     load_background(); 
@@ -156,8 +153,9 @@ void game_init_draw() {
     view_init_cache(); 
 
     // 4. Paletten-Setup für UI und Text
-    PAL_setPalette(PAL3, PAL_FONT_CLEAR.data, CPU);
-    VDP_setTextPalette(PAL3);
+    //PAL_setPalette(PAL3, PAL_FONT_CLEAR.data, CPU);
+    //VDP_setTextPalette(PAL3);
+    UI_init_fonts_and_palettes(); // Setzt PAL1, PAL2, PAL3 und Font
 
     // 5. Visueller Start-Effekt
     view_fade_in_frame();  
@@ -166,22 +164,17 @@ void game_init_draw() {
 void game_update() {
     if (ctx == NULL) return;
 
-    // 1. Animationen prüfen (und ggf. abbrechen)
     if (handle_active_animations(ctx)) {
         lastJoyState = joyState;
         return;
     }
 
-    // 2. Eingaben verarbeiten (dein bereits ausgelagertes Skript)
     bool moved = controls_update(ctx);
 
-    // 3. Gravitation berechnen
     if (handle_gravity(ctx)) moved = true;
 
-    // 4. Garbage, Schatten und Timer
     handle_environment(ctx, moved);
 
-    // 5. Finaler Check für den Draw-Frame
     if (moved) ctx->needsBoardDraw = true;
     
     lastJoyState = joyState; 

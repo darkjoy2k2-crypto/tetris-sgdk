@@ -2,6 +2,7 @@
 #include "states/highscore.h"
 #include "states/states.h"
 #include "fonts.h"
+#include "gfx.h"
 
 typedef struct HighscoreContext {
     u16 displayTimer;
@@ -24,26 +25,11 @@ void highscore_init() {
 
 void highscore_init_draw() {
     if (hCtx == NULL) return;
-
+    UI_init_fonts_and_palettes();
     // 1. Screen vorbereiten
     VDP_clearTextArea(0, 0, 40, 28);
     
-    // 2. Paletten-Setup (Farben definieren)
-    PAL_setPalette(PAL3, PAL_FONT_CLEAR.data, CPU);
 
-    // Palette für das UI (Rot-Töne)
-    PAL_setPalette(PAL2, PAL_FONT_CLEAR.data, CPU);
-    PAL_setColor(33, RGB24_TO_VDPCOLOR(0x440000)); 
-    PAL_setColor(37, RGB24_TO_VDPCOLOR(0x880000)); 
-    PAL_setColor(38, RGB24_TO_VDPCOLOR(0xFF0000)); 
-    PAL_setColor(39, RGB24_TO_VDPCOLOR(0xFF8888));
-
-    // Palette für neue Einträge (Gelb/Gold)
-    PAL_setPalette(PAL1, PAL_FONT_CLEAR.data, CPU);
-    PAL_setColor(17, RGB24_TO_VDPCOLOR(0x444400));
-    PAL_setColor(21, RGB24_TO_VDPCOLOR(0x888800));
-    PAL_setColor(22, RGB24_TO_VDPCOLOR(0xFFFF00));
-    PAL_setColor(23, RGB24_TO_VDPCOLOR(0x888800));
 
     // 3. Header zeichnen
     VDP_setTextPalette(PAL2);

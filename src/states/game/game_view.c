@@ -84,14 +84,14 @@ void view_update_ui(GameContext* ctx) {
     }
 
     bool hideNext = (ctx->activeBadEffect == EFFECT_HIDE_NEXT);
-    if (config.showNext && ctx->nextType != ctx->lastNextType) {
-        if (hideNext) drawPreview(-1, UI_X, NEXT_Y);
+if (GET_FLAG(config.flags, FLAG_NEXT) && ctx->nextType != ctx->lastNextType) {
+            if (hideNext) drawPreview(-1, UI_X, NEXT_Y);
         else drawPreview(ctx->nextType, UI_X, NEXT_Y);
         ctx->lastNextType = ctx->nextType;
     }
 
-    if (config.allowHold && ctx->holdType != ctx->lastHoldType) {
-        drawPreview(ctx->holdType, UI_X, HOLD_Y);
+if (GET_FLAG(config.flags, FLAG_HOLD) && ctx->holdType != ctx->lastHoldType) {
+            drawPreview(ctx->holdType, UI_X, HOLD_Y);
         ctx->lastHoldType = ctx->holdType;
     }
 
@@ -120,7 +120,7 @@ void view_update_ui(GameContext* ctx) {
             if (ctx->activeBadEffect <= 2 || ctx->activeBadEffect == EFFECT_I_RAIN) {
                 sprintf(timerBuf, "%d P", ctx->badEffectTimer);
             } else {
-                u16 sec = (ctx->badEffectTimer + 59) / 60;
+u16 sec = (ctx->badEffectTimer + (GET_TICKS(60) - 1)) / GET_TICKS(60);  
                 sprintf(timerBuf, "%d S", sec);
             }
             VDP_drawTextBG(VDP_BG_A, statusMsg, UI_X - 1, 24);
@@ -139,7 +139,7 @@ void drawBoard() {
     for (u16 y = 0; y < BOARD_HEIGHT; y++) {
         // Blink-Check: Jede Zeile, die gelöscht wird, flackert
         bool isClearingRow = (ctx->clearTimer > 0 && ctx->pendingLines[y]);
-        bool showFlash = isClearingRow && ((ctx->clearTimer >> 2) & 1);
+bool showFlash = isClearingRow && ((ctx->clearTimer >> (GET_FLAG(config.flags, FLAG_IS_PAL) ? 1 : 2)) & 1);
 
         for (u16 x = 0; x < BOARD_WIDTH; x++) {
             u16 tile;
@@ -162,8 +162,8 @@ void drawBoard() {
         }
     }
 
-    // Schatten & Aktives Piece (Cache-Bypass)
-    if (config.showShadow && ctx->clearTimer == 0) {
+// Schatten Rendering (Nutzt FLAG_SHADOW)
+    if (GET_FLAG(config.flags, FLAG_SHADOW) && ctx->clearTimer == 0) {
         for (u16 i = 0; i < 4; i++) {
             s16 gx = ctx->pieceX + PIECES[ctx->type][ctx->rotation][i][0];
             s16 gy = ctx->ghostY + PIECES[ctx->type][ctx->rotation][i][1];
@@ -173,6 +173,7 @@ void drawBoard() {
             }
         }
     }
+
 
     if (ctx->clearTimer == 0) {
         for (u16 i = 0; i < 4; i++) {
@@ -216,9 +217,9 @@ void view_fade_in_frame() {
     target_pal[13] = RGB24_TO_VDPCOLOR(0x5555FF);
     target_pal[14] = RGB24_TO_VDPCOLOR(0xFFA500);
     target_pal[15] = RGB24_TO_VDPCOLOR(0x444444);
-    PAL_fadeInPalette(PAL2, target_pal, 30, FALSE);
+PAL_fadeInPalette(PAL2, target_pal, GET_TICKS(30), FALSE);
 }
 
 void view_fade_out_frame() {
-    PAL_fadeOutPalette(PAL2, 30, FALSE);
+PAL_fadeOutPalette(PAL2, GET_TICKS(30), FALSE);
 }

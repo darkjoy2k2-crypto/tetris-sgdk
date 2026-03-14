@@ -20,7 +20,8 @@ typedef enum GameState{
     STATE_GAME = 3,
     STATE_SOUNDTEST = 4,
     STATE_GAMEOVER = 5,
-    STATE_HIGHSCORE = 6 // NEU
+    STATE_HIGHSCORE = 6,
+    STATE_OPTIONS = 7
 } GameState;
 
 typedef struct HighscoreEntry{
@@ -30,17 +31,39 @@ typedef struct HighscoreEntry{
 } HighscoreEntry;
 
 // NEU: Die Struktur für deine globalen Spieleinstellungen
-typedef struct GlobalConfig{
-    char playerName[4]; // 3 Buchstaben + \0
-    u32 currentScore;   // NEU: Damit der GameOver-Screen den letzten Score kennt
-    u16 randMode;       // 0: Fair, 1: Chaos
-    u16 speedLevel;     // 0-3
-    u16 garbageFreq;    // 0-3
+// In der struct GlobalConfig in states.h ergänzen:
+typedef struct GlobalConfig {
+    char playerName[4];
+    u32 currentScore;
+    u16 randMode;
+    u16 speedLevel;
+    u16 garbageFreq;
     u16 itemMode;
-    bool showShadow;
-    bool allowHold;
-    bool showNext;
+    u16 flags;          // HIER sitzen jetzt alle Bools zusammen!
 } GlobalConfig;
+
+// Bit-Masken für das Flags-System
+#define FLAG_SHADOW      (1 << 0)  // 00000001
+#define FLAG_HOLD        (1 << 1)  // 00000010
+#define FLAG_NEXT        (1 << 2)  // 00000100
+#define FLAG_IS_PAL      (1 << 3)  // 00001000
+#define FLAG_SOUND       (1 << 4)  // 00010000
+#define FLAG_MUSIC       (1 << 5)  // 00100000
+#define FLAG_BG          (1 << 6)  // 00100000
+
+// ... du hast noch Platz bis Bit 15!
+
+// Hilfs-Makros für die Abfrage (erhöht die Lesbarkeit massiv)
+#define SET_FLAG(v, f)    ((v) |= (f))
+#define CLEAR_FLAG(v, f)  ((v) &= ~(f))
+#define TOGGLE_FLAG(v, f) ((v) ^= (f))
+#define GET_FLAG(v, f)    ((v) & (f))
+
+// Umrechnung von 60Hz (NTSC) auf 50Hz (PAL)
+// Wert_PAL = (Wert_NTSC * 50) / 60  => (Wert * 5) / 6
+#define SCALE_TO_PAL(v)   (((v) * 5) / 6)
+#define GET_TICKS(v)      (GET_FLAG(config.flags, FLAG_IS_PAL) ? SCALE_TO_PAL(v) : (v))
+
 
 // Globale Variablen (Deklaration)
 extern GameState currentState;

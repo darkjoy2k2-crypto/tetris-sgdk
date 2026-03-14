@@ -8,6 +8,11 @@
 #define UI_X         27 
 #define NEXT_Y        6  
 #define HOLD_Y       10 
+#include "states/states.h"
+#define UI_X_NEXT 26  // Spalte für Next-Fenster
+#define UI_Y_NEXT 4   // Zeile für Next-Fenster
+#define UI_X_HOLD 26  // Spalte für Hold-Fenster
+#define UI_Y_HOLD 10  // Zeile für Hold-Fenster
 
 extern const s8 PIECES[7][4][4][2];
 

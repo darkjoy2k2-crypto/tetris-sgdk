@@ -101,11 +101,25 @@ if (GET_FLAG(config.flags, FLAG_HOLD) && (changed & BUTTON_C)) {
     }
 
     // --- 6. SELECT TRIGGER (Manual Sort) ---
-    if ((joyState & BUTTON_START) && (changed & BUTTON_START)) {
-        triggerManualSort();
-        // moved auf true setzen, damit das Board-Redraw eventuell getriggert wird
-        moved = true; 
+    // --- 6. DEBUG TRIGGER (Statt Manual Sort jetzt No-Rotate Fluch) ---
+if (changed & BUTTON_START) {
+    // Falls der Fluch schon aktiv ist, schalten wir ihn aus (Toggle)
+    if (ctx->activeBadEffect == EFFECT_NO_ROTATE) {
+        ctx->activeBadEffect = EFFECT_NONE;
+        ctx->badEffectTimer = 0;
+        SOUND_play(SND_GOOD_ITEM);
+    } else {
+        // Fluch aktivieren
+        ctx->activeBadEffect = EFFECT_NO_ROTATE;
+        // 10 Sekunden (600 Frames bei 60Hz)
+        ctx->badEffectTimer = GET_TICKS(600); 
+        
+        SOUND_play(SND_BAD_ITEM);
     }
+    
+    // moved auf true setzen, damit das Board-Redraw/Sprite-Update getriggert wird
+    moved = true; 
+}
 
     return moved;
 }

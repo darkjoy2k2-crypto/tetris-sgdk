@@ -95,6 +95,15 @@ void UI_init_fonts_and_palettes() {
     PAL_setColor(32 + 5, RGB24_TO_VDPCOLOR(0x880000)); // Mittel
     PAL_setColor(32 + 6, RGB24_TO_VDPCOLOR(0xFF0000)); // Hellrot
     PAL_setColor(32 + 7, RGB24_TO_VDPCOLOR(0xFF8888)); // Rosa/Highlight
+// JETZT: Wir überschreiben Index 1 und 7 in PAL2 mit den Board-Farben
+    // Wir holen uns die Farben direkt aus PAL0, damit sie identisch sind!
+    u16 colorCyan = PAL_getColor(1); // Farbe von Cyan (I-Piece) aus PAL0
+    u16 colorRed  = PAL_getColor(7); // Farbe von Rot (Z-Piece) aus PAL0
 
+    PAL_setColor(32 + 1, colorCyan); // Setzt Cyan auf Index 1 von PAL2
+    PAL_setColor(32 + 7, colorRed);  // Setzt Rot auf Index 7 von PAL2
+
+
+    
 VDP_setTextPalette(PAL1);
 }

@@ -164,43 +164,29 @@ ctx->canHold = GET_FLAG(config.flags, FLAG_HOLD);
 }
 
 void update_curse_sprites(GameContext* ctx) {
-    // Prüfen, ob der No-Rotate Fluch gerade aktiv ist
     bool curseActive = (ctx->activeBadEffect == EFFECT_NO_ROTATE);
-
-    // --- SPRITE 0: AKTIVES PIECE ---
-    sprites_set_visible(0, curseActive);
-    if (curseActive) {
-        gameSprites[0].x = (RENDER_X + ctx->pieceX) << 3;
-        gameSprites[0].y = (RENDER_Y + ctx->pieceY) << 3;
-    }
-
-    // --- SPRITE 1: SCHATTEN (GHOST) ---
-    // Nur sichtbar, wenn Fluch aktiv UND Schatten-Option an ist
     bool shadowEnabled = GET_FLAG(config.flags, FLAG_SHADOW);
-    sprites_set_visible(1, curseActive && shadowEnabled);
-    if (curseActive && shadowEnabled) {
-        gameSprites[1].x = (RENDER_X + ctx->pieceX) << 3;
-        gameSprites[1].y = (RENDER_Y + ctx->ghostY) << 3;
-    }
 
-    // --- SPRITE 2: NEXT FENSTER ---
-    bool nextEnabled = GET_FLAG(config.flags, FLAG_NEXT);
-    sprites_set_visible(2, curseActive && nextEnabled);
-    if (curseActive && nextEnabled) {
-        gameSprites[2].x = UI_X_NEXT << 3; // Deine UI-X Koordinate für Next
-        gameSprites[2].y = UI_Y_NEXT << 3; // Deine UI-Y Koordinate für Next
+    for (u16 i = 0; i < 10; i++) {
+        GameSprite* gs = &gameSprites[i];
+        
+        if (gs->attr & SPRITE_FLAG_TETROMINO) {
+            // Nur das Tetromino-Sprite reagiert auf den NO_ROTATE Fluch
+            sprites_set_visible(i, curseActive);
+            gs->x = ((RENDER_X + ctx->pieceX) << 3) + gs->offsetX;
+            gs->y = ((RENDER_Y + ctx->pieceY) << 3) + gs->offsetY;
+        }
+        else if (gs->attr & SPRITE_FLAG_SHADOW) {
+            // Schatten, Next und Hold bleiben immer unsichtbar (Bit 0 = 0)
+            sprites_set_visible(i, false);
+        }
+        else if (gs->attr & SPRITE_FLAG_NEXT) {
+            sprites_set_visible(i, false);
+        }
+        else if (gs->attr & SPRITE_FLAG_HOLD) {
+            sprites_set_visible(i, false);
+        }
     }
-
-    // --- SPRITE 3: HOLD FENSTER ---
-    bool holdEnabled = GET_FLAG(config.flags, FLAG_HOLD);
-    sprites_set_visible(3, curseActive && holdEnabled);
-    if (curseActive && holdEnabled) {
-        gameSprites[3].x = UI_X_HOLD << 3; // Deine UI-X Koordinate für Hold
-        gameSprites[3].y = UI_Y_HOLD << 3; // Deine UI-Y Koordinate für Hold
-    }
-
-    // Alle aktiven Sprites verarbeiten (Animation & VDP-Update)
-    sprites_update();
 }
 
 
@@ -260,6 +246,7 @@ void game_draw() {
         
         ctx->needsBoardDraw = false; 
     }
+    sprites_update();
 
     view_update_ui(ctx); 
 }

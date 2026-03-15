@@ -23,19 +23,19 @@ const u32 tile_heart[8] = {
 };
 
 void gfx_load_tiles(u16 offset) {
-    PAL_setColor(32 + 7, RGB24_TO_VDPCOLOR(0x000044)); 
-    
-    PAL_setColor(40, RGB24_TO_VDPCOLOR(0x0000FF)); 
-    PAL_setColor(41, RGB24_TO_VDPCOLOR(0xFFFF00)); 
-    PAL_setColor(42, RGB24_TO_VDPCOLOR(0xFF00FF)); 
-    PAL_setColor(43, RGB24_TO_VDPCOLOR(0x00FF00)); 
-    PAL_setColor(44, RGB24_TO_VDPCOLOR(0xFF0000)); 
-    PAL_setColor(45, RGB24_TO_VDPCOLOR(0x5555FF)); 
-    PAL_setColor(46, RGB24_TO_VDPCOLOR(0xFFA500)); 
-    
-    PAL_setColor(47, RGB24_TO_VDPCOLOR(0x444444)); 
-    PAL_setColor(32 + 5, RGB24_TO_VDPCOLOR(0x222222)); 
-    PAL_setColor(32 + 6, RGB24_TO_VDPCOLOR(0xFFFFFF)); 
+
+PAL_setColor(37, RGB24_TO_VDPCOLOR(0x222222)); // PAL2 COL5 ANTHRAZIT (Block-Schatten/Sprite-Teil)
+PAL_setColor(38, RGB24_TO_VDPCOLOR(0xFFFFFF)); // PAL2 COL6 WEISS (Block-Highlight/Sprite-Teil)
+PAL_setColor(39, RGB24_TO_VDPCOLOR(0x000044)); // PAL2 COL7 DUNKELBLAU (Hintergrund/Schatten)
+PAL_setColor(40, RGB24_TO_VDPCOLOR(0x0000FF)); // PAL2 COL8 BLAU (Tetromino I / Kristall)
+PAL_setColor(41, RGB24_TO_VDPCOLOR(0xFFFF00)); // PAL2 COL9 GELB (Tetromino O / Kristall)
+PAL_setColor(42, RGB24_TO_VDPCOLOR(0xFF00FF)); // PAL2 COL10 MAGENTA (Tetromino T / Kristall)
+PAL_setColor(43, RGB24_TO_VDPCOLOR(0x00FF00)); // PAL2 COL11 GRÜN (Tetromino S / Kristall)
+PAL_setColor(44, RGB24_TO_VDPCOLOR(0xFF0000)); // PAL2 COL12 ROT (Tetromino Z / Kristall)
+PAL_setColor(45, RGB24_TO_VDPCOLOR(0x5555FF)); // PAL2 COL13 HELLBLAU (Tetromino J / Kristall)
+PAL_setColor(46, RGB24_TO_VDPCOLOR(0xFFA500)); // PAL2 COL14 ORANGE (Tetromino L / Kristall)
+PAL_setColor(47, RGB24_TO_VDPCOLOR(0x444444)); // PAL2 COL15 DUNKELGRAU (Ghost-Piece Umrandung)
+
 
     const u32 empty_tile[8] = {
         0x77777777, 0x00000007, 0x00000007, 0x00000007,

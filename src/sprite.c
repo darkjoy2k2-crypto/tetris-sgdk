@@ -1,35 +1,32 @@
 #include "sprite.h"
-#include "sprites.h"
-#include "states/states.h"
-#include "gfx.h"
+#include "sprites.h" // Ressourcen (anim_skull, anim_norotate)
+#include <string.h>
 
+// Definition des Arrays
 GameSprite gameSprites[10];
 
 void sprites_init() {
     SPR_init();
     for(u16 i = 0; i < 10; i++) {
         memset(&gameSprites[i], 0, sizeof(GameSprite));
+        // Default: norotate
         gameSprites[i].vdpSprite = SPR_addSprite(&anim_norotate, -128, -128, TILE_ATTR(PAL2, 0, 0, 0));
-        // Alle Sprites starten ohne SPRITE_ATTR_VISIBLE (Bit 0)
+        gameSprites[i].type = SPRITE_TYPE_NOROTATE;
+        gameSprites[i].animDir = 1;
     }
     
-    // Index 0: Aktives Tetromino
-    gameSprites[0].attr = SPRITE_FLAG_TETROMINO;
-    gameSprites[0].offsetX = -8;
-    gameSprites[0].offsetY = -8;
+    // Initial-Offsets für Tetromino & Shadow
+    gameSprites[0].offsetX = -8; gameSprites[0].offsetY = -8;
+    gameSprites[1].offsetX = -8; gameSprites[1].offsetY = -8;
 
-    // Index 1: Schatten
-    gameSprites[1].attr = SPRITE_FLAG_SHADOW;
-    gameSprites[1].offsetX = -8;
-    gameSprites[1].offsetY = -8;
+    // Index 2: Next Piece Offset
+    gameSprites[2].offsetX = -8;
+    gameSprites[2].offsetY = -8;
 
-    // Index 2: Next Piece
-    gameSprites[2].attr = SPRITE_FLAG_NEXT;
-
-    // Index 3: Hold Piece
-    gameSprites[3].attr = SPRITE_FLAG_HOLD;
+    // Index 3: Hold Piece Offset
+    gameSprites[3].offsetX = -8;
+    gameSprites[3].offsetY = -8;
 }
-
 
 void sprites_update() {
     for(u16 i = 0; i < 10; i++) {
@@ -40,16 +37,29 @@ void sprites_update() {
             continue;
         }
 
-        gs->animTimer++;
-        if (gs->animTimer >= GET_TICKS(NOROT_NEXTFRAME)) {
-            gs->frame = (gs->frame + 1) & 3; 
-            gs->animTimer = 0;
-        }
-
-        gs->stateTimer++;
-        if (gs->stateTimer >= GET_TICKS(NOROT_NETXANIM)) {
-            gs->animation = (gs->animation == 0) ? 1 : 0;
-            gs->stateTimer = 0;
+        if (gs->type == SPRITE_TYPE_SKULL) {
+            gs->animTimer++;
+            if (gs->animTimer >= GET_TICKS(SKULL_NEXTFRAME)) {
+                gs->frame += gs->animDir;
+                if (gs->frame >= 7) gs->animDir = -1;
+                else if (gs->frame <= 0) { 
+                    gs->animDir = 1; 
+                    gs->attr ^= SPRITE_ATTR_FLIPX; 
+                }
+                gs->animTimer = 0;
+            }
+        } else {
+            // Norotate Logic
+            gs->animTimer++;
+            if (gs->animTimer >= GET_TICKS(NOROT_NEXTFRAME)) {
+                gs->frame = (gs->frame + 1) & 3; 
+                gs->animTimer = 0;
+            }
+            gs->stateTimer++;
+            if (gs->stateTimer >= GET_TICKS(NOROT_NETXANIM)) {
+                gs->animation = (gs->animation == 0) ? 1 : 0;
+                gs->stateTimer = 0;
+            }
         }
 
         SPR_setAnim(gs->vdpSprite, gs->animation);

@@ -80,50 +80,48 @@ if (moved && GET_FLAG(config.flags, FLAG_SHADOW)) {
 }
 
 void update_sprite_position(){
-// Sprite mittig auf das 4x4 Grid des Pieces setzen
-// (RENDER_X + ctx->pieceX) * 8  => << 3
-gameSprites[0].x = (RENDER_X + ctx->pieceX) << 3; 
-gameSprites[0].y = (RENDER_Y + ctx->pieceY) << 3;
+    // Tetromino
+    gameSprites[0].x = ((RENDER_X + ctx->pieceX) << 3) + gameSprites[0].offsetX; 
+    gameSprites[0].y = ((RENDER_Y + ctx->pieceY) << 3) + gameSprites[0].offsetY;
 
-// Sprite für den Schatten
-gameSprites[1].x = (RENDER_X + ctx->pieceX) << 3;
-gameSprites[1].y = (RENDER_Y + ctx->ghostY) << 3;
+    // Schatten
+    gameSprites[1].x = ((RENDER_X + ctx->pieceX) << 3) + gameSprites[1].offsetX;
+    gameSprites[1].y = ((RENDER_Y + ctx->ghostY) << 3) + gameSprites[1].offsetY;
 
-// UI Elemente (Next/Hold)
-gameSprites[2].x = UI_X << 3; 
-gameSprites[2].y = NEXT_Y << 3;
+    // UI Elemente (Next/Hold) erhalten ebenfalls ihre Offsets (-8)
+    gameSprites[2].x = (UI_X << 3) + gameSprites[2].offsetX; 
+    gameSprites[2].y = (NEXT_Y << 3) + gameSprites[2].offsetY;
 
-gameSprites[3].x = UI_X << 3; 
-gameSprites[3].y = HOLD_Y << 3;
-
+    gameSprites[3].x = (UI_X << 3) + gameSprites[3].offsetX; 
+    gameSprites[3].y = (HOLD_Y << 3) + gameSprites[3].offsetY;
 }
+
+
+
 
 
 // --- REINE LOGIK INITIALISIERUNG ---
 void game_init() {
-    // 1. Speicher & Context absichern
     if (ctx != NULL) {
         MEM_free(ctx); 
         ctx = NULL;
     }
     ctx = MEM_alloc(sizeof(GameContext));
     memset(ctx, 0, sizeof(GameContext)); 
-    PAL_setPalette(PAL2, anim_norotate.palette->data, DMA);    // 2. System-Zustände setzen
+    PAL_setPalette(PAL2, anim_norotate.palette->data, DMA);
     SOUND_init();
     menu_bg_set_mode(BG_MODE_SPACE);
     menu_bg_set_active(true);
     
-    // 3. UI Cache-Reset (Zwingt das UI beim ersten Frame zum Zeichnen)
-    ctx->lastScore          = 0xFFFFFFFF; 
-    ctx->lastLevel          = 0xFFFF;
-    ctx->lastLinesNext      = 0xFFFF;
-    ctx->lastComboCount     = 0xFFFF;
+    ctx->lastScore           = 0xFFFFFFFF; 
+    ctx->lastLevel           = 0xFFFF;
+    ctx->lastLinesNext       = 0xFFFF;
+    ctx->lastComboCount      = 0xFFFF;
     ctx->lastActiveBadEffect = 99; 
     ctx->lastBadEffectTimer  = -1;
-    ctx->lastNextType       = -2;
-    ctx->lastHoldType       = -2;
+    ctx->lastNextType        = -2;
+    ctx->lastHoldType        = -2;
 
-    // 4. Spiel-Parameter & Level-Logik
     ctx->score = 0;
     if (config.speedLevel == 0)      ctx->startLevel = 1;
     else if (config.speedLevel == 1) ctx->startLevel = 1;
@@ -133,62 +131,86 @@ void game_init() {
     ctx->level      = ctx->startLevel;
     ctx->linesTotal = 0;
     ctx->moveTimer  = 0;
-    ctx->holdType   = -1; // -1 = Kein Stein im Speicher
-ctx->canHold = GET_FLAG(config.flags, FLAG_HOLD);
+    ctx->holdType   = -1; 
+    ctx->canHold = GET_FLAG(config.flags, FLAG_HOLD);
 
-    // 5. Effekt- & Animations-Initialisierung
     ctx->activeBadEffect = EFFECT_NONE;
     ctx->badEffectTimer  = 0;
     ctx->heartTriggered  = false;
-    ctx->sortingRow      = -1; // -1 = Keine Animation aktiv
+    ctx->sortingRow      = -1; 
     ctx->clearTimer      = 0;
 
-    // 6. Garbage-Setup (Zufallswert basierend auf config)
     ctx->garbageTimer = 0;
     if (config.garbageFreq > 0) {
         u16 base = GARBAGE_INTERVALS[config.garbageFreq];
-    ctx->garbageNextThreshold = GET_TICKS(base + (random() % 120) - 60);
+        ctx->garbageNextThreshold = GET_TICKS(base + (random() % 120) - 60);
     }
 
-    // 7. Piece-Logik (Bag füllen & ersten Stein spawnen)
     refillBag();
-    ctx->nextType = ctx->bag[ctx->bagIndex];
-    ctx->bagIndex++;
+    ctx->nextType = ctx->bag[0];
+    ctx->bagIndex = 0;
     
-    // Berechnet PieceX, PieceY und Rotation für den Start
     spawnPiece();
 
-    // 8. Dirty-Flag für den ersten Frame
     ctx->needsBoardDraw = true; 
     update_sprite_position();
 }
 
 void update_curse_sprites(GameContext* ctx) {
-    bool curseActive = (ctx->activeBadEffect == EFFECT_NO_ROTATE);
-    bool shadowEnabled = GET_FLAG(config.flags, FLAG_SHADOW);
+    bool norotActive  = (ctx->activeBadEffect == EFFECT_NO_ROTATE);
+    bool skullActive  = (ctx->activeBadEffect == EFFECT_FULLSPEED || ctx->activeBadEffect == EFFECT_SAME_TILES);
+    bool holdLocked   = (ctx->activeBadEffect == EFFECT_HOLD_LOCK);
+    bool nextHidden   = (ctx->activeBadEffect == EFFECT_HIDE_NEXT);
+    bool shadowOn     = GET_FLAG(config.flags, FLAG_SHADOW);
 
-    for (u16 i = 0; i < 10; i++) {
-        GameSprite* gs = &gameSprites[i];
-        
-        if (gs->attr & SPRITE_FLAG_TETROMINO) {
-            // Nur das Tetromino-Sprite reagiert auf den NO_ROTATE Fluch
-            sprites_set_visible(i, curseActive);
-            gs->x = ((RENDER_X + ctx->pieceX) << 3) + gs->offsetX;
-            gs->y = ((RENDER_Y + ctx->pieceY) << 3) + gs->offsetY;
-        }
-        else if (gs->attr & SPRITE_FLAG_SHADOW) {
-            // Schatten, Next und Hold bleiben immer unsichtbar (Bit 0 = 0)
-            sprites_set_visible(i, false);
-        }
-        else if (gs->attr & SPRITE_FLAG_NEXT) {
-            sprites_set_visible(i, false);
-        }
-        else if (gs->attr & SPRITE_FLAG_HOLD) {
-            sprites_set_visible(i, false);
-        }
+    // --- Slot 0: Tetromino Position ---
+    GameSprite* s0 = &gameSprites[0];
+    if (norotActive) {
+        s0->type = SPRITE_TYPE_NOROTATE;
+        SPR_setDefinition(s0->vdpSprite, &anim_norotate);
+        s0->attr &= ~SPRITE_ATTR_PRIORITY; // Über das Piece
+        sprites_set_visible(0, true);
+    } else if (skullActive) {
+        s0->type = SPRITE_TYPE_SKULL;
+        SPR_setDefinition(s0->vdpSprite, &anim_skull);
+        s0->attr |= SPRITE_ATTR_PRIORITY;  // Hinter das Piece (Low Prio)
+        sprites_set_visible(0, true);
+    } else {
+        sprites_set_visible(0, false);
     }
-}
+    s0->x = ((RENDER_X + ctx->pieceX) << 3) + s0->offsetX;
+    s0->y = ((RENDER_Y + ctx->pieceY) << 3) + s0->offsetY;
 
+    // --- Slot 1: Schatten Position ---
+    // Norotate laut Vorgabe NICHT auf den Schatten abbilden
+    sprites_set_visible(1, false); 
+
+    // --- Slot 2: Next Platz ---
+    GameSprite* s2 = &gameSprites[2];
+    if (nextHidden) {
+        s2->type = SPRITE_TYPE_SKULL;
+        SPR_setDefinition(s2->vdpSprite, &anim_skull);
+        s2->attr &= ~SPRITE_ATTR_PRIORITY;
+        sprites_set_visible(2, true);
+    } else {
+        sprites_set_visible(2, false);
+    }
+    s2->x = (UI_X << 3) + s2->offsetX;
+    s2->y = (NEXT_Y << 3) + s2->offsetY;
+
+    // --- Slot 3: Hold Platz ---
+    GameSprite* s3 = &gameSprites[3];
+    if (holdLocked) {
+        s3->type = SPRITE_TYPE_SKULL;
+        SPR_setDefinition(s3->vdpSprite, &anim_skull);
+        s3->attr &= ~SPRITE_ATTR_PRIORITY;
+        sprites_set_visible(3, true);
+    } else {
+        sprites_set_visible(3, false);
+    }
+    s3->x = (UI_X << 3) + s3->offsetX;
+    s3->y = (HOLD_Y << 3) + s3->offsetY;
+}
 
 
 

@@ -356,40 +356,52 @@ void spawnPiece() {
 
     // 1. Effekt-Timer Check
     if (ctx->badEffectTimer > 0 && (ctx->activeBadEffect <= 2 || ctx->activeBadEffect == EFFECT_I_RAIN)) {
-        if (--ctx->badEffectTimer == 0) { ctx->activeBadEffect = EFFECT_NONE; ctx->lastActiveBadEffect = 99; }
+        if (--ctx->badEffectTimer == 0) { 
+            ctx->activeBadEffect = EFFECT_NONE; 
+            ctx->lastActiveBadEffect = 99; 
+        }
     }
 
-    // 2. Stein-Wahl
+    // 2. Zuweisung: Das, was in 'nextType' stand, wird jetzt aktiv
+    ctx->type = ctx->nextType;
+
+    // 3. Neuen 'nextType' für die Vorschau bestimmen
     if (ctx->activeBadEffect == EFFECT_I_RAIN) {
-        ctx->type = 0;
+        ctx->type = 0; // Aktuellen Stein für I-Rain überschreiben, Vorschau bleibt
     } else if (ctx->activeBadEffect != EFFECT_SAME_TILES) {
-        ctx->type = ctx->nextType;
         if (config.randMode == 0) {
-            ctx->nextType = ctx->bag[ctx->bagIndex++];
-            if (ctx->bagIndex >= 7) refillBag();
+            // Hole den nächsten Stein aus dem Bag
+            ctx->nextType = ctx->bag[ctx->bagIndex];
+            ctx->bagIndex++;
+            // Wenn Bag leer, neu füllen und Index zurücksetzen
+            if (ctx->bagIndex >= 7) {
+                refillBag();
+            }
         } else {
             ctx->nextType = random() % 7;
         }
     }
 
+    // 4. Positionierung und Status
     ctx->rotation = 0;
     ctx->pieceX = 3;
     ctx->pieceY = (ctx->type == 0) ? -1 : 0;
     ctx->canHold = true;
 
-    // 3. Item-Spawning (Hier wird die statische Funktion jetzt benutzt!)
     handle_item_spawn_logic();
 
-    // 4. Ghost & Collision
-if (GET_FLAG(config.flags, FLAG_SHADOW)) {
-    calculate_ghost_y();
-    ctx->needsBoardDraw = true; // Wichtig: Board muss neu gemalt werden
-}
-if (checkCollision(ctx->pieceX, ctx->pieceY, ctx->rotation)) {
+    if (GET_FLAG(config.flags, FLAG_SHADOW)) {
+        calculate_ghost_y();
+    }
+    
+    ctx->needsBoardDraw = true;
+
+    if (checkCollision(ctx->pieceX, ctx->pieceY, ctx->rotation)) {
         SOUND_play(SND_GAME_OVER);
-        play_game_over_animation(); // Animation hier ebenfalls einfügen
+        play_game_over_animation();
     }
 }
+
 
 bool handle_active_animations(GameContext* ctx) {
     if (ctx == NULL) return false;

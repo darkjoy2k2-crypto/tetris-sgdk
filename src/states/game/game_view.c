@@ -181,8 +181,8 @@ void drawBoard() {
 
     for (u16 y = 0; y < BOARD_HEIGHT; y++) {
         // Blink-Check: Jede Zeile, die gelöscht wird, flackert
-        bool isClearingRow = (ctx->clearTimer > 0 && ctx->pendingLines[y]);
-        bool showFlash = isClearingRow && ((ctx->clearTimer >> (GET_FLAG(config.flags, FLAG_IS_PAL) ? 1 : 2)) & 1);
+// Nutzt das Makro GET_LINE_PENDING, um das entsprechende Bit in boardFlags zu prüfen
+        bool isClearingRow = (ctx->clearTimer > 0 && GET_LINE_PENDING(y));        bool showFlash = isClearingRow && ((ctx->clearTimer >> (GET_FLAG(config.flags, FLAG_IS_PAL) ? 1 : 2)) & 1);
 
         for (u16 x = 0; x < BOARD_WIDTH; x++) {
             u16 tile;

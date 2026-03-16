@@ -53,16 +53,13 @@ static bool handle_gravity(GameContext* ctx) {
 
 static void handle_environment(GameContext* ctx, bool moved) {
     // Garbage
-    if (config.garbageFreq > 0 && ctx->clearTimer == 0) {
-        ctx->garbageTimer++;
-        if (ctx->garbageTimer >= ctx->garbageNextThreshold) {
-            addGarbageLine();
-            ctx->garbageTimer = 0;
-ctx->garbageNextThreshold = GET_TICKS(GARBAGE_INTERVALS[config.garbageFreq] + (random() % 120) - 60);
-
-ctx->needsBoardDraw = true;
-        }
+if (ctx->garbageTimer >= ctx->garbageNextThreshold) {
+        addGarbageLine();
+        ctx->garbageTimer = 0;
+        ctx->garbageNextThreshold = GET_TICKS(GARBAGE_INTERVALS[config.garbageFreq] + (random() % 120) - 60);
+        ctx->boardFlags |= GF_NEEDS_DRAW;
     }
+
 
     // Shadow
 if (moved && GET_FLAG(config.flags, FLAG_SHADOW)) {
@@ -223,21 +220,25 @@ void game_update() {
 
     handle_environment(ctx, moved);
 
-    if (moved) ctx->needsBoardDraw = true;
-    
+    if (moved) ctx->boardFlags |= GF_NEEDS_DRAW;
+
     lastJoyState = joyState; 
 }
 
 void game_draw() {
     if (ctx == NULL) return;
 
-    if (ctx->needsBoardDraw) {
+    // Nutzt das Bit-Flag GF_NEEDS_DRAW aus dem u32 boardFlags Member
+    if (ctx->boardFlags & GF_NEEDS_DRAW) {
         drawBoard(); 
+        
         // Debug Bag Anzeige aufrufen
         view_draw_debug_bag(ctx);
         
-        ctx->needsBoardDraw = false; 
+        // Bit-Flag löschen (Reset)
+        ctx->boardFlags &= ~GF_NEEDS_DRAW; 
     }
+    
     sprites_update();
     view_update_ui(ctx); 
 }

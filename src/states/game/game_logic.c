@@ -171,10 +171,10 @@ ctx->badEffectTimer = GET_TICKS(180);
 ctx->badEffectTimer = GET_TICKS(240);
             strncpy(ctx->lastComment, "REVERSED!", 20); 
             break;
-        case EFFECT_HOLD_LOCK:  
-ctx->badEffectTimer = GET_TICKS(300);
+case EFFECT_HOLD_LOCK:  
+            ctx->badEffectTimer = GET_TICKS(300);
             ctx->holdType = -1; 
-            ctx->canHold = false; 
+            ctx->flags &= ~GF_CAN_HOLD; // Flag statt bool
             strncpy(ctx->lastComment, "HOLD LOCKED!", 20); 
             break;
         case EFFECT_HIDE_NEXT:  
@@ -249,10 +249,9 @@ void triggerGoodEffect() {
             }
         }
     }
-
-    SOUND_play(SND_GOOD_ITEM);
+SOUND_play(SND_GOOD_ITEM);
     ctx->commentTimer = 60;
-    ctx->needsBoardDraw = true;
+    ctx->boardFlags |= GF_NEEDS_DRAW;
 }
 
 
@@ -304,13 +303,13 @@ u16 clearLines() {
             if (t == ITEM_ID_HEART) h++;
             else if (t == ITEM_ID_SKULL) s++;
         }
-        if (full) {
+if (full) {
             linesCleared++;
-            ctx->pendingLines[y] = true;
+            SET_LINE_PENDING(y); // Makro nutzt boardFlags Bits 1-20
             u8 f;
             if (h == 0 && s == 0) f = 0;
-            else if (h > s) { f = ITEM_ID_HEART; ctx->heartTriggered = true; }
-            else if (s > h) { f = ITEM_ID_SKULL; ctx->skullTriggered = true; }
+            else if (h > s) { f = ITEM_ID_HEART; ctx->flags |= GF_HEART_TRIG; }   
+            else if (s > h) { f = ITEM_ID_SKULL; ctx->flags |= GF_SKULL_TRIG; }   
             else f = TILE_ID_FLASH;
             for (u16 x = 0; x < BOARD_WIDTH; x++) ctx->board[x][y] = f;
         }
@@ -336,10 +335,8 @@ void play_game_over_animation() {
                 rowChanged = true;
             }
         }
-        if (rowChanged) {
-            ctx->needsBoardDraw = true;
-            // WICHTIG: Falls der Fehler bleibt, nenne view_draw_board() hier 
-            // exakt so, wie die Zeichen-Funktion in deiner game_view.c heißt!
+if (rowChanged) {
+            ctx->boardFlags |= GF_NEEDS_DRAW;
             drawBoard(); 
             for(u16 i = 0; i < 3; i++) SYS_doVBlankProcess();
         }
@@ -385,10 +382,8 @@ void spawnPiece() {
     ctx->rotation = 0;
     ctx->pieceX = 3;
     ctx->pieceY = (ctx->type == 0) ? -1 : 0;
-    ctx->canHold = true;
-
-    // FAKTISCHER FIX: Timer zurücksetzen, um Doppel-Lock im selben Frame zu verhindern
-    ctx->moveTimer = 0; 
+ctx->flags |= GF_CAN_HOLD; // Flag setzen
+    ctx->moveTimer = 0;
 
     handle_item_spawn_logic();
 
@@ -396,7 +391,7 @@ void spawnPiece() {
         calculate_ghost_y();
     }
     
-    ctx->needsBoardDraw = true;
+ctx->boardFlags |= GF_NEEDS_DRAW; // u32 boardFlags nutzen
 
     if (checkCollision(ctx->pieceX, ctx->pieceY, ctx->rotation)) {
         SOUND_play(SND_GAME_OVER);
@@ -414,7 +409,7 @@ bool handle_active_animations(GameContext* ctx) {
             finishLineClear();
             if (ctx->sortingRow == -1) spawnPiece();
         }
-        ctx->needsBoardDraw = true;
+ctx->boardFlags |= GF_NEEDS_DRAW;
         return true; 
     }
 
@@ -428,7 +423,7 @@ bool handle_active_animations(GameContext* ctx) {
         else handle_sort_row(y);
 
         ctx->sortingRow++;
-        ctx->needsBoardDraw = true;
+ctx->boardFlags |= GF_NEEDS_DRAW;
 
         if (ctx->sortingRow >= BOARD_HEIGHT) {
             ctx->sortingRow = -1;
@@ -456,32 +451,34 @@ bool handle_active_animations(GameContext* ctx) {
 
 void finishLineClear() {
     for (s16 y = BOARD_HEIGHT - 1; y >= 0; y--) {
-        if (ctx->pendingLines[y]) {
+        if (GET_LINE_PENDING(y)) { // Bit-Abfrage
             for (s16 yy = y; yy > 0; yy--) {
                 for (u16 x = 0; x < BOARD_WIDTH; x++) {
                     ctx->board[x][yy] = ctx->board[x][yy - 1];
-                    ctx->pendingLines[yy] = ctx->pendingLines[yy - 1];
+                    // Verschieben der Pending-Bits im boardFlags Register
+                    if (GET_LINE_PENDING(yy - 1)) SET_LINE_PENDING(yy);
+                    else ctx->boardFlags &= ~(1UL << (yy + GF_PENDING_SHIFT));
                 }
             }
             for (u16 x = 0; x < BOARD_WIDTH; x++) ctx->board[x][0] = 0;
-            ctx->pendingLines[0] = false;
+            ctx->boardFlags &= ~(1UL << (0 + GF_PENDING_SHIFT)); // Y0 Bit löschen
             y++; 
         }
     }
 
-    // Effekte zünden
-    if (ctx->heartTriggered) {
+    if (ctx->flags & GF_HEART_TRIG) {
         triggerGoodEffect();
-        ctx->heartTriggered = false;
+        ctx->flags &= ~GF_HEART_TRIG;
     }
-    if (ctx->skullTriggered) {
+    if (ctx->flags & GF_SKULL_TRIG) {
         triggerBadEffect();
-        ctx->skullTriggered = false;
+        ctx->flags &= ~GF_SKULL_TRIG;
     }
 }
 
 void performHold() {
-    if (!GET_FLAG(config.flags, FLAG_HOLD) || !ctx->canHold) return;
+    // Prüft das Verhaltens-Bit GF_CAN_HOLD in ctx->flags
+    if (!GET_FLAG(config.flags, FLAG_HOLD) || !(ctx->flags & GF_CAN_HOLD)) return;
 
     if (ctx->itemSlot < 4 && ctx->itemType == ITEM_ID_SKULL) { 
         triggerBadEffect(); 
@@ -494,15 +491,17 @@ void performHold() {
             ctx->lastHoldType = -2; 
             SOUND_play(SND_BAD_ITEM); 
         }
-        ctx->canHold = false; return; 
+        // Bit löschen statt bool-Zuweisung
+        ctx->flags &= ~GF_CAN_HOLD; 
+        return; 
     }
 
     SOUND_play(SND_HOLD);
 
     if (ctx->holdType == -1) { 
         ctx->holdType = ctx->type; 
-        spawnPiece(); } 
-    else {
+        spawnPiece(); 
+    } else {
         s16 temp = ctx->type; 
         ctx->type = ctx->holdType; 
         ctx->holdType = temp;
@@ -511,7 +510,9 @@ void performHold() {
         ctx->rotation = 0;
     }
 
-    ctx->itemSlot = 255; ctx->canHold = false;
+    ctx->itemSlot = 255; 
+    // Bit löschen am Ende des Hold-Vorgangs
+    ctx->flags &= ~GF_CAN_HOLD;
 }
 
 void addGarbageLine() {
@@ -528,9 +529,9 @@ void addGarbageLine() {
         if (!checkCollision(ctx->pieceX, ctx->pieceY - 1, ctx->rotation)) ctx->pieceY--;
         else currentState = STATE_GAMEOVER;
     }
-    if (GET_FLAG(config.flags, FLAG_SHADOW)) calculate_ghost_y();
+if (GET_FLAG(config.flags, FLAG_SHADOW)) calculate_ghost_y();
     SOUND_play(SND_GARBAGE);
-    ctx->needsBoardDraw = true;
+    ctx->boardFlags |= GF_NEEDS_DRAW;
 }
 
 
@@ -574,11 +575,19 @@ void reset_game_logic() {
     ctx->badEffectTimer = 0;
     ctx->sortingRow = -1;
     ctx->clearTimer = 0;
-    ctx->moveTimer = 0;
+
+ctx->moveTimer = 0;
     ctx->holdType = -1;
-    ctx->canHold = GET_FLAG(config.flags, FLAG_HOLD);
-    ctx->heartTriggered = false;
-    ctx->skullTriggered = false;
+    
+    if (GET_FLAG(config.flags, FLAG_HOLD)) ctx->flags |= GF_CAN_HOLD; 
+    else ctx->flags &= ~GF_CAN_HOLD;
+
+    ctx->flags &= ~GF_HEART_TRIG;
+    ctx->flags &= ~GF_SKULL_TRIG;
+    
+    // Board Flags komplett zurücksetzen (Dirty Bit + alle Pending Lines)
+    ctx->boardFlags = GF_NEEDS_DRAW;
+
 
     // 4. Garbage Timer (Zufallsvarianz)
     ctx->garbageTimer = 0;
@@ -601,10 +610,10 @@ spawnPiece();
     ctx->lastComboCount      = 0xFFFF;
     ctx->lastActiveBadEffect = 99; 
     ctx->lastBadEffectTimer  = -1;
-    ctx->lastNextType        = -2;
+ctx->lastNextType        = -2;
     ctx->lastHoldType        = -2;
 
-    ctx->needsBoardDraw = true;
+    ctx->boardFlags |= GF_NEEDS_DRAW;
 }
 
 static void handle_rainbow_row(u16 y) {
@@ -638,7 +647,7 @@ static void handle_sort_row(u16 y) {
 void trigger_line_items(u16 y) {
     for (u16 x = 0; x < BOARD_WIDTH; x++) {
         if (ctx->board[x][y] == ITEM_ID_SKULL) triggerBadEffect();
-        if (ctx->board[x][y] == ITEM_ID_HEART) ctx->heartTriggered = true;
+        if (ctx->board[x][y] == ITEM_ID_HEART) ctx->flags |= GF_HEART_TRIG;
     }
 }
 
@@ -663,12 +672,12 @@ void update_board_animations() {
     if (ctx->sortingRow >= 20) {
         ctx->sortingRow = -1; // Animation Ende
         
-        if (clearLines() == 0) {
+if (clearLines() == 0) {
             spawnPiece();
         }
     }
 
-    ctx->needsBoardDraw = true;
+    ctx->boardFlags |= GF_NEEDS_DRAW;
 }
 
 void handle_game_over() {

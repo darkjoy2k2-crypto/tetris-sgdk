@@ -1,70 +1,70 @@
 # Tetris Vibe SGDK - See what AI can do for you
 
-Voll funktionsfähiger Tetris-Klon insporiert von Tetris Party Wii
+A fully functional Tetris clone for the **Sega Mega Drive / Genesis**, inspired by *Tetris Party (Wii)*. 
 
-Ein technisches Demonstrationsprojekt für das **Sega Mega Drive**, das die Symbiose zwischen Low-Level-Programmierung (SGDK 2.1.1) und KI-gestützter Entwicklung (Google Gemini) aufzeigt.
+This project serves as a technical demonstration of the synergy between low-level hardware programming (SGDK 2.1.1) and AI-assisted development (Google Gemini).
 
 ---
 
 ## 💻 Development Insight: AI Collaboration
 
-Dieses Projekt wurde größtenteils durch die Interaktion mit **Gemini** entwickelt. Der Fokus lag hierbei auf:
-* **Prompt Engineering:** Präzise Instruktionen zur Einhaltung von 68000-Alignment-Regeln.
-* **Code Optimization:** Implementierung von Bitshift-Operationen zur Vermeidung von Divisionen bei u16/s16 Multiplikationen.
-* **Architecture:** Strukturierung der Game-States und Trennung von Logik (`game_logic.c`) und Rendering (`game_view.c`).
+The majority of this project’s logic and optimization was developed through iterative interaction with **Gemini**. The focus was on leveraging AI to solve platform-specific challenges:
 
-### Technische Implementierung (SGDK 2.1.1)
-* **Math:** Nutzung von `F16_toInt`, `FIX16(1.5)`, `F16_mul` und `F16_div`.
-* **Memory:** Dynamische Context-Verwaltung zur Minimierung des RAM-Footprints.
-* **Alignment:** Striktes Padding von Datenstrukturen zur Vermeidung von Address-Errors auf Original-Hardware.
+* **Prompt Engineering:** Utilizing precise instructions to enforce Motorola 68000 memory alignment rules, preventing "Address Errors."
+* **Low-Level Optimization:** Implementing bitshift-based math to replace costly division/multiplication cycles for u16/s16 operations.
+* **Hardware Architecture:** Designing a robust Game State Machine and decoupling core logic (`game_logic.c`) from the VDP rendering engine (`game_view.c`).
+
+### Technical Implementation (SGDK 2.1.1)
+* **Math Engine:** Heavy use of fixed-point arithmetic (`FIX16`, `F16_mul`, `F16_div`) for physics and timing.
+* **Dynamic Context Management:** Utilizing `MEM_alloc` for game state persistence to minimize the global RAM footprint.
+* **VDP Management:** Custom background system featuring a "Tetromino Rain" animation using plane scrolling and tile-map manipulation.
 
 ---
 
-## 🎮 Steuerung
+## 🎮 Controls
 
-Das Spiel verzichtet auf eine Pause-Funktion, um den Fokus auf das unmittelbare Gameplay zu legen.
+The game features a streamlined control scheme optimized for the original 3-button and 6-button pads. (Pause functionality is currently omitted to maintain gameplay intensity).
 
-| Taste | Aktion |
+| Button | Action |
 | :--- | :--- |
-| **Steuerkreuz Links/Rechts** | Stück bewegen |
-| **Steuerkreuz Unten** | Soft Drop |
-| **Steuerkreuz Oben** | Hard Drop |
-| **Button A** | Rotieren (Links/Rechts) |
-| **Button B** | Rotieren (Links/Rechts) |
+| **D-Pad Left/Right** | Move Piece |
+| **D-Pad Down** | Soft Drop |
+| **D-Pad Up** | Hard Drop |
+| **Button A / B** | Rotate Piece (Clockwise/Counter-Clockwise) |
 | **Button C** | Hold Function |
-| **Start** | (Nicht belegt) |
+| **Start** | (Unassigned / Debug) |
 
 ---
 
 ## 🚀 Game Features
 
-* **Highscores:** voll funktionoerende Highscore-Liste mit 10 einträgen.
-* **Customizable:** Every aspect of the playmode, items, speed is adjustable ingame.
-* **RNG-System:** 7-Bag Randomizer zur Vermeidung von "Droughts".
-* **Curse Engine:** Zufällige Statuseffekte (No-Rotate, Speed-Skulls, Reversed Controls).
-* **Ghost Piece:** Echtzeit-Berechnung der Landeposition.
-* **Sprite Management:** Dynamische Priorisierung von Tetrominos gegenüber UI-Elementen.
+* **Dynamic Backgrounds:** Features a specialized "Tetromino Rain" visualizer running on background planes.
+* **Curse Engine:** Randomized status effects including "No-Rotate," "Speed-Skulls," and "Reversed Controls."
+* **7-Bag RNG:** Industry-standard 7-bag randomizer to prevent piece droughts and ensure fair play.
+* **Fully Customizable:** In-game menus allow adjustment of every gameplay aspect, including item ratios, drop speeds, and gravity.
+* **Ghost Piece:** Real-time projection of the piece's landing position for precision play.
+* **Highscore System:** Persistent session-based highscore list with support for up to 10 entries.
 
 ---
 
 ## 📝 TODOs / Roadmap
 
-- [ ] **Bugs:** Leidet seit der Sprite-Imtegration aktzell unter memory-leaks/crash, nächtes tile wird nicht korrelt dargestellt
-- [ ] **Audio:** Integration von FM-Tracks und PCM-Samples für Line-Clears.
-- [ ] **Stages:** Hintergrundwechsel und steigende Schwierigkeitskurven pro Level.
-- [ ] **Versus Mode:** Implementierung einer VS CPU oder 2-Player Komponente.
-- [ ] **UI Polish:** Erweiterte Animationen bei "Tetris"-Clears.
+- [ ] **Stability:** Resolve current memory leak/crash issues introduced during Sprite-Engine integration.
+- [ ] **Logic Fix:** Debug the "Next Tile" synchronization error (VDP vs. Logic mismatch).
+- [ ] **Enhanced Audio:** Full integration of FM-synth tracks and PCM samples for line clears.
+- [ ] **Progression:** Add dynamic stage backgrounds and difficulty scaling per level.
+- [ ] **Multiplayer:** Implement a "Versus CPU" or 2-Player competitive mode.
 
 ---
 
-## 📖 Dokumentation & Wiki
+## 📖 Documentation & Wiki
 
-Detaillierte Informationen zum Memory-Layout und den KI-Prompts:
-> [👉 Zum Wiki (Platzhalter)](https://github.com/darkjoy2k2-crypto/tetris-vibe/wiki)
+For deep-dives into the memory layout, alignment strategies, and specific AI prompts used:
+> [👉 View the Project Wiki (Placeholder)](https://github.com/darkjoy2k2-crypto/tetris-vibe/wiki)
 
 ---
 
 ## 📜 Credits
-* **Development:** Gemini (AI) & darkjoy2k2.
-* **SOUND:** Sound effects are taken from the game "puyo puyo". Developed by Compile, created by Einosuke Nagao.
-* **SDK:** SGDK by Stephane Dallongeville.
+* **Lead Development:** Gemini (AI) & darkjoy2k2.
+* **Sound Assets:** Sound effects sourced from *Puyo Puyo*. Developed by **Compile**, created by **Einosuke Nagao**.
+* **SDK:** SGDK by **Stephane Dallongeville**.

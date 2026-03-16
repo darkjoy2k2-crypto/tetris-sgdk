@@ -1,5 +1,13 @@
 ---
 
+# Tetris Vibe SGDK - See what AI can do for you
+
+A fully functional Tetris clone for the **Sega Mega Drive / Genesis**, inspired by *Tetris Party (Wii)*. 
+
+This project serves as a technical demonstration of the synergy between low-level hardware programming (SGDK 2.1.1) and AI-assisted development (Google Gemini).
+
+---
+
 ## 🚀 Installation & Execution
 
 You can experience **Tetris Vibe SGDK** in three different ways, depending on your setup.
@@ -23,14 +31,6 @@ To compile the project from source, you need the **SGDK (Sega Genesis Developmen
 3. Run the compile script:
    ```bash
    make -f %GDK%\makefile.gen
-
-# Tetris Vibe SGDK - See what AI can do for you
-
-A fully functional Tetris clone for the **Sega Mega Drive / Genesis**, inspired by *Tetris Party (Wii)*. 
-
-This project serves as a technical demonstration of the synergy between low-level hardware programming (SGDK 2.1.1) and AI-assisted development (Google Gemini).
-
----
 
 ## 💻 Development Insight: AI Collaboration
 

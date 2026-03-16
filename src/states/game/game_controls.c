@@ -90,13 +90,24 @@ if (GET_FLAG(config.flags, FLAG_HOLD) && (changed & BUTTON_C)) {
     }
 
     // --- 5. HARD DROP ---
+// --- 5. HARD DROP ---
+    // Nutzt 'changed' für Flankenerkennung (muss losgelassen worden sein)
     if (changed & vBtnHardDrop) {
         SOUND_play(SND_HARD_DROP);
+        
+        // 1. Teleportation nach unten
         while (!checkCollision(ctx->pieceX, ctx->pieceY + 1, ctx->rotation)) {
             ctx->pieceY++;
         }
+        
+        // 2. WICHTIG: ghostY angleichen, um Diskrepanzen im selben Frame zu vermeiden
+        ctx->ghostY = ctx->pieceY;
+
+        // 3. LockPiece aufrufen
+        // FAKT: lockPiece ruft intern bereits clearLines() und spawnPiece() auf!
         lockPiece();
-        if (clearLines() == 0) spawnPiece();
+        
+        // Der manuelle Aufruf von spawnPiece() wurde hier ENTFERNT.
         moved = true;
     }
 

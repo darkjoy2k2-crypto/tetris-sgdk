@@ -17,6 +17,48 @@ static u16 HEART_TILE_IDX;
 
 // --- Initialisierung ---
 
+void view_draw_debug_bag(GameContext* ctx) {
+    if (ctx == NULL) return;
+
+    // 1. Spalte: Die komplette 7-Bag (X=0, Y=0 bis 27)
+    for (u16 b = 0; b < 7; b++) {
+        u8 bType = ctx->bag[b];
+        u16 anchorY = b << 2; // b * 4 via Bitshift (Abstand 4 Tiles)
+
+        // Altes 4x4 Feld löschen
+        VDP_fillTileMapRect(BG_A, TILE_ATTR_FULL(PAL2, 0, 0, 0, GAME_TILE_START), 0, anchorY, 4, 4);
+
+        // Bag-Piece zeichnen
+        for (u16 i = 0; i < 4; i++) {
+            s16 px = PIECES[bType][0][i][0];
+            s16 py = PIECES[bType][0][i][1];
+            
+            // Markierung: Aktueller Bag-Index bekommt Highlight-Tile (GAME_TILE_START + 8)
+            u16 tile = (b == ctx->bagIndex) ? (GAME_TILE_START + 8) : (GAME_TILE_START + 1 + bType);
+            VDP_setTileMapXY(BG_A, TILE_ATTR_FULL(PAL2, 0, 0, 0, tile), px, anchorY + py);
+        }
+    }
+
+    // 2. Spalte: Aktueller Typ & Next Typ (X=5, Y=0 und Y=5)
+    u16 col2X = 5;
+
+    // Aktueller Piece (Type) an Y=0
+    VDP_fillTileMapRect(BG_A, TILE_ATTR_FULL(PAL2, 0, 0, 0, GAME_TILE_START), col2X, 0, 4, 4);
+    for (u16 i = 0; i < 4; i++) {
+        s16 px = PIECES[ctx->type][0][i][0];
+        s16 py = PIECES[ctx->type][0][i][1];
+        VDP_setTileMapXY(BG_A, TILE_ATTR_FULL(PAL2, 0, 0, 0, GAME_TILE_START + 1 + ctx->type), col2X + px, py);
+    }
+
+    // Nächstes Piece (NextType) an Y=5 (Sicherheitsabstand zu Y=0)
+    VDP_fillTileMapRect(BG_A, TILE_ATTR_FULL(PAL2, 0, 0, 0, GAME_TILE_START), col2X, 5, 4, 4);
+    for (u16 i = 0; i < 4; i++) {
+        s16 px = PIECES[ctx->nextType][0][i][0];
+        s16 py = PIECES[ctx->nextType][0][i][1];
+        VDP_setTileMapXY(BG_A, TILE_ATTR_FULL(PAL2, 0, 0, 0, GAME_TILE_START + 1 + ctx->nextType), col2X + px, 5 + py);
+    }
+}
+
 void load_background() {
     u16 ind = TILE_USER_INDEX;
     VDP_drawImageEx(BG_A, &game_bg, TILE_ATTR_FULL(PAL2, 0, 0, 0, ind), 0, 0, FALSE, CPU);
@@ -84,11 +126,12 @@ void view_update_ui(GameContext* ctx) {
     }
 
     bool hideNext = (ctx->activeBadEffect == EFFECT_HIDE_NEXT);
-if (GET_FLAG(config.flags, FLAG_NEXT) && ctx->nextType != ctx->lastNextType) {
-            if (hideNext) drawPreview(-1, UI_X, NEXT_Y);
-        else drawPreview(ctx->nextType, UI_X, NEXT_Y);
-        ctx->lastNextType = ctx->nextType;
-    }
+if (GET_FLAG(config.flags, FLAG_NEXT)) {
+    if (hideNext) drawPreview(-1, UI_X, NEXT_Y);
+    else drawPreview(ctx->nextType, UI_X, NEXT_Y);
+
+    ctx->lastNextType = ctx->nextType;
+}
 
 if (GET_FLAG(config.flags, FLAG_HOLD) && ctx->holdType != ctx->lastHoldType) {
             drawPreview(ctx->holdType, UI_X, HOLD_Y);
@@ -139,7 +182,7 @@ void drawBoard() {
     for (u16 y = 0; y < BOARD_HEIGHT; y++) {
         // Blink-Check: Jede Zeile, die gelöscht wird, flackert
         bool isClearingRow = (ctx->clearTimer > 0 && ctx->pendingLines[y]);
-bool showFlash = isClearingRow && ((ctx->clearTimer >> (GET_FLAG(config.flags, FLAG_IS_PAL) ? 1 : 2)) & 1);
+        bool showFlash = isClearingRow && ((ctx->clearTimer >> (GET_FLAG(config.flags, FLAG_IS_PAL) ? 1 : 2)) & 1);
 
         for (u16 x = 0; x < BOARD_WIDTH; x++) {
             u16 tile;

@@ -27,16 +27,17 @@
 #define SPRITE_FLAG_HOLD      (1 << 7)
 
 typedef struct {
-    s16 x, y;
-    s16 offsetX, offsetY;
-    u16 frame;
-    u16 animation;
-    u16 animTimer;
-    u16 stateTimer;
-    u16 attr;
-    s16 animDir;
-    u8  type;
-    Sprite* vdpSprite;
+    Sprite* vdpSprite;    // 4 Bytes - Jetzt auf Offset 0 (Sicher!)
+    s16 x, y;             // 4 Bytes
+    s16 offsetX, offsetY; // 4 Bytes
+    u16 frame;            // 2 Bytes
+    u16 animation;        // 2 Bytes
+    u16 animTimer;        // 2 Bytes
+    u16 stateTimer;       // 2 Bytes
+    u16 attr;             // 2 Bytes
+    s16 animDir;          // 2 Bytes
+    u8  type;             // 1 Byte
+    u8  padding;          // 1 Byte - Füllt auf 26 Bytes Gesamtlänge auf
 } GameSprite;
 
 // Deklarationen für den Manager (sprite.c)

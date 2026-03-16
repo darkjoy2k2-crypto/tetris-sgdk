@@ -6,14 +6,28 @@
 GameSprite gameSprites[10];
 
 void sprites_init() {
+    // 1. Sprite-Engine sauber zurücksetzen statt nur neu init
+    if (SPR_isInitialized()) {
+        SPR_end(); 
+    }
     SPR_init();
+
     for(u16 i = 0; i < 10; i++) {
         memset(&gameSprites[i], 0, sizeof(GameSprite));
-        // Default: norotate
+        
+        // 2. Fehlerprüfung: SPR_addSprite kann NULL zurückgeben
         gameSprites[i].vdpSprite = SPR_addSprite(&anim_norotate, -128, -128, TILE_ATTR(PAL2, 0, 0, 0));
+        
+        if (gameSprites[i].vdpSprite == NULL) {
+            // Hier kritischer Fehler: VDP Speicher voll!
+            continue; 
+        }
+        
         gameSprites[i].type = SPRITE_TYPE_NOROTATE;
         gameSprites[i].animDir = 1;
     }
+    
+
     
     // Initial-Offsets für Tetromino & Shadow
     gameSprites[0].offsetX = -8; gameSprites[0].offsetY = -8;
@@ -32,10 +46,15 @@ void sprites_update() {
     for(u16 i = 0; i < 10; i++) {
         GameSprite* gs = &gameSprites[i];
         
+        // FAKTISCHER FIX: Wenn kein VDP-Sprite existiert, überspringen
+        if (gs->vdpSprite == NULL) continue;
+
         if (!(gs->attr & SPRITE_ATTR_VISIBLE)) {
             SPR_setPosition(gs->vdpSprite, -128, -128); 
             continue;
         }
+
+
 
         if (gs->type == SPRITE_TYPE_SKULL) {
             gs->animTimer++;

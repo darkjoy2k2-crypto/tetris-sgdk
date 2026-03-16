@@ -13,3 +13,4 @@ void view_animate_grayscale();
 void drawPreview(s16 type, u16 x, u16 y);
 void view_update_ui(GameContext* ctx); // Jetzt kennt er GameContext
 void drawBoard();
+void view_draw_debug_bag(GameContext* ctx);

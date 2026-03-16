@@ -14,10 +14,11 @@
 #include "sprites.h"
 
 #include <string.h>
-const u16 GRAVITY_SPEEDS[] = { 9999, 60, 30, 15 };
-const u16 GARBAGE_INTERVALS[] = { 0, 1200, 600, 300 };
 
 GameContext* ctx = NULL;
+
+const u16 GRAVITY_SPEEDS[] = { 9999, 60, 30, 15 };
+const u16 GARBAGE_INTERVALS[] = { 0, 1200, 600, 300 };
 
 // Ganz am Ende von game_logic.c einfügen:
 
@@ -102,57 +103,25 @@ void update_sprite_position(){
 
 // --- REINE LOGIK INITIALISIERUNG ---
 void game_init() {
+    // 1. Speicher-Lifecycle
     if (ctx != NULL) {
-        MEM_free(ctx); 
+        MEM_free(ctx);
         ctx = NULL;
     }
     ctx = MEM_alloc(sizeof(GameContext));
-    memset(ctx, 0, sizeof(GameContext)); 
+    
+    // 2. Logik-Reset aufrufen
+    reset_game_logic();
+
+    // 3. Hardware & VDP Setup
     PAL_setPalette(PAL2, anim_norotate.palette->data, DMA);
+    UI_init_fonts_and_palettes();
     SOUND_init();
+    
     menu_bg_set_mode(BG_MODE_SPACE);
     menu_bg_set_active(true);
-    
-    ctx->lastScore           = 0xFFFFFFFF; 
-    ctx->lastLevel           = 0xFFFF;
-    ctx->lastLinesNext       = 0xFFFF;
-    ctx->lastComboCount      = 0xFFFF;
-    ctx->lastActiveBadEffect = 99; 
-    ctx->lastBadEffectTimer  = -1;
-    ctx->lastNextType        = -2;
-    ctx->lastHoldType        = -2;
 
-    ctx->score = 0;
-    if (config.speedLevel == 0)      ctx->startLevel = 1;
-    else if (config.speedLevel == 1) ctx->startLevel = 1;
-    else if (config.speedLevel == 2) ctx->startLevel = 5;
-    else                             ctx->startLevel = 10;
-
-    ctx->level      = ctx->startLevel;
-    ctx->linesTotal = 0;
-    ctx->moveTimer  = 0;
-    ctx->holdType   = -1; 
-    ctx->canHold = GET_FLAG(config.flags, FLAG_HOLD);
-
-    ctx->activeBadEffect = EFFECT_NONE;
-    ctx->badEffectTimer  = 0;
-    ctx->heartTriggered  = false;
-    ctx->sortingRow      = -1; 
-    ctx->clearTimer      = 0;
-
-    ctx->garbageTimer = 0;
-    if (config.garbageFreq > 0) {
-        u16 base = GARBAGE_INTERVALS[config.garbageFreq];
-        ctx->garbageNextThreshold = GET_TICKS(base + (random() % 120) - 60);
-    }
-
-    refillBag();
-    ctx->nextType = ctx->bag[0];
-    ctx->bagIndex = 0;
-    
-    spawnPiece();
-
-    ctx->needsBoardDraw = true; 
+    // 4. Initiale Sprite-Berechnung
     update_sprite_position();
 }
 
@@ -260,16 +229,16 @@ void game_update() {
 }
 
 void game_draw() {
-
     if (ctx == NULL) return;
 
     if (ctx->needsBoardDraw) {
         drawBoard(); 
+        // Debug Bag Anzeige aufrufen
+        view_draw_debug_bag(ctx);
         
         ctx->needsBoardDraw = false; 
     }
     sprites_update();
-
     view_update_ui(ctx); 
 }
 

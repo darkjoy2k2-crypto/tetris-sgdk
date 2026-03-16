@@ -7,7 +7,6 @@
 #include "states/states.h"
 #include "sound_manager.h"
 #include "sounds.h"
-#include "states/game/game_view.h" 
 
 void triggerBadEffect();
 static void handle_item_spawn_logic();
@@ -355,25 +354,25 @@ void spawnPiece() {
     if (ctx == NULL) return;
 
     // 1. Effekt-Timer Check
-    if (ctx->badEffectTimer > 0 && (ctx->activeBadEffect <= 2 || ctx->activeBadEffect == EFFECT_I_RAIN)) {
-        if (--ctx->badEffectTimer == 0) { 
+    if (ctx->badEffectTimer > 0 && (ctx->activeBadEffect <= 2 
+        || ctx->activeBadEffect == EFFECT_I_RAIN)) 
+    {
+        if (--ctx->badEffectTimer == 0) 
+        { 
             ctx->activeBadEffect = EFFECT_NONE; 
             ctx->lastActiveBadEffect = 99; 
         }
     }
 
-    // 2. Zuweisung: Das, was in 'nextType' stand, wird jetzt aktiv
+    // 2. Zuweisung
     ctx->type = ctx->nextType;
 
-    // 3. Neuen 'nextType' für die Vorschau bestimmen
+    // 3. Neuen 'nextType' bestimmen
     if (ctx->activeBadEffect == EFFECT_I_RAIN) {
-        ctx->type = 0; // Aktuellen Stein für I-Rain überschreiben, Vorschau bleibt
+        ctx->type = 0; 
     } else if (ctx->activeBadEffect != EFFECT_SAME_TILES) {
         if (config.randMode == 0) {
-            // Hole den nächsten Stein aus dem Bag
-            ctx->nextType = ctx->bag[ctx->bagIndex];
-            ctx->bagIndex++;
-            // Wenn Bag leer, neu füllen und Index zurücksetzen
+            ctx->nextType = ctx->bag[ctx->bagIndex++];
             if (ctx->bagIndex >= 7) {
                 refillBag();
             }
@@ -388,6 +387,9 @@ void spawnPiece() {
     ctx->pieceY = (ctx->type == 0) ? -1 : 0;
     ctx->canHold = true;
 
+    // FAKTISCHER FIX: Timer zurücksetzen, um Doppel-Lock im selben Frame zu verhindern
+    ctx->moveTimer = 0; 
+
     handle_item_spawn_logic();
 
     if (GET_FLAG(config.flags, FLAG_SHADOW)) {
@@ -401,7 +403,6 @@ void spawnPiece() {
         play_game_over_animation();
     }
 }
-
 
 bool handle_active_animations(GameContext* ctx) {
     if (ctx == NULL) return false;
@@ -480,18 +481,36 @@ void finishLineClear() {
 }
 
 void performHold() {
-if (!GET_FLAG(config.flags, FLAG_HOLD) || !ctx->canHold) return;
-    if (ctx->itemSlot < 4 && ctx->itemType == ITEM_ID_SKULL) { triggerBadEffect(); ctx->itemSlot = 255; }
+    if (!GET_FLAG(config.flags, FLAG_HOLD) || !ctx->canHold) return;
+
+    if (ctx->itemSlot < 4 && ctx->itemType == ITEM_ID_SKULL) { 
+        triggerBadEffect(); 
+        ctx->itemSlot = 255; 
+    }
+
     if (ctx->activeBadEffect == EFFECT_SAME_TILES) {
-        if (ctx->holdType != -1) { ctx->holdType = -1; ctx->lastHoldType = -2; SOUND_play(SND_BAD_ITEM); }
+        if (ctx->holdType != -1) { 
+            ctx->holdType = -1; 
+            ctx->lastHoldType = -2; 
+            SOUND_play(SND_BAD_ITEM); 
+        }
         ctx->canHold = false; return; 
     }
+
     SOUND_play(SND_HOLD);
-    if (ctx->holdType == -1) { ctx->holdType = ctx->type; spawnPiece(); } 
+
+    if (ctx->holdType == -1) { 
+        ctx->holdType = ctx->type; 
+        spawnPiece(); } 
     else {
-        s16 temp = ctx->type; ctx->type = ctx->holdType; ctx->holdType = temp;
-        ctx->pieceX = 3; ctx->pieceY = 0; ctx->rotation = 0;
+        s16 temp = ctx->type; 
+        ctx->type = ctx->holdType; 
+        ctx->holdType = temp;
+        ctx->pieceX = 3; 
+        ctx->pieceY = 0; 
+        ctx->rotation = 0;
     }
+
     ctx->itemSlot = 255; ctx->canHold = false;
 }
 
@@ -538,22 +557,54 @@ void finalize_game_session() {
 void reset_game_logic() {
     if (ctx == NULL) return;
 
-    // Board leeren
+    // 1. Board & Basis-Daten
     memset(ctx->board, 0, sizeof(ctx->board));
-    
-    // Status zurücksetzen
     ctx->score = 0;
     ctx->linesTotal = 0;
-    ctx->level = ctx->startLevel;
-    menu_bg_set_intensity(1);
     ctx->comboCount = 0;
+    
+    // 2. Level-Berechnung (Optimiert)
+    // Nutzt config.speedLevel als Basis für das Start-Level
+    ctx->startLevel = (config.speedLevel == 2) ? 5 : 
+                      (config.speedLevel == 3) ? 10 : 1;
+    ctx->level = ctx->startLevel;
+
+    // 3. Status & Effekte
     ctx->activeBadEffect = EFFECT_NONE;
     ctx->badEffectTimer = 0;
     ctx->sortingRow = -1;
-    
-    // Bag für neues Spiel mischen
-    refillBag();
-    ctx->nextType = ctx->bag[ctx->bagIndex++];
+    ctx->clearTimer = 0;
+    ctx->moveTimer = 0;
+    ctx->holdType = -1;
+    ctx->canHold = GET_FLAG(config.flags, FLAG_HOLD);
+    ctx->heartTriggered = false;
+    ctx->skullTriggered = false;
+
+    // 4. Garbage Timer (Zufallsvarianz)
+    ctx->garbageTimer = 0;
+    if (config.garbageFreq > 0) {
+        u16 base = GARBAGE_INTERVALS[config.garbageFreq];
+        ctx->garbageNextThreshold = GET_TICKS(base + (random() % 120) - 60);
+    }
+
+    // 5. RNG & Erster Stein
+refillBag();
+
+ctx->nextType = ctx->bag[ctx->bagIndex++];
+
+spawnPiece();
+
+    // 6. UI-Cache Invalidierung
+    ctx->lastScore           = 0xFFFFFFFF; 
+    ctx->lastLevel           = 0xFFFF;
+    ctx->lastLinesNext       = 0xFFFF;
+    ctx->lastComboCount      = 0xFFFF;
+    ctx->lastActiveBadEffect = 99; 
+    ctx->lastBadEffectTimer  = -1;
+    ctx->lastNextType        = -2;
+    ctx->lastHoldType        = -2;
+
+    ctx->needsBoardDraw = true;
 }
 
 static void handle_rainbow_row(u16 y) {

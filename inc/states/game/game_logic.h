@@ -18,6 +18,7 @@ typedef struct GameContext GameContext;
 #define ITEM_RATIO_HEART 50 
 
 extern const s8 PIECES[7][4][4][2];
+extern const u16 GARBAGE_INTERVALS[];
 
 // Funktionen
 bool checkCollision(s16 nx, s16 ny, u16 nr);
@@ -29,6 +30,8 @@ void refillBag();
 void performHold();
 void addGarbageLine();
 void triggerManualSort();
+void reset_game_logic();
+
 void update_board_animations(); // Hinzugefügt
 bool handle_active_animations(GameContext *ctx);
 bool tryRotate(u16 newRotation);

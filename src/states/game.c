@@ -52,27 +52,46 @@ static bool handle_gravity(GameContext* ctx) {
 }
 
 static void handle_environment(GameContext* ctx, bool moved) {
-    // Garbage
-if (ctx->garbageTimer >= ctx->garbageNextThreshold) {
+    if (ctx == NULL) return;
+
+    // Garbage Logik
+    if (ctx->garbageTimer >= ctx->garbageNextThreshold) {
         addGarbageLine();
         ctx->garbageTimer = 0;
         ctx->garbageNextThreshold = GET_TICKS(GARBAGE_INTERVALS[config.garbageFreq] + (random() % 120) - 60);
         ctx->boardFlags |= GF_NEEDS_DRAW;
     }
 
-
-    // Shadow
-if (moved && GET_FLAG(config.flags, FLAG_SHADOW)) {
-                ctx->ghostY = ctx->pieceY;
+    // Shadow Logik (Ghost Piece)
+    if (moved && GET_FLAG(config.flags, FLAG_SHADOW)) {
+        ctx->ghostY = ctx->pieceY;
         while (!checkCollision(ctx->pieceX, ctx->ghostY + 1, ctx->rotation)) ctx->ghostY++;
     }
 
-    // Effect Timer
-    if (ctx->badEffectTimer > 0 && ctx->activeBadEffect >= 3) {
-        ctx->badEffectTimer--;
-        if (ctx->badEffectTimer == 0) {
-            ctx->activeBadEffect = EFFECT_NONE;
-            SOUND_play(SND_GOOD_ITEM);
+    // Zeitbasierte Effekte dekrementieren (Sekunden-Timer)
+    // Ausschluss von Rainbow (dauerhaft) und stückbasierten Effekten (0, 1, 2, 7)
+    if (ctx->badEffectTimer > 0) {
+        if (ctx->activeBadEffect != EFFECT_RAINBOW && 
+            ctx->activeBadEffect != EFFECT_FULLSPEED &&
+            ctx->activeBadEffect != EFFECT_SAME_TILES &&
+            ctx->activeBadEffect != EFFECT_I_RAIN) 
+        {
+            ctx->badEffectTimer--;
+
+            if (ctx->badEffectTimer <= 0) {
+                // Übergang von Dunkelheit zu Rainbow
+                if (ctx->activeBadEffect == EFFECT_SHADOW_BOARD) {
+                    ctx->activeBadEffect = EFFECT_RAINBOW;
+                    ctx->badEffectTimer = 0; // Permanent
+                    ctx->sortingRow = 0;
+                    set_game_comment("RAINBOW REBIRTH!", 90);
+                    SOUND_play(SND_GOOD_ITEM);
+                } else {
+                    ctx->activeBadEffect = EFFECT_NONE;
+                    ctx->lastActiveBadEffect = 99;
+                    SOUND_play(SND_GOOD_ITEM);
+                }
+            }
         }
     }
 }

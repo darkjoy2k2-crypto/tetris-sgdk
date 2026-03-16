@@ -7,7 +7,7 @@
 // Animations-Geschwindigkeiten (Ticks)
 #define NOROT_NEXTFRAME       10
 #define NOROT_NETXANIM        60
-#define SKULL_NEXTFRAME       5
+#define SKULL_NEXTFRAME       2
 #define EFFECT_DURATION_NOROT GET_TICKS(180)
 
 // Sprite-Verhaltens-Typen
@@ -25,6 +25,14 @@
 #define SPRITE_FLAG_SHADOW    (1 << 5)
 #define SPRITE_FLAG_NEXT      (1 << 6)
 #define SPRITE_FLAG_HOLD      (1 << 7)
+
+// --- Sprite Z-Order & Priority ---
+#define DEPTH_FOREGROUND     0    // Ganz vorne (z.B. No-Rotate Icon)
+#define DEPTH_DEFAULT        128  // Standard Ebene
+#define DEPTH_BACKGROUND     255  // Hinter High-Prio Tiles (z.B. Speed-Schädel)
+
+#define PRIO_LOW             FALSE // VDP Low Priority
+#define PRIO_HIGH            TRUE  // VDP High Priority
 
 typedef struct {
     Sprite* vdpSprite;    // 4 Bytes - Jetzt auf Offset 0 (Sicher!)

@@ -101,4 +101,17 @@ typedef struct GameContext {
 #define GET_LINE_PENDING(y) (ctx->boardFlags & (1UL << (y + GF_PENDING_SHIFT)))
 #define CLEAR_ALL_PENDING() (ctx->boardFlags &= ~GF_PENDING_MASK)
 
+// --- Effekt-Dauern (Zeitbasiert: 5 Sekunden = 300 Frames bei 60Hz) ---
+#define DUR_NO_ROTATE_TICKS    300  
+#define DUR_REVERSED_TICKS     300  
+#define DUR_HOLD_LOCK_TICKS    300  
+#define DUR_HIDE_NEXT_TICKS    300  
+#define DUR_SHADOW_TICKS       300  
+#define DUR_FREEZE_TICKS       300  
+
+// --- Effekt-Dauern (Stückbasiert: 5 Pieces) ---
+#define DUR_FULLSPEED_SPAWNS   5    
+#define DUR_SAME_TILES_SPAWNS  5    
+#define DUR_I_RAIN_SPAWNS      5
+
 extern GameContext* ctx;

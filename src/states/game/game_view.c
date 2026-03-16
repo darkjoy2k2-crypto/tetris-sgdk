@@ -180,44 +180,48 @@ void drawBoard() {
     if (ctx == NULL) return;
 
     for (u16 y = 0; y < BOARD_HEIGHT; y++) {
-        // Blink-Check: Jede Zeile, die gelöscht wird, flackert
-// Nutzt das Makro GET_LINE_PENDING, um das entsprechende Bit in boardFlags zu prüfen
-        bool isClearingRow = (ctx->clearTimer > 0 && GET_LINE_PENDING(y));        bool showFlash = isClearingRow && ((ctx->clearTimer >> (GET_FLAG(config.flags, FLAG_IS_PAL) ? 1 : 2)) & 1);
+        // Blink-Check für Clearing
+        bool isClearingRow = (ctx->clearTimer > 0 && GET_LINE_PENDING(y)); 
+        bool showFlash = isClearingRow && ((ctx->clearTimer >> (GET_FLAG(config.flags, FLAG_IS_PAL) ? 1 : 2)) & 1);
 
         for (u16 x = 0; x < BOARD_WIDTH; x++) {
             u16 tile;
             u8 cell = ctx->board[x][y];
+            u8 priority = 1; // Standard für Blöcke: High Priority
 
             if (showFlash) {
-                tile = GAME_TILE_START + 8; // Weißes Tile
+                tile = GAME_TILE_START + 8; 
             } else if (cell != 0) {
                 if (cell == ITEM_ID_SKULL) tile = SKULL_TILE_IDX;
                 else if (cell == ITEM_ID_HEART) tile = HEART_TILE_IDX;
                 else tile = GAME_TILE_START + 1 + (cell - 1);
             } else {
                 tile = GAME_TILE_START;
+                priority = 0; // Gitter: Low Priority! Damit es hinter Sprites liegt
             }
 
             if (tile != tileCache[x][y]) {
-                VDP_setTileMapXY(BG_A, TILE_ATTR_FULL(PAL2, 0, 0, 0, tile), RENDER_X + x, RENDER_Y + y);
+                // Nutzt berechnete Priorität (0 für Gitter, 1 für Blöcke)
+                VDP_setTileMapXY(BG_A, TILE_ATTR_FULL(PAL2, priority, 0, 0, tile), RENDER_X + x, RENDER_Y + y);
                 tileCache[x][y] = tile;
             }
         }
     }
 
-// Schatten Rendering (Nutzt FLAG_SHADOW)
+    // Schatten Rendering (Ghost Piece) - Low Priority (0)
     if (GET_FLAG(config.flags, FLAG_SHADOW) && ctx->clearTimer == 0) {
         for (u16 i = 0; i < 4; i++) {
             s16 gx = ctx->pieceX + PIECES[ctx->type][ctx->rotation][i][0];
             s16 gy = ctx->ghostY + PIECES[ctx->type][ctx->rotation][i][1];
             if (gy >= 0) {
+                // Ghost Piece bleibt im Hintergrund (0)
                 VDP_setTileMapXY(BG_A, TILE_ATTR_FULL(PAL2, 0, 0, 0, GAME_TILE_START + 8), RENDER_X + gx, RENDER_Y + gy);
                 tileCache[gx][gy] = 0xFFFF;
             }
         }
     }
 
-
+    // Aktiver Tetromino
     if (ctx->clearTimer == 0) {
         for (u16 i = 0; i < 4; i++) {
             s16 px = ctx->pieceX + PIECES[ctx->type][ctx->rotation][i][0];
@@ -226,13 +230,15 @@ void drawBoard() {
                 u16 tile = (i == ctx->itemSlot) ? 
                            ((ctx->itemType == ITEM_ID_SKULL) ? SKULL_TILE_IDX : HEART_TILE_IDX) : 
                            (GAME_TILE_START + 1 + ctx->type);
-                VDP_setTileMapXY(BG_A, TILE_ATTR_FULL(PAL2, 0, 0, 0, tile), RENDER_X + px, RENDER_Y + py);
+                
+                // AKTIVER TETROMINO: MUSS HIGH PRIORITY (1) SEIN!
+                // Nur so wird das Item-Sprite (Prio 0) bei Speed/Confusion verdeckt.
+                VDP_setTileMapXY(BG_A, TILE_ATTR_FULL(PAL2, 1, 0, 0, tile), RENDER_X + px, RENDER_Y + py);
                 tileCache[px][py] = 0xFFFF;
             }
         }
     }
 }
-
 // --- Animationen ---
 
 void view_animate_grayscale() {

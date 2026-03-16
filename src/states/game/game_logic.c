@@ -142,52 +142,58 @@ static void apply_scoring(u16 lines) {
 
 
 
-static void set_game_comment(const char* text, u16 duration) {
+void set_game_comment(const char* text, u16 duration) {
     strncpy(ctx->lastComment, text, 20);
     ctx->lastComment[19] = '\0';
     ctx->commentTimer = duration;
 }
 
 void triggerBadEffect() {
+    if (ctx == NULL) return;
+
     u16 roll = (random() % 7) + 1; 
     ctx->activeBadEffect = (roll <= 6) ? roll : EFFECT_SHADOW_BOARD;
 
     switch(ctx->activeBadEffect) {
-        // Suche diesen Case:
         case EFFECT_FULLSPEED: 
-ctx->badEffectTimer = GET_TICKS(5);
-            // Füge das hier ein:
+            ctx->badEffectTimer = DUR_FULLSPEED_SPAWNS;
             set_game_comment("FULL SPEED!", 90); 
             break;
-            case EFFECT_SAME_TILES: 
-ctx->badEffectTimer = GET_TICKS(5);
+
+        case EFFECT_SAME_TILES: 
+            ctx->badEffectTimer = DUR_SAME_TILES_SPAWNS;
             strncpy(ctx->lastComment, "SPEED / SAME!", 20); 
             break;
+
         case EFFECT_NO_ROTATE:  
-ctx->badEffectTimer = GET_TICKS(180);
+            ctx->badEffectTimer = DUR_NO_ROTATE_TICKS;
             strncpy(ctx->lastComment, "NO ROTATE!", 20); 
             break;
+
         case EFFECT_REVERSED:   
-ctx->badEffectTimer = GET_TICKS(240);
+            ctx->badEffectTimer = DUR_REVERSED_TICKS;
             strncpy(ctx->lastComment, "REVERSED!", 20); 
             break;
-case EFFECT_HOLD_LOCK:  
-            ctx->badEffectTimer = GET_TICKS(300);
+
+        case EFFECT_HOLD_LOCK:  
+            ctx->badEffectTimer = DUR_HOLD_LOCK_TICKS;
             ctx->holdType = -1; 
-            ctx->flags &= ~GF_CAN_HOLD; // Flag statt bool
+            ctx->flags &= ~GF_CAN_HOLD; 
             strncpy(ctx->lastComment, "HOLD LOCKED!", 20); 
             break;
+
         case EFFECT_HIDE_NEXT:  
-ctx->badEffectTimer = GET_TICKS(300);
+            ctx->badEffectTimer = DUR_HIDE_NEXT_TICKS;
             strncpy(ctx->lastComment, "NEXT HIDDEN!", 20); 
             break;
+
         case EFFECT_SHADOW_BOARD: 
-            ctx->activeBadEffect = EFFECT_SHADOW_BOARD;
-            ctx->badEffectTimer = GET_TICKS(300); // Die 5 Sekunden "Licht aus"
-            ctx->sortingRow = 0; // Startet die Verwandlung in Schatten-Farben
+            ctx->badEffectTimer = DUR_SHADOW_TICKS;
+            ctx->sortingRow = 0; 
             set_game_comment("DARK CURSE!", 90); 
             break;
     }
+
     SOUND_play(SND_BAD_ITEM);
     ctx->commentTimer = 60;
     ctx->lastActiveBadEffect = 99;
@@ -214,6 +220,8 @@ void lockPiece() {
 
 
 void triggerGoodEffect() {
+    if (ctx == NULL) return;
+
     ctx->activeBadEffect = EFFECT_NONE;
     ctx->badEffectTimer = 0;
     ctx->lastActiveBadEffect = 99;
@@ -226,7 +234,10 @@ void triggerGoodEffect() {
         for (u16 x = 0; x < BOARD_WIDTH; x++) ctx->board[x][0] = 0;
         strncpy(ctx->lastComment, "HEAL & CLEAR!", 20);
     } 
-    else if (chance == 1) { ctx->sortingRow = 0; strncpy(ctx->lastComment, "HEAL & SORT!", 20); }
+    else if (chance == 1) { 
+        ctx->sortingRow = 0; 
+        strncpy(ctx->lastComment, "HEAL & SORT!", 20); 
+    }
     else if (chance == 2) {
         for (u16 y = 0; y < BOARD_HEIGHT; y++) {
             for (u16 x = 0; x < BOARD_WIDTH; x++) {
@@ -237,9 +248,23 @@ void triggerGoodEffect() {
         }
         strncpy(ctx->lastComment, "SKULLS RECLAIMED!", 20);
     }
-    else if (chance == 3) { ctx->activeBadEffect = EFFECT_I_RAIN; ctx->badEffectTimer = GET_TICKS(4); strncpy(ctx->lastComment, "I-BEAM RAIN!", 20); }
-    else if (chance == 4) { ctx->activeBadEffect = EFFECT_FREEZE; ctx->badEffectTimer = GET_TICKS(600); strncpy(ctx->lastComment, "TIME FREEZE!", 20); }
-    else { ctx->activeBadEffect = EFFECT_RAINBOW; ctx->sortingRow = 0; strncpy(ctx->lastComment, "RAINBOW POWER!", 20); }
+    else if (chance == 3) { 
+        ctx->activeBadEffect = EFFECT_I_RAIN; 
+        ctx->badEffectTimer = DUR_I_RAIN_SPAWNS; 
+        strncpy(ctx->lastComment, "I-BEAM RAIN!", 20); 
+    }
+    else if (chance == 4) { 
+        ctx->activeBadEffect = EFFECT_FREEZE; 
+        ctx->badEffectTimer = DUR_FREEZE_TICKS; 
+        strncpy(ctx->lastComment, "TIME FREEZE!", 20); 
+    }
+    else { 
+        // Rainbow: Permanent, kein Timer-Reset in spawnPiece nötig
+        ctx->activeBadEffect = EFFECT_RAINBOW; 
+        ctx->badEffectTimer = 0; 
+        ctx->sortingRow = 0; 
+        strncpy(ctx->lastComment, "RAINBOW POWER!", 20); 
+    }
 
     // Alle verbleibenden Herzen in bunte Steine verwandeln
     for (u16 y = 0; y < BOARD_HEIGHT; y++) {
@@ -249,7 +274,8 @@ void triggerGoodEffect() {
             }
         }
     }
-SOUND_play(SND_GOOD_ITEM);
+
+    SOUND_play(SND_GOOD_ITEM);
     ctx->commentTimer = 60;
     ctx->boardFlags |= GF_NEEDS_DRAW;
 }
@@ -350,48 +376,48 @@ if (rowChanged) {
 void spawnPiece() {
     if (ctx == NULL) return;
 
-    // 1. Effekt-Timer Check
-    if (ctx->badEffectTimer > 0 && (ctx->activeBadEffect <= 2 
-        || ctx->activeBadEffect == EFFECT_I_RAIN)) 
-    {
-        if (--ctx->badEffectTimer == 0) 
-        { 
-            ctx->activeBadEffect = EFFECT_NONE; 
-            ctx->lastActiveBadEffect = 99; 
+    // Stückbasierte Effekte dekrementieren
+    if (ctx->badEffectTimer > 0) {
+        if (ctx->activeBadEffect == EFFECT_FULLSPEED || 
+            ctx->activeBadEffect == EFFECT_SAME_TILES || 
+            ctx->activeBadEffect == EFFECT_I_RAIN) 
+        {
+            ctx->badEffectTimer--;
+            
+            if (ctx->badEffectTimer <= 0) {
+                ctx->activeBadEffect = EFFECT_NONE;
+                ctx->lastActiveBadEffect = 99;
+            }
         }
     }
 
-    // 2. Zuweisung
     ctx->type = ctx->nextType;
 
-    // 3. Neuen 'nextType' bestimmen
+    // Spezielle Logik für I-Beam Rain
     if (ctx->activeBadEffect == EFFECT_I_RAIN) {
-        ctx->type = 0; 
-    } else if (ctx->activeBadEffect != EFFECT_SAME_TILES) {
+        ctx->type = 0; // Immer I-Piece
+    } 
+    else if (ctx->activeBadEffect != EFFECT_SAME_TILES) {
         if (config.randMode == 0) {
             ctx->nextType = ctx->bag[ctx->bagIndex++];
-            if (ctx->bagIndex >= 7) {
-                refillBag();
-            }
+            if (ctx->bagIndex >= 7) refillBag();
         } else {
             ctx->nextType = random() % 7;
         }
     }
+    // Bei SAME_TILES bleibt nextType identisch (keine Generierung)
 
-    // 4. Positionierung und Status
     ctx->rotation = 0;
     ctx->pieceX = 3;
     ctx->pieceY = (ctx->type == 0) ? -1 : 0;
-ctx->flags |= GF_CAN_HOLD; // Flag setzen
-    ctx->moveTimer = 0;
+    ctx->flags |= GF_CAN_HOLD;
+    ctx->moveTimer = 0; 
 
     handle_item_spawn_logic();
 
-    if (GET_FLAG(config.flags, FLAG_SHADOW)) {
-        calculate_ghost_y();
-    }
+    if (GET_FLAG(config.flags, FLAG_SHADOW)) calculate_ghost_y();
     
-ctx->boardFlags |= GF_NEEDS_DRAW; // u32 boardFlags nutzen
+    ctx->boardFlags |= GF_NEEDS_DRAW;
 
     if (checkCollision(ctx->pieceX, ctx->pieceY, ctx->rotation)) {
         SOUND_play(SND_GAME_OVER);

@@ -1,3 +1,29 @@
+---
+
+## 🚀 Installation & Execution
+
+You can experience **Tetris Vibe SGDK** in three different ways, depending on your setup.
+
+### 1. Instant Play (Web Emulator)
+The fastest way to play the latest build is through our unified Sega Dev Hub. No installation required.
+> [**🎮 Play Tetris Vibe SGDK Live**](https://darkjoy2k2-crypto.github.io/Celeste_demake/)
+*(Select "Tetris Vibe SGDK" from the dropdown menu)*
+
+### 2. Real Hardware & Desktop Emulation
+For the most authentic experience, run the ROM on original hardware or a dedicated emulator like BlastEm or Genesis Plus GX.
+1. Download the `rom.bin` from the `/out` directory.
+2. **Flash:** Load it onto a flash cartridge (e.g., EverDrive).
+3. **Emulate:** Open the file with your emulator of choice.
+*Note: Ensure your region is set to NTSC-U or PAL depending on your preference (the game supports both).*
+
+### 3. Development Build
+To compile the project from source, you need the **SGDK (Sega Genesis Development Kit)** version 2.1.1 or higher.
+1. Clone this repository.
+2. Ensure your `%GDK%` environment variable is set.
+3. Run the compile script:
+   ```bash
+   make -f %GDK%\makefile.gen
+
 # Tetris Vibe SGDK - See what AI can do for you
 
 A fully functional Tetris clone for the **Sega Mega Drive / Genesis**, inspired by *Tetris Party (Wii)*. 

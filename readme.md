@@ -1,5 +1,7 @@
 # Tetris Vibe SGDK - See what AI can do for you
 
+Voll funktionsfähiger Tetris-Klon insporiert von Tetris Party Wii
+
 Ein technisches Demonstrationsprojekt für das **Sega Mega Drive**, das die Symbiose zwischen Low-Level-Programmierung (SGDK 2.1.1) und KI-gestützter Entwicklung (Google Gemini) aufzeigt.
 
 ---
@@ -36,6 +38,8 @@ Das Spiel verzichtet auf eine Pause-Funktion, um den Fokus auf das unmittelbare 
 
 ## 🚀 Game Features
 
+* **Highscores:** voll funktionoerende Highscore-Liste mit 10 einträgen.
+* **Customizable:** Every aspect of the playmode, items, speed is adjustable ingame.
 * **RNG-System:** 7-Bag Randomizer zur Vermeidung von "Droughts".
 * **Curse Engine:** Zufällige Statuseffekte (No-Rotate, Speed-Skulls, Reversed Controls).
 * **Ghost Piece:** Echtzeit-Berechnung der Landeposition.
@@ -45,6 +49,7 @@ Das Spiel verzichtet auf eine Pause-Funktion, um den Fokus auf das unmittelbare 
 
 ## 📝 TODOs / Roadmap
 
+- [ ] **Bugs:** Leidet seit der Sprite-Imtegration aktzell unter memory-leaks/crash, nächtes tile wird nicht korrelt dargestellt
 - [ ] **Audio:** Integration von FM-Tracks und PCM-Samples für Line-Clears.
 - [ ] **Stages:** Hintergrundwechsel und steigende Schwierigkeitskurven pro Level.
 - [ ] **Versus Mode:** Implementierung einer VS CPU oder 2-Player Komponente.
@@ -61,4 +66,5 @@ Detaillierte Informationen zum Memory-Layout und den KI-Prompts:
 
 ## 📜 Credits
 * **Development:** Gemini (AI) & darkjoy2k2.
+* **SOUND:** Sound effects are taken from the game "puyo puyo". Developed by Compile, created by Einosuke Nagao.
 * **SDK:** SGDK by Stephane Dallongeville.

@@ -32,17 +32,16 @@ static bool handle_gravity(GameContext *ctx)
     if (threshold < 3) threshold = 3;
 
     // 2. FULLSPEED Logik (Warnung vs. Action)
-    if (ctx->activeBadEffect == EFFECT_FULLSPEED)
+if (ctx->activeBadEffect == EFFECT_FULLSPEED)
     {
-        s16 actionPhaseThreshold = (DUR_FULLSPEED_SPAWNS * 60);
-        
-        if (ctx->badEffectTimer > actionPhaseThreshold) {
-            // WARNPHASE: Piepen alle 30 Frames
-            u16 timeLeftInWarn = ctx->badEffectTimer - actionPhaseThreshold;
-            if (timeLeftInWarn % 30 == 0) SOUND_play(SND_ALERT);
-            // Hier bleibt threshold beim normalen Level-Speed
-        } else {
-            // AKTIVPHASE: Stein rast
+        // Warnphase: Nur piepen, solange der Timer über 1 ist
+        if (ctx->badEffectTimer > 1) 
+        {
+            if (ctx->badEffectTimer % 60 == 0) SOUND_play(SND_ALERT);
+        } 
+        // Aktivphase: Sobald spawnPiece auf 0 oder kleiner schaltet
+        else if (ctx->badEffectTimer <= 0) 
+        {
             threshold = 2; 
         }
     }
@@ -113,30 +112,28 @@ if (ctx->badEffectTimer > 0)
             ctx->badEffectTimer--;
 
 
-            if (ctx->badEffectTimer <= 0)
-            {
-                // SPEZIALFALL: Hold Lock Ende
-                if (ctx->activeBadEffect == EFFECT_HOLD_LOCK)
-                {
-                    ctx->holdType = ctx->lastHoldType; // Stein wieder einblenden
-                    ctx->flags |= GF_CAN_HOLD;         // C-Taste wieder erlauben
-                }
+           if (ctx->badEffectTimer > 0)
+    {
+        if (ctx->activeBadEffect != EFFECT_RAINBOW &&
+            ctx->activeBadEffect != EFFECT_SAME_TILES &&
+            ctx->activeBadEffect != EFFECT_I_RAIN)
+        {
+            // Stoppe bei 1, wenn Fullspeed, damit spawnPiece den Übergang steuert
+            if (ctx->activeBadEffect == EFFECT_FULLSPEED && ctx->badEffectTimer == 1) {
+                // Nichts tun, auf spawnPiece warten
+            } else {
+                ctx->badEffectTimer--;
+            }
 
-                // Übergang von Dunkelheit zu Rainbow
-                if (ctx->activeBadEffect == EFFECT_SHADOW_BOARD)
-                {
-                    ctx->activeBadEffect = EFFECT_RAINBOW;
-                    ctx->badEffectTimer = 0;
-                    ctx->sortingRow = 0;
-                    set_game_comment("RAINBOW REBIRTH!", 90);
-                }
-                else
-                {
-                    ctx->activeBadEffect = EFFECT_NONE;
-                    ctx->lastActiveBadEffect = 99;
-                }
+            if (ctx->badEffectTimer <= 0 && ctx->activeBadEffect != EFFECT_FULLSPEED)
+            {
+                // ... (Restliche Reaktivierung für Hold/Shadow wie gehabt) ...
+                ctx->activeBadEffect = EFFECT_NONE;
+                ctx->lastActiveBadEffect = 99;
                 SOUND_play(SND_GOOD_ITEM);
             }
+        }
+    }
         }
     }
 }

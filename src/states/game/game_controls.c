@@ -128,7 +128,7 @@ if (GET_FLAG(config.flags, FLAG_HOLD) && (changed & BUTTON_C)) {
             ctx->lastActiveBadEffect = 99; // Erzwingt Sprite-Sync
             
             // Erstes Warnsignal sofort
-            SOUND_play(SND_ALERT);
+           //SOUND_play(SND_ALERT);
             set_game_comment("GET READY...", 60);
         }
         

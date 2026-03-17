@@ -222,12 +222,9 @@ void triggerBadEffect() {
 
     switch(ctx->activeBadEffect) {
 case EFFECT_FULLSPEED:
-    // 120 Frames Warnung + 300 Frames (5 Sek) Highspeed
-    ctx->badEffectTimer = 120 + (DUR_FULLSPEED_SPAWNS * 60); 
+    ctx->badEffectTimer = 120; // Nur die Warnzeit
     ctx->activeBadEffect = EFFECT_FULLSPEED;
-    
-    SOUND_play(SND_ALERT); 
-    set_game_comment("GET READY...", 60);
+    //SOUND_play(SND_ALERT);
     break;
 
         case EFFECT_SAME_TILES: 
@@ -387,35 +384,70 @@ if (rowChanged) {
     currentState = STATE_GAMEOVER;
 }
 
-void spawnPiece() {
+void spawnPiece()
+{
     if (ctx == NULL) return;
 
-    // Stückbasierte Effekte dekrementieren
-if (ctx->badEffectTimer > 0) {
-        // NUR noch die rein stückbasierten Effekte hier lassen
-        if (ctx->activeBadEffect == EFFECT_SAME_TILES || 
-            ctx->activeBadEffect == EFFECT_I_RAIN) 
+    // --- 1. STÜCKBASIERTE EFFEKTE DEKREMENTIEREN ---
+    if (ctx->activeBadEffect != EFFECT_NONE)
+    {
+        // A) Fullspeed Logik (Zählt erst ab Timer <= 0 Steine)
+if (ctx->activeBadEffect == EFFECT_FULLSPEED)
+    {
+        // Wenn handle_environment bei 1 gestoppt hat, jetzt auf 0 setzen für Speed-Start
+        if (ctx->badEffectTimer == 1) ctx->badEffectTimer = 0;
+
+        if (ctx->badEffectTimer <= 0)
         {
-            ctx->badEffectTimer--;
-            // ...
+            ctx->badEffectTimer--; 
+            if (ctx->badEffectTimer <= -DUR_FULLSPEED_SPAWNS)
+            {
+                ctx->activeBadEffect = EFFECT_NONE;
+                ctx->badEffectTimer = 0;
+                ctx->lastActiveBadEffect = 99;
+                SOUND_play(SND_GOOD_ITEM);
+            }
+        }
+    }
+        else if (ctx->activeBadEffect == EFFECT_SAME_TILES || 
+                 ctx->activeBadEffect == EFFECT_I_RAIN)
+        {
+            if (ctx->badEffectTimer > 0)
+            {
+                ctx->badEffectTimer--;
+                if (ctx->badEffectTimer <= 0)
+                {
+                    ctx->activeBadEffect = EFFECT_NONE;
+                    ctx->badEffectTimer = 0;
+                    ctx->lastActiveBadEffect = 99;
+                    SOUND_play(SND_GOOD_ITEM);
+                }
+            }
         }
     }
 
-    ctx->type = ctx->nextType;
+    // --- 2. SPAWN LOGIK ---
+    ctx->type = ctx->nextType; // Korrekt: 'type' statt 'curType'
 
-    // Spezielle Logik für I-Beam Rain
-    if (ctx->activeBadEffect == EFFECT_I_RAIN) {
-        ctx->type = 0; // Immer I-Piece
-    } 
-    else if (ctx->activeBadEffect != EFFECT_SAME_TILES) {
-        if (config.randMode == 0) {
-            ctx->nextType = ctx->bag[ctx->bagIndex++];
-            if (ctx->bagIndex >= 7) refillBag();
-        } else {
-            ctx->nextType = random() % 7;
-        }
+    // Bag-System oder Zufall
+    if (config.randMode == 0) {
+        ctx->nextType = ctx->bag[ctx->bagIndex++];
+        if (ctx->bagIndex >= 7) refillBag();
+    } else {
+        ctx->nextType = random() % 7;
     }
-    // Bei SAME_TILES bleibt nextType identisch (keine Generierung)
+
+    // Sonderregel für SAME_TILES: Typ erzwingen
+    if (ctx->activeBadEffect == EFFECT_SAME_TILES)
+    {
+        ctx->type = ctx->forcedPieceType; // Korrekt: 'forcedPieceType'
+    }
+
+    // Sonderregel für I_RAIN: Immer I-Piece (Typ 0)
+    if (ctx->activeBadEffect == EFFECT_I_RAIN)
+    {
+        ctx->type = 0; 
+    }
 
     ctx->rotation = 0;
     ctx->pieceX = 3;
@@ -423,17 +455,21 @@ if (ctx->badEffectTimer > 0) {
     ctx->flags |= GF_CAN_HOLD;
     ctx->moveTimer = 0; 
 
+    // Item Spawn Logik aufrufen (war als ungenutzt markiert)
     handle_item_spawn_logic();
 
     if (GET_FLAG(config.flags, FLAG_SHADOW)) calculate_ghost_y();
     
     ctx->boardFlags |= GF_NEEDS_DRAW;
 
-    if (checkCollision(ctx->pieceX, ctx->pieceY, ctx->rotation)) {
+    // Collision Check für Game Over
+    if (checkCollision(ctx->pieceX, ctx->pieceY, ctx->rotation))
+    {
         SOUND_play(SND_GAME_OVER);
-        play_game_over_animation();
+        play_game_over_animation(); // Nutzt deine vorhandene Funktion
     }
 }
+
 
 bool handle_active_animations(GameContext* ctx) {
     if (ctx == NULL) return false;

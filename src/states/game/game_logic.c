@@ -7,6 +7,7 @@
 #include "states/states.h"
 #include "sound_manager.h"
 #include "sounds.h"
+#include "sprite.h"
 
 void triggerBadEffect();
 static void handle_item_spawn_logic();
@@ -148,6 +149,71 @@ void set_game_comment(const char* text, u16 duration) {
     ctx->commentTimer = duration;
 }
 
+void triggerGoodEffect() {
+    if (ctx == NULL) return;
+
+    // Alle Flüche stoppen
+    ctx->activeBadEffect = EFFECT_NONE;
+    ctx->badEffectTimer = 0;
+    ctx->lastActiveBadEffect = 99;
+
+    u16 chance = random() % 6;
+    if (chance == 0) {
+        // Heal & Clear: Eine Zeile nach unten schieben
+        for (s16 y = BOARD_HEIGHT - 1; y > 0; y--) {
+            for (u16 x = 0; x < BOARD_WIDTH; x++) ctx->board[x][y] = ctx->board[x][y - 1];
+        }
+        for (u16 x = 0; x < BOARD_WIDTH; x++) ctx->board[x][0] = 0;
+        set_game_comment("HEAL & CLEAR!", 90);
+    } 
+    else if (chance == 1) { 
+        ctx->sortingRow = 0; 
+        set_game_comment("HEAL & SORT!", 90); 
+    }
+    else if (chance == 2) {
+        // Skulls auf dem Board in normale Blöcke verwandeln
+        for (u16 y = 0; y < BOARD_HEIGHT; y++) {
+            for (u16 x = 0; x < BOARD_WIDTH; x++) {
+                if (ctx->board[x][y] == ITEM_ID_SKULL) {
+                    ctx->board[x][y] = 1 + (random() % 7);
+                }
+            }
+        }
+        set_game_comment("SKULLS RECLAIMED!", 90);
+    }
+    else if (chance == 3) { 
+        ctx->activeBadEffect = EFFECT_I_RAIN; 
+        ctx->badEffectTimer = DUR_I_RAIN_SPAWNS; 
+        set_game_comment("I-BEAM RAIN!", 90); 
+    }
+    else if (chance == 4) { 
+        ctx->activeBadEffect = EFFECT_FREEZE; 
+        ctx->badEffectTimer = DUR_FREEZE_TICKS; 
+        set_game_comment("TIME FREEZE!", 90); 
+    }
+    else { 
+        // Rainbow: Permanent
+        ctx->activeBadEffect = EFFECT_RAINBOW; 
+        ctx->badEffectTimer = 0; 
+        ctx->sortingRow = 0; 
+        set_game_comment("RAINBOW POWER!", 90); 
+    }
+
+    // Alle verbleibenden Herzen in bunte Steine verwandeln
+    for (u16 y = 0; y < BOARD_HEIGHT; y++) {
+        for (u16 x = 0; x < BOARD_WIDTH; x++) {
+            if (ctx->board[x][y] == ITEM_ID_HEART) {
+                ctx->board[x][y] = 1 + (random() % 7);
+            }
+        }
+    }
+
+    SOUND_play(SND_GOOD_ITEM);
+    ctx->commentTimer = 60;
+    ctx->boardFlags |= GF_NEEDS_DRAW;
+}
+
+
 void triggerBadEffect() {
     if (ctx == NULL) return;
 
@@ -155,36 +221,45 @@ void triggerBadEffect() {
     ctx->activeBadEffect = (roll <= 6) ? roll : EFFECT_SHADOW_BOARD;
 
     switch(ctx->activeBadEffect) {
-        case EFFECT_FULLSPEED: 
-            ctx->badEffectTimer = DUR_FULLSPEED_SPAWNS;
-            set_game_comment("FULL SPEED!", 90); 
-            break;
+case EFFECT_FULLSPEED:
+    // 120 Frames Warnung + 300 Frames (5 Sek) Highspeed
+    ctx->badEffectTimer = 120 + (DUR_FULLSPEED_SPAWNS * 60); 
+    ctx->activeBadEffect = EFFECT_FULLSPEED;
+    
+    SOUND_play(SND_ALERT); 
+    set_game_comment("GET READY...", 60);
+    break;
 
         case EFFECT_SAME_TILES: 
             ctx->badEffectTimer = DUR_SAME_TILES_SPAWNS;
-            strncpy(ctx->lastComment, "SPEED / SAME!", 20); 
+            set_game_comment("SPEED / SAME!", 90); 
             break;
 
         case EFFECT_NO_ROTATE:  
             ctx->badEffectTimer = DUR_NO_ROTATE_TICKS;
-            strncpy(ctx->lastComment, "NO ROTATE!", 20); 
+            set_game_comment("NO ROTATE!", 90); 
             break;
 
         case EFFECT_REVERSED:   
             ctx->badEffectTimer = DUR_REVERSED_TICKS;
-            strncpy(ctx->lastComment, "REVERSED!", 20); 
+            set_game_comment("REVERSED!", 90); 
             break;
 
-        case EFFECT_HOLD_LOCK:  
-            ctx->badEffectTimer = DUR_HOLD_LOCK_TICKS;
-            ctx->holdType = -1; 
-            ctx->flags &= ~GF_CAN_HOLD; 
-            strncpy(ctx->lastComment, "HOLD LOCKED!", 20); 
-            break;
+
+case EFFECT_HOLD_LOCK:
+    ctx->badEffectTimer = DUR_HOLD_LOCK_TICKS;
+    // Wir merken uns den Typ NICHT extra, da holdType nur für die Anzeige ist.
+    // Der eigentliche Stein-Typ bleibt in einer internen Variable oder wir 
+    // verstecken ihn nur optisch:
+    ctx->lastHoldType = ctx->holdType; // Backup des Steins
+    ctx->holdType = -1;                // Unsichtbar machen
+    ctx->flags &= ~GF_CAN_HOLD;        // Sperren
+    set_game_comment("HOLD LOCKED!", 90);
+    break;
 
         case EFFECT_HIDE_NEXT:  
             ctx->badEffectTimer = DUR_HIDE_NEXT_TICKS;
-            strncpy(ctx->lastComment, "NEXT HIDDEN!", 20); 
+            set_game_comment("NEXT HIDDEN!", 90); 
             break;
 
         case EFFECT_SHADOW_BOARD: 
@@ -196,8 +271,10 @@ void triggerBadEffect() {
 
     SOUND_play(SND_BAD_ITEM);
     ctx->commentTimer = 60;
-    ctx->lastActiveBadEffect = 99;
+    // Erzwingt, dass sprite.c im nächsten Sync die Änderungen bemerkt
+    ctx->lastActiveBadEffect = 99; 
 }
+
 
 
 
@@ -217,69 +294,6 @@ void lockPiece() {
         }
     }
 }
-
-
-void triggerGoodEffect() {
-    if (ctx == NULL) return;
-
-    ctx->activeBadEffect = EFFECT_NONE;
-    ctx->badEffectTimer = 0;
-    ctx->lastActiveBadEffect = 99;
-
-    u16 chance = random() % 6;
-    if (chance == 0) {
-        for (s16 y = BOARD_HEIGHT - 1; y > 0; y--) {
-            for (u16 x = 0; x < BOARD_WIDTH; x++) ctx->board[x][y] = ctx->board[x][y - 1];
-        }
-        for (u16 x = 0; x < BOARD_WIDTH; x++) ctx->board[x][0] = 0;
-        strncpy(ctx->lastComment, "HEAL & CLEAR!", 20);
-    } 
-    else if (chance == 1) { 
-        ctx->sortingRow = 0; 
-        strncpy(ctx->lastComment, "HEAL & SORT!", 20); 
-    }
-    else if (chance == 2) {
-        for (u16 y = 0; y < BOARD_HEIGHT; y++) {
-            for (u16 x = 0; x < BOARD_WIDTH; x++) {
-                if (ctx->board[x][y] == ITEM_ID_SKULL) {
-                    ctx->board[x][y] = 1 + (random() % 7);
-                }
-            }
-        }
-        strncpy(ctx->lastComment, "SKULLS RECLAIMED!", 20);
-    }
-    else if (chance == 3) { 
-        ctx->activeBadEffect = EFFECT_I_RAIN; 
-        ctx->badEffectTimer = DUR_I_RAIN_SPAWNS; 
-        strncpy(ctx->lastComment, "I-BEAM RAIN!", 20); 
-    }
-    else if (chance == 4) { 
-        ctx->activeBadEffect = EFFECT_FREEZE; 
-        ctx->badEffectTimer = DUR_FREEZE_TICKS; 
-        strncpy(ctx->lastComment, "TIME FREEZE!", 20); 
-    }
-    else { 
-        // Rainbow: Permanent, kein Timer-Reset in spawnPiece nötig
-        ctx->activeBadEffect = EFFECT_RAINBOW; 
-        ctx->badEffectTimer = 0; 
-        ctx->sortingRow = 0; 
-        strncpy(ctx->lastComment, "RAINBOW POWER!", 20); 
-    }
-
-    // Alle verbleibenden Herzen in bunte Steine verwandeln
-    for (u16 y = 0; y < BOARD_HEIGHT; y++) {
-        for (u16 x = 0; x < BOARD_WIDTH; x++) {
-            if (ctx->board[x][y] == ITEM_ID_HEART) {
-                ctx->board[x][y] = 1 + (random() % 7);
-            }
-        }
-    }
-
-    SOUND_play(SND_GOOD_ITEM);
-    ctx->commentTimer = 60;
-    ctx->boardFlags |= GF_NEEDS_DRAW;
-}
-
 
 void check_and_update_highscore(u32 score) {
     s16 insertIdx = -1;
@@ -377,17 +391,13 @@ void spawnPiece() {
     if (ctx == NULL) return;
 
     // Stückbasierte Effekte dekrementieren
-    if (ctx->badEffectTimer > 0) {
-        if (ctx->activeBadEffect == EFFECT_FULLSPEED || 
-            ctx->activeBadEffect == EFFECT_SAME_TILES || 
+if (ctx->badEffectTimer > 0) {
+        // NUR noch die rein stückbasierten Effekte hier lassen
+        if (ctx->activeBadEffect == EFFECT_SAME_TILES || 
             ctx->activeBadEffect == EFFECT_I_RAIN) 
         {
             ctx->badEffectTimer--;
-            
-            if (ctx->badEffectTimer <= 0) {
-                ctx->activeBadEffect = EFFECT_NONE;
-                ctx->lastActiveBadEffect = 99;
-            }
+            // ...
         }
     }
 

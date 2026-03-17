@@ -1,131 +1,157 @@
 #include <genesis.h>
+#include <string.h>
+
+#include "bg.h"
+#include "fonts.h"
+#include "gfx.h"
+#include "menu_bg.h"
+#include "sprite.h"
+#include "sprites.h"
+#include "sound_manager.h"
+#include "states/states.h"
 #include "states/game/game_core.h"
 #include "states/game/game_logic.h"
 #include "states/game/game_view.h"
-#include "states/game/game_controls.h" // NEU
+#include "states/game/game_controls.h"
 
-#include "gfx.h"
-#include "sound_manager.h"
-#include "states/states.h"
-#include "menu_bg.h"
-#include "fonts.h"
-#include "bg.h"
-#include "sprite.h"
-#include "sprites.h"
+GameContext *ctx = NULL;
 
-#include <string.h>
-
-GameContext* ctx = NULL;
-
-const u16 GRAVITY_SPEEDS[] = { 9999, 60, 30, 15 };
-const u16 GARBAGE_INTERVALS[] = { 0, 1200, 600, 300 };
+const u16 GRAVITY_SPEEDS[] = {9999, 60, 30, 15};
+const u16 GARBAGE_INTERVALS[] = {0, 1200, 600, 300};
 
 // Ganz am Ende von game_logic.c einfügen:
 
-
-
-
-
-
-static bool handle_gravity(GameContext* ctx) {
+static bool handle_gravity(GameContext *ctx)
+{
     u16 vBtnSoftDrop = (ctx->activeBadEffect == EFFECT_REVERSED) ? BUTTON_LEFT : BUTTON_DOWN;
     bool moved = false;
     ctx->moveTimer++;
+
+    // 1. Basis-Geschwindigkeit berechnen
     s16 threshold = GET_TICKS(60 - ((ctx->level - 1) * 3));
-    if (threshold < 2) threshold = 3;
-    if (ctx->activeBadEffect == EFFECT_FULLSPEED) threshold = 3;
-    u16 finalThreshold = (joyState & vBtnSoftDrop) ? (threshold / 12) : 
-                        ((ctx->activeBadEffect == EFFECT_FREEZE) ? 9999 : threshold);
-    if (finalThreshold < 4 && (joyState & vBtnSoftDrop)) finalThreshold = 4;
-    if (ctx->moveTimer >= finalThreshold) {
-        if (!checkCollision(ctx->pieceX, ctx->pieceY + 1, ctx->rotation)) {
+    if (threshold < 3) threshold = 3;
+
+    // 2. FULLSPEED Logik (Warnung vs. Action)
+    if (ctx->activeBadEffect == EFFECT_FULLSPEED)
+    {
+        s16 actionPhaseThreshold = (DUR_FULLSPEED_SPAWNS * 60);
+        
+        if (ctx->badEffectTimer > actionPhaseThreshold) {
+            // WARNPHASE: Piepen alle 30 Frames
+            u16 timeLeftInWarn = ctx->badEffectTimer - actionPhaseThreshold;
+            if (timeLeftInWarn % 30 == 0) SOUND_play(SND_ALERT);
+            // Hier bleibt threshold beim normalen Level-Speed
+        } else {
+            // AKTIVPHASE: Stein rast
+            threshold = 2; 
+        }
+    }
+
+    // 3. Finaler Check (Soft-Drop oder Freeze)
+    u16 finalThreshold = threshold;
+    
+    if (joyState & vBtnSoftDrop) {
+        finalThreshold = threshold / 12;
+        if (finalThreshold < 2) finalThreshold = 2;
+    } else if (ctx->activeBadEffect == EFFECT_FREEZE) {
+        finalThreshold = 9999;
+    }
+
+    // 4. Bewegung ausführen
+    if (ctx->moveTimer >= finalThreshold)
+    {
+        if (!checkCollision(ctx->pieceX, ctx->pieceY + 1, ctx->rotation))
+        {
             ctx->pieceY++;
             moved = true;
-            if (joyState & vBtnSoftDrop) { ctx->score++; SOUND_play(SND_SOFT_DROP); }
-        } else {
+            if (joyState & vBtnSoftDrop) {
+                ctx->score++;
+                SOUND_play(SND_SOFT_DROP);
+            }
+        }
+        else
+        {
             lockPiece();
             moved = true;
         }
         ctx->moveTimer = 0;
     }
+
     return moved;
 }
 
-static void handle_environment(GameContext* ctx, bool moved) {
-    if (ctx == NULL) return;
+static void handle_environment(GameContext *ctx, bool moved)
+{
+    if (ctx == NULL)
+        return;
 
-    // Garbage Logik
-    if (ctx->garbageTimer >= ctx->garbageNextThreshold) {
+    // 1. Garbage Logik (Zeitbasierte neue Zeilen)
+    if (ctx->garbageTimer >= ctx->garbageNextThreshold)
+    {
         addGarbageLine();
         ctx->garbageTimer = 0;
         ctx->garbageNextThreshold = GET_TICKS(GARBAGE_INTERVALS[config.garbageFreq] + (random() % 120) - 60);
         ctx->boardFlags |= GF_NEEDS_DRAW;
     }
 
-    // Shadow Logik (Ghost Piece)
-    if (moved && GET_FLAG(config.flags, FLAG_SHADOW)) {
+    // 2. Shadow Logik (Berechnung der Fall-Tiefe des Schattens)
+    if (moved && GET_FLAG(config.flags, FLAG_SHADOW))
+    {
         ctx->ghostY = ctx->pieceY;
-        while (!checkCollision(ctx->pieceX, ctx->ghostY + 1, ctx->rotation)) ctx->ghostY++;
+        while (!checkCollision(ctx->pieceX, ctx->ghostY + 1, ctx->rotation))
+            ctx->ghostY++;
     }
 
-    // Zeitbasierte Effekte dekrementieren (Sekunden-Timer)
-    // Ausschluss von Rainbow (dauerhaft) und stückbasierten Effekten (0, 1, 2, 7)
-    if (ctx->badEffectTimer > 0) {
-        if (ctx->activeBadEffect != EFFECT_RAINBOW && 
-            ctx->activeBadEffect != EFFECT_FULLSPEED &&
+if (ctx->badEffectTimer > 0)
+    {
+        // NUR Rainbow und stückbasierte Effekte (falls du sie so behalten willst) ausschließen.
+        // FULLSPEED MUSS hier dekrementiert werden, damit das Piepen (Frames) funktioniert!
+        if (ctx->activeBadEffect != EFFECT_RAINBOW &&
             ctx->activeBadEffect != EFFECT_SAME_TILES &&
-            ctx->activeBadEffect != EFFECT_I_RAIN) 
+            ctx->activeBadEffect != EFFECT_I_RAIN)
         {
             ctx->badEffectTimer--;
 
-            if (ctx->badEffectTimer <= 0) {
+
+            if (ctx->badEffectTimer <= 0)
+            {
+                // SPEZIALFALL: Hold Lock Ende
+                if (ctx->activeBadEffect == EFFECT_HOLD_LOCK)
+                {
+                    ctx->holdType = ctx->lastHoldType; // Stein wieder einblenden
+                    ctx->flags |= GF_CAN_HOLD;         // C-Taste wieder erlauben
+                }
+
                 // Übergang von Dunkelheit zu Rainbow
-                if (ctx->activeBadEffect == EFFECT_SHADOW_BOARD) {
+                if (ctx->activeBadEffect == EFFECT_SHADOW_BOARD)
+                {
                     ctx->activeBadEffect = EFFECT_RAINBOW;
-                    ctx->badEffectTimer = 0; // Permanent
+                    ctx->badEffectTimer = 0;
                     ctx->sortingRow = 0;
                     set_game_comment("RAINBOW REBIRTH!", 90);
-                    SOUND_play(SND_GOOD_ITEM);
-                } else {
+                }
+                else
+                {
                     ctx->activeBadEffect = EFFECT_NONE;
                     ctx->lastActiveBadEffect = 99;
-                    SOUND_play(SND_GOOD_ITEM);
                 }
+                SOUND_play(SND_GOOD_ITEM);
             }
         }
     }
 }
 
-void update_sprite_position(){
-    // Tetromino
-    gameSprites[0].x = ((RENDER_X + ctx->pieceX) << 3) + gameSprites[0].offsetX; 
-    gameSprites[0].y = ((RENDER_Y + ctx->pieceY) << 3) + gameSprites[0].offsetY;
-
-    // Schatten
-    gameSprites[1].x = ((RENDER_X + ctx->pieceX) << 3) + gameSprites[1].offsetX;
-    gameSprites[1].y = ((RENDER_Y + ctx->ghostY) << 3) + gameSprites[1].offsetY;
-
-    // UI Elemente (Next/Hold) erhalten ebenfalls ihre Offsets (-8)
-    gameSprites[2].x = (UI_X << 3) + gameSprites[2].offsetX; 
-    gameSprites[2].y = (NEXT_Y << 3) + gameSprites[2].offsetY;
-
-    gameSprites[3].x = (UI_X << 3) + gameSprites[3].offsetX; 
-    gameSprites[3].y = (HOLD_Y << 3) + gameSprites[3].offsetY;
-}
-
-
-
-
-
 // --- REINE LOGIK INITIALISIERUNG ---
-void game_init() {
+void game_init()
+{
     // 1. Speicher-Lifecycle
-    if (ctx != NULL) {
+    if (ctx != NULL)
+    {
         MEM_free(ctx);
         ctx = NULL;
     }
     ctx = MEM_alloc(sizeof(GameContext));
-    
+
     // 2. Logik-Reset aufrufen
     reset_game_logic();
 
@@ -133,137 +159,97 @@ void game_init() {
     PAL_setPalette(PAL2, anim_norotate.palette->data, DMA);
     UI_init_fonts_and_palettes();
     SOUND_init();
-    
+
     menu_bg_set_mode(BG_MODE_SPACE);
     menu_bg_set_active(true);
 
     // 4. Initiale Sprite-Berechnung
-    update_sprite_position();
 }
 
-void update_curse_sprites(GameContext* ctx) {
-    bool norotActive  = (ctx->activeBadEffect == EFFECT_NO_ROTATE);
-    bool skullActive  = (ctx->activeBadEffect == EFFECT_FULLSPEED || ctx->activeBadEffect == EFFECT_SAME_TILES);
-    bool holdLocked   = (ctx->activeBadEffect == EFFECT_HOLD_LOCK);
-    bool nextHidden   = (ctx->activeBadEffect == EFFECT_HIDE_NEXT);
-    bool shadowOn     = GET_FLAG(config.flags, FLAG_SHADOW);
-
-    // --- Slot 0: Tetromino Position ---
-    GameSprite* s0 = &gameSprites[0];
-    if (norotActive) {
-        s0->type = SPRITE_TYPE_NOROTATE;
-        SPR_setDefinition(s0->vdpSprite, &anim_norotate);
-        s0->attr &= ~SPRITE_ATTR_PRIORITY; // Über das Piece
-        sprites_set_visible(0, true);
-    } else if (skullActive) {
-        s0->type = SPRITE_TYPE_SKULL;
-        SPR_setDefinition(s0->vdpSprite, &anim_skull);
-        s0->attr |= SPRITE_ATTR_PRIORITY;  // Hinter das Piece (Low Prio)
-        sprites_set_visible(0, true);
-    } else {
-        sprites_set_visible(0, false);
-    }
-    s0->x = ((RENDER_X + ctx->pieceX) << 3) + s0->offsetX;
-    s0->y = ((RENDER_Y + ctx->pieceY) << 3) + s0->offsetY;
-
-    // --- Slot 1: Schatten Position ---
-    // Norotate laut Vorgabe NICHT auf den Schatten abbilden
-    sprites_set_visible(1, false); 
-
-    // --- Slot 2: Next Platz ---
-    GameSprite* s2 = &gameSprites[2];
-    if (nextHidden) {
-        s2->type = SPRITE_TYPE_SKULL;
-        SPR_setDefinition(s2->vdpSprite, &anim_skull);
-        s2->attr &= ~SPRITE_ATTR_PRIORITY;
-        sprites_set_visible(2, true);
-    } else {
-        sprites_set_visible(2, false);
-    }
-    s2->x = (UI_X << 3) + s2->offsetX;
-    s2->y = (NEXT_Y << 3) + s2->offsetY;
-
-    // --- Slot 3: Hold Platz ---
-    GameSprite* s3 = &gameSprites[3];
-    if (holdLocked) {
-        s3->type = SPRITE_TYPE_SKULL;
-        SPR_setDefinition(s3->vdpSprite, &anim_skull);
-        s3->attr &= ~SPRITE_ATTR_PRIORITY;
-        sprites_set_visible(3, true);
-    } else {
-        sprites_set_visible(3, false);
-    }
-    s3->x = (UI_X << 3) + s3->offsetX;
-    s3->y = (HOLD_Y << 3) + s3->offsetY;
-}
-
-
-
-void game_init_draw() {
+void game_init_draw()
+{
     // Sicherheitscheck: Ohne Context kein Zeichnen
-    if (ctx == NULL) return;
+    if (ctx == NULL)
+        return;
 
     // 1. VRAM Säuberung
     VDP_clearPlane(BG_A, TRUE);
 
     // 2. Grafik-Ressourcen laden
-    load_background(); 
+    load_background();
 
     // 3. Tile-Cache Initialisierung
-    view_init_cache(); 
-   // PAL_setPalette(PAL0, anim_norotate.palette->data, DMA); //SPRITEPALETTE
+    view_init_cache();
+    // PAL_setPalette(PAL0, anim_norotate.palette->data, DMA); //SPRITEPALETTE
     sprites_init();
-        // 4. Paletten-Setup für UI und Text
-    //PAL_setPalette(PAL3, PAL_FONT_CLEAR.data, CPU);
-    //VDP_setTextPalette(PAL3);
+    // 4. Paletten-Setup für UI und Text
+    // PAL_setPalette(PAL3, PAL_FONT_CLEAR.data, CPU);
+    // VDP_setTextPalette(PAL3);
     UI_init_fonts_and_palettes(); // Setzt PAL1, PAL2, PAL3 und Font
 
     // 5. Visueller Start-Effekt
-    view_fade_in_frame();  
-
+    view_fade_in_frame();
 }
 
-void game_update() {
-    if (ctx == NULL) return;
+void game_update()
+{
+    if (ctx == NULL)
+        return;
 
-    if (handle_active_animations(ctx)) {
+    // 1. Animationen (z.B. Zeilen löschen) blockieren Steuerung
+    if (handle_active_animations(ctx))
+    {
         lastJoyState = joyState;
-        update_curse_sprites(ctx);
+        // Hardware-Animationen der Sprites trotzdem weiterlaufen lassen
+        sprites_update();
         return;
     }
 
+    // 2. Eingabe verarbeiten
     bool moved = controls_update(ctx);
 
-    update_curse_sprites(ctx);
-    if (handle_gravity(ctx)) moved = true;
+    // 3. Schwerkraft
+    if (handle_gravity(ctx))
+        moved = true;
 
+    // 4. Logik-Timer (Effekte, Schatten, Garbage)
     handle_environment(ctx, moved);
 
-    if (moved) ctx->boardFlags |= GF_NEEDS_DRAW;
+    // 5. Sprite-Animationen (Hardware-Update)
+    // Ersetzt update_curse_sprites, da die Logik nun in sprite.c kapselt ist
+    sprites_update();
 
-    lastJoyState = joyState; 
+    if (moved)
+        ctx->boardFlags |= GF_NEEDS_DRAW;
+
+    lastJoyState = joyState;
 }
 
-void game_draw() {
-    if (ctx == NULL) return;
+void game_draw()
+{
+    if (ctx == NULL)
+        return;
 
     // Nutzt das Bit-Flag GF_NEEDS_DRAW aus dem u32 boardFlags Member
-    if (ctx->boardFlags & GF_NEEDS_DRAW) {
-        drawBoard(); 
-        
+    if (ctx->boardFlags & GF_NEEDS_DRAW)
+    {
+        drawBoard();
+
         // Debug Bag Anzeige aufrufen
-        view_draw_debug_bag(ctx);
-        
+        // view_draw_debug_bag(ctx);
+
         // Bit-Flag löschen (Reset)
-        ctx->boardFlags &= ~GF_NEEDS_DRAW; 
+        ctx->boardFlags &= ~GF_NEEDS_DRAW;
     }
-    
+
     sprites_update();
-    view_update_ui(ctx); 
+    view_update_ui(ctx);
 }
 
-void game_cleanup() {
-    if (ctx != NULL) {
+void game_cleanup()
+{
+    if (ctx != NULL)
+    {
         MEM_free(ctx);
         ctx = NULL;
     }

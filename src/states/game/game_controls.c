@@ -113,24 +113,27 @@ if (GET_FLAG(config.flags, FLAG_HOLD) && (changed & BUTTON_C)) {
 
     // --- 6. SELECT TRIGGER (Manual Sort) ---
     // --- 6. DEBUG TRIGGER (Statt Manual Sort jetzt No-Rotate Fluch) ---
-if (changed & BUTTON_START) {
-    // Falls der Fluch schon aktiv ist, schalten wir ihn aus (Toggle)
-    if (ctx->activeBadEffect == EFFECT_NO_ROTATE) {
-        ctx->activeBadEffect = EFFECT_NONE;
-        ctx->badEffectTimer = 0;
-        SOUND_play(SND_GOOD_ITEM);
-    } else {
-        // Fluch aktivieren
-        ctx->activeBadEffect = EFFECT_NO_ROTATE;
-        // 10 Sekunden (600 Frames bei 60Hz)
-        ctx->badEffectTimer = GET_TICKS(600); 
+// --- 6. DEBUG TRIGGER (EFFECT_FULLSPEED via START) ---
+    if (changed & BUTTON_START) {
+        // Falls ein Effekt aktiv ist, schalten wir ihn aus (Toggle)
+        if (ctx->activeBadEffect != EFFECT_NONE) {
+            ctx->activeBadEffect = EFFECT_NONE;
+            ctx->badEffectTimer = 0;
+            ctx->lastActiveBadEffect = 99; // Erzwingt Sprite-Reset
+            SOUND_play(SND_GOOD_ITEM);
+        } else {
+            // FULLSPEED aktivieren: 120 Frames Piepen + 300 Frames High-Speed
+            ctx->activeBadEffect = EFFECT_FULLSPEED;
+            ctx->badEffectTimer = 120 + (DUR_FULLSPEED_SPAWNS * 60); 
+            ctx->lastActiveBadEffect = 99; // Erzwingt Sprite-Sync
+            
+            // Erstes Warnsignal sofort
+            SOUND_play(SND_ALERT);
+            set_game_comment("GET READY...", 60);
+        }
         
-        SOUND_play(SND_BAD_ITEM);
+        moved = true; 
     }
-    
-    // moved auf true setzen, damit das Board-Redraw/Sprite-Update getriggert wird
-    moved = true; 
-}
 
     return moved;
 }

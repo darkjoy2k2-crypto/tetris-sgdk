@@ -179,67 +179,83 @@ u16 sec = (ctx->badEffectTimer + (GET_TICKS(60) - 1)) / GET_TICKS(60);
 void drawBoard() {
     if (ctx == NULL) return;
 
+    // 1. Board & Gitter zeichnen (Hintergrund und festliegende Steine)
     for (u16 y = 0; y < BOARD_HEIGHT; y++) {
-        // Blink-Check für Clearing
+        // Blink-Check: Zeilen flackern während des Löschens
         bool isClearingRow = (ctx->clearTimer > 0 && GET_LINE_PENDING(y)); 
         bool showFlash = isClearingRow && ((ctx->clearTimer >> (GET_FLAG(config.flags, FLAG_IS_PAL) ? 1 : 2)) & 1);
 
         for (u16 x = 0; x < BOARD_WIDTH; x++) {
             u16 tile;
             u8 cell = ctx->board[x][y];
-            u8 priority = 1; // Standard für Blöcke: High Priority
+            u8 priority = 1; // Standard für Blöcke: High Priority (1)
 
             if (showFlash) {
-                tile = GAME_TILE_START + 8; 
+                tile = GAME_TILE_START + 8; // Weißes Flash-Tile
             } else if (cell != 0) {
+                // Item- oder Block-Kacheln
                 if (cell == ITEM_ID_SKULL) tile = SKULL_TILE_IDX;
                 else if (cell == ITEM_ID_HEART) tile = HEART_TILE_IDX;
                 else tile = GAME_TILE_START + 1 + (cell - 1);
             } else {
+                // Leere Zelle (Spielfeld-Gitter)
                 tile = GAME_TILE_START;
-                priority = 0; // Gitter: Low Priority! Damit es hinter Sprites liegt
+                priority = 0; // Gitter: Low Priority (0), damit Sprites davor liegen können
             }
 
+            // Redraw nur bei Änderung (Tile Cache)
             if (tile != tileCache[x][y]) {
-                // Nutzt berechnete Priorität (0 für Gitter, 1 für Blöcke)
                 VDP_setTileMapXY(BG_A, TILE_ATTR_FULL(PAL2, priority, 0, 0, tile), RENDER_X + x, RENDER_Y + y);
                 tileCache[x][y] = tile;
             }
         }
     }
 
-    // Schatten Rendering (Ghost Piece) - Low Priority (0)
+    // 2. Schatten Rendering (Ghost Piece)
     if (GET_FLAG(config.flags, FLAG_SHADOW) && ctx->clearTimer == 0) {
         for (u16 i = 0; i < 4; i++) {
             s16 gx = ctx->pieceX + PIECES[ctx->type][ctx->rotation][i][0];
             s16 gy = ctx->ghostY + PIECES[ctx->type][ctx->rotation][i][1];
             if (gy >= 0) {
-                // Ghost Piece bleibt im Hintergrund (0)
+                // Ghost Piece bleibt im Hintergrund (Priority 0)
                 VDP_setTileMapXY(BG_A, TILE_ATTR_FULL(PAL2, 0, 0, 0, GAME_TILE_START + 8), RENDER_X + gx, RENDER_Y + gy);
-                tileCache[gx][gy] = 0xFFFF;
+                tileCache[gx][gy] = 0xFFFF; // Cache invalidieren für nächsten Frame
             }
         }
     }
 
-    // Aktiver Tetromino
+    // 3. Aktiver Tetromino (Fallendes Teil)
     if (ctx->clearTimer == 0) {
         for (u16 i = 0; i < 4; i++) {
             s16 px = ctx->pieceX + PIECES[ctx->type][ctx->rotation][i][0];
             s16 py = ctx->pieceY + PIECES[ctx->type][ctx->rotation][i][1];
             if (py >= 0) {
+                // Ermittlung, ob dieser Block ein Item (Schädel/Herz) trägt
                 u16 tile = (i == ctx->itemSlot) ? 
                            ((ctx->itemType == ITEM_ID_SKULL) ? SKULL_TILE_IDX : HEART_TILE_IDX) : 
                            (GAME_TILE_START + 1 + ctx->type);
                 
-                // AKTIVER TETROMINO: MUSS HIGH PRIORITY (1) SEIN!
-                // Nur so wird das Item-Sprite (Prio 0) bei Speed/Confusion verdeckt.
+                // AKTIVER TETROMINO: HIGH PRIORITY (1)
+                // Ermöglicht es dem Sprite-System, den Schädel hinter dem Stein zu zeichnen
                 VDP_setTileMapXY(BG_A, TILE_ATTR_FULL(PAL2, 1, 0, 0, tile), RENDER_X + px, RENDER_Y + py);
                 tileCache[px][py] = 0xFFFF;
             }
         }
     }
+
+// RICHTIG: (Spalte + Versatz) * 8
+Vect2D_s16 pPos = { 
+    .x = (RENDER_X + ctx->pieceX) << 3, 
+    .y = (RENDER_Y + ctx->pieceY) << 3 
+};
+
+Vect2D_s16 sPos = { 
+    .x = (RENDER_X + ctx->pieceX) << 3, 
+    .y = (RENDER_Y + ctx->ghostY) << 3
+};
+
+sprites_sync_game(pPos, sPos, ctx->activeBadEffect);
 }
-// --- Animationen ---
 
 void view_animate_grayscale() {
     for (s16 y = 0; y < BOARD_HEIGHT; y++) {

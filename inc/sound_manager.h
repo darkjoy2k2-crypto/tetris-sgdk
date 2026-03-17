@@ -18,6 +18,7 @@ typedef enum {
     SND_COMBO       = 52,
     SND_GARBAGE     = 99,
     SND_GOOD_ITEM   = 15,
+    SND_ALERT       = 87,
     SND_BAD_ITEM    = 15  // Oder die nächste freie ID in deiner Liste
 } SoundEvent;
 

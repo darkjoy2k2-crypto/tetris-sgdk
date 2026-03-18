@@ -69,3 +69,16 @@ extern const s8 PIECES[7][4][4][2];
 #define DUR_I_RAIN_SPAWNS      5
 
 extern GameContext* ctx;
+
+// Zwingend 'static inline' damit der Code direkt in die aufrufende Funktion kopiert wird
+static inline void set_board_tile(s16 x, s16 y, u8 val) {
+    ctx->board[x + ((y << 3) + (y << 1))] = val;
+}
+
+static inline u8 get_board_tile(s16 x, s16 y) {
+    return ctx->board[x + ((y << 3) + (y << 1))];
+}
+
+static inline bool is_within_board(s16 x, s16 y) {
+    return (x >= 0 && x < 10 && y >= 0 && y < 20);
+}

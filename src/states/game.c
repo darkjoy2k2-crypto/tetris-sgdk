@@ -28,19 +28,19 @@ static bool handle_gravity(GameContext *gctx)
     ctx->moveTimer++;
 
     // 1. Basis-Geschwindigkeit berechnen
-    // Multiplikation mit 3 via Bitshift gelöst: (n << 1) + n
     u16 levelOffset = ((ctx->level - 1) << 1) + (ctx->level - 1);
     s16 threshold = GET_TICKS(60 - levelOffset);
     if (threshold < 3) threshold = 3;
 
-    // 2. FULLSPEED Logik
+// 2. FULLSPEED Logik
     if (ctx->activeBadEffect == EFFECT_FULLSPEED)
     {
         if (ctx->badEffectTimer > 1) 
         {
             if (ctx->badEffectTimer % 60 == 0) SOUND_play(SND_ALERT);
         } 
-        else if (ctx->badEffectTimer <= 0) 
+        // Korrektur: Auch bei Timer-Stand 1 (Sirene vorbei) sofort Speed aktivieren
+        else if (ctx->badEffectTimer <= 1) 
         {
             threshold = 2; 
         }
@@ -50,8 +50,8 @@ static bool handle_gravity(GameContext *gctx)
     u16 finalThreshold = threshold;
     
     if (joyState & vBtnSoftDrop) {
-        finalThreshold = threshold / 12;
-        if (finalThreshold < 2) finalThreshold = 2;
+        // Festwert für konstante Geschwindigkeit (2 Frames pro Fallschritt)
+        finalThreshold = 4; 
     } else if (ctx->activeBadEffect == EFFECT_FREEZE) {
         finalThreshold = 9999;
     }
@@ -83,58 +83,61 @@ static bool handle_gravity(GameContext *gctx)
 
 static void handle_environment(GameContext *gctx, bool moved)
 {
+    if (gctx == NULL) return;
 
-
-    // 1. Garbage Logik (Zeitbasierte neue Zeilen)
-    if (ctx->garbageTimer >= ctx->garbageNextThreshold)
+    // 1. Garbage Logik
+    if (config.garbageFreq > 0 && gctx->activeBadEffect != EFFECT_FREEZE)
     {
-        addGarbageLine();
-        ctx->garbageTimer = 0;
-        ctx->garbageNextThreshold = GET_TICKS(GARBAGE_INTERVALS[config.garbageFreq] + (random() % 120) - 60);
-        ctx->boardFlags |= GF_NEEDS_DRAW;
-    }
-
-    // 2. Shadow Logik (Berechnung der Fall-Tiefe des Schattens)
-    if (moved && GET_FLAG(config.flags, FLAG_SHADOW))
-    {
-        ctx->ghostY = ctx->pieceY;
-        while (!checkCollision(ctx->pieceX, ctx->ghostY + 1, ctx->rotation))
-            ctx->ghostY++;
-    }
-
-if (ctx->badEffectTimer > 0)
-    {
-        // NUR Rainbow und stückbasierte Effekte (falls du sie so behalten willst) ausschließen.
-        // FULLSPEED MUSS hier dekrementiert werden, damit das Piepen (Frames) funktioniert!
-        if (ctx->activeBadEffect != EFFECT_RAINBOW &&
-            ctx->activeBadEffect != EFFECT_SAME_TILES &&
-            ctx->activeBadEffect != EFFECT_I_RAIN)
+        gctx->garbageTimer++;
+        if (gctx->garbageTimer >= gctx->garbageNextThreshold)
         {
-            ctx->badEffectTimer--;
+            addGarbageLine();
+            
+            // WICHTIG: Nach Garbage hat sich das Board verändert. 
+            // Der Schatten muss zwingend neu berechnet werden.
+            calculate_ghost_y();
 
-
-           if (ctx->badEffectTimer > 0)
-    {
-        if (ctx->activeBadEffect != EFFECT_RAINBOW &&
-            ctx->activeBadEffect != EFFECT_SAME_TILES &&
-            ctx->activeBadEffect != EFFECT_I_RAIN)
-        {
-            // Stoppe bei 1, wenn Fullspeed, damit spawnPiece den Übergang steuert
-            if (ctx->activeBadEffect == EFFECT_FULLSPEED && ctx->badEffectTimer == 1) {
-                // Nichts tun, auf spawnPiece warten
-            } else {
-                ctx->badEffectTimer--;
-            }
-
-            if (ctx->badEffectTimer <= 0 && ctx->activeBadEffect != EFFECT_FULLSPEED)
-            {
-                // ... (Restliche Reaktivierung für Hold/Shadow wie gehabt) ...
-                ctx->activeBadEffect = EFFECT_NONE;
-                ctx->lastActiveBadEffect = 99;
-                SOUND_play(SND_GOOD_ITEM);
-            }
+            gctx->garbageTimer = 0;
+            u16 base = GARBAGE_INTERVALS[config.garbageFreq];
+            gctx->garbageNextThreshold = GET_TICKS(base + (random() % 120) - 60);
+            gctx->boardFlags |= GF_NEEDS_DRAW;
         }
     }
+
+    // 2. Shadow Logik
+    // Wir rufen die zentrale Funktion, wenn eine Bewegung stattfand.
+    if (moved && GET_FLAG(config.flags, FLAG_SHADOW))
+    {
+        calculate_ghost_y();
+    }
+
+    // 3. Bad Effect Timer Management
+    if (gctx->badEffectTimer > 0)
+    {
+        // Stückbasierte Effekte ausschließen
+        if (gctx->activeBadEffect != EFFECT_RAINBOW &&
+            gctx->activeBadEffect != EFFECT_SAME_TILES &&
+            gctx->activeBadEffect != EFFECT_I_RAIN)
+        {
+            if (gctx->activeBadEffect == EFFECT_FULLSPEED)
+            {
+                if (gctx->badEffectTimer > 1) gctx->badEffectTimer--;
+            }
+            else 
+            {
+                gctx->badEffectTimer--;
+                if (gctx->badEffectTimer <= 0)
+                {
+                    if (gctx->activeBadEffect == EFFECT_HOLD_LOCK)
+                    {
+                        if (GET_FLAG(config.flags, FLAG_HOLD)) gctx->flags |= GF_CAN_HOLD;
+                        gctx->holdType = gctx->lastHoldType;
+                    }
+                    gctx->activeBadEffect = EFFECT_NONE;
+                    gctx->lastActiveBadEffect = 99;
+                    SOUND_play(SND_GOOD_ITEM);
+                }
+            }
         }
     }
 }

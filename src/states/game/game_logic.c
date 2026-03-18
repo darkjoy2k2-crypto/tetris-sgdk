@@ -28,17 +28,14 @@ const s8 PIECES[7][4][4][2] = {
     { {{2,0}, {2,1}, {1,1}, {0,1}}, {{2,2}, {1,2}, {1,1}, {1,0}}, {{0,2}, {0,1}, {1,1}, {2,1}}, {{0,0}, {1,0}, {1,1}, {1,2}} }
 };
 // Sicherstellen, dass dies oben in game_logic.c steht:
-static u8 sortBuffer[BOARD_WIDTH][BOARD_HEIGHT];
+static u8 sortBuffer[200];
 
 void triggerManualSort() {
     if (ctx == NULL || ctx->sortingRow != -1) return;
 
-    // 1. Das gesamte Board (0 bis 19) in den Puffer
-    for (u16 y = 0; y < 20; y++) {
-        for (u16 x = 0; x < 10; x++) {
-            sortBuffer[x][y] = ctx->board[x][y];
-        }
-    }
+    // 1. Das gesamte Board in den Puffer kopieren
+    // memcpy nutzt auf dem 68k optimierte MOVE.L Befehle für 32-Bit Transfers
+    memcpy(sortBuffer, ctx->board, 200);
 
     // 2. Selection Sort: Wir füllen das Board von UNTEN (19) nach OBEN (0)
     for (s16 targetY = 19; targetY >= 0; targetY--) {
@@ -48,34 +45,55 @@ void triggerManualSort() {
         // Suche im verbleibenden oberen Teil die vollste Reihe
         for (u16 currentY = 0; currentY <= (u16)targetY; currentY++) {
             u16 currentCount = 0;
+            // Manueller Zeilen-Offset mit Bitshifts (y * 10)
+            u16 rowOffset = (currentY << 3) + (currentY << 1);
+            
             for (u16 x = 0; x < 10; x++) {
-                if (sortBuffer[x][currentY] != 0) currentCount++;
+                if (sortBuffer[rowOffset + x] != 0) {
+                    currentCount++;
+                }
             }
 
+            // Stabilität: >= sorgt dafür, dass bei gleicher Blockanzahl die 
+            // untere Reihe bevorzugt wird (weniger Sprünge)
             if (currentCount >= maxBlocksCount) {
                 maxBlocksCount = currentCount;
                 maxBlocksIndex = currentY;
             }
         }
 
-        // Tausch der Reihen im Puffer
-        for (u16 x = 0; x < 10; x++) {
-            u8 temp = sortBuffer[x][targetY];
-            sortBuffer[x][targetY] = sortBuffer[x][maxBlocksIndex];
-            sortBuffer[x][maxBlocksIndex] = temp;
+        // Tausch der Reihen im Puffer (10 Bytes pro Zeile)
+        u16 targetOffset = (targetY << 3) + (targetY << 1);
+        u16 maxOffset    = (maxBlocksIndex << 3) + (maxBlocksIndex << 1);
+
+        // Nur tauschen, wenn es nicht dieselbe Zeile ist
+        if (targetOffset != maxOffset) {
+            for (u16 x = 0; x < 10; x++) {
+                u8 temp = sortBuffer[targetOffset + x];
+                sortBuffer[targetOffset + x] = sortBuffer[maxOffset + x];
+                sortBuffer[maxOffset + x] = temp;
+            }
         }
     }
 
-    // 3. Animation bei 0 starten (läuft dann bis 19 durch)
+    // 3. Animation-Trigger
+    // Die game_update wird nun Frame für Frame ctx->board aus sortBuffer füllen
     ctx->sortingRow = 0; 
     SOUND_play(SND_TETRIS);
 }
+
 bool checkCollision(s16 nx, s16 ny, u16 nr) {
     for (u16 i = 0; i < 4; i++) {
-        s16 px = nx + PIECES[ctx->type][nr][i][0];
-        s16 py = ny + PIECES[ctx->type][nr][i][1];
-        if (px < 0 || px >= BOARD_WIDTH || py >= BOARD_HEIGHT) return true;
-        if (py >= 0 && ctx->board[px][py] != 0) return true;
+        s16 gx = nx + PIECES[ctx->type][nr][i][0];
+        s16 gy = ny + PIECES[ctx->type][nr][i][1];
+
+        // Wand- und Boden-Check (Immer aktiv)
+        if (gx < 0 || gx >= 10 || gy >= 20) return true;
+
+        // Board-Check: Nur wenn der Block im sichtbaren Bereich (0-19) ist
+        if (gy >= 0) {
+            if (get_board_tile(gx, gy) != 0) return true;
+        }
     }
     return false;
 }
@@ -113,14 +131,22 @@ static void handle_item_spawn_logic() {
     }
 }
 
-static void transfer_piece_to_board() {
-    for (u16 i = 0; i < 4; i++) {
-        s16 px = ctx->pieceX + PIECES[ctx->type][ctx->rotation][i][0];
-        s16 py = ctx->pieceY + PIECES[ctx->type][ctx->rotation][i][1];
-        if (py >= 0) {
-            ctx->board[px][py] = (i == ctx->itemSlot) ? ctx->itemType : (ctx->type + 1);
+void transfer_piece_to_board() {
+    u16 i;
+    for (i = 0; i < 4; i++) {
+        s16 gx = ctx->pieceX + PIECES[ctx->type][ctx->rotation][i][0];
+        s16 gy = ctx->pieceY + PIECES[ctx->type][ctx->rotation][i][1];
+
+        if (is_within_board(gx, gy)) {
+            // Prüfung: Ist dieser spezifische Block der Träger des Items?
+            // Wenn ja, schreibe die Item-ID (ctx->itemType), sonst die Steinfarbe.
+            u8 tileValue = (i == ctx->itemSlot) ? ctx->itemType : (ctx->type + 1);
+            
+            set_board_tile(gx, gy, tileValue);
         }
     }
+    
+    ctx->boardFlags |= GF_NEEDS_DRAW;
 }
 
 static void apply_scoring(u16 lines) {
@@ -152,18 +178,18 @@ void set_game_comment(const char* text, u16 duration) {
 void triggerGoodEffect() {
     if (ctx == NULL) return;
 
-    // Alle Flüche stoppen
     ctx->activeBadEffect = EFFECT_NONE;
     ctx->badEffectTimer = 0;
     ctx->lastActiveBadEffect = 99;
 
     u16 chance = random() % 6;
+    
     if (chance == 0) {
-        // Heal & Clear: Eine Zeile nach unten schieben
-        for (s16 y = BOARD_HEIGHT - 1; y > 0; y--) {
-            for (u16 x = 0; x < BOARD_WIDTH; x++) ctx->board[x][y] = ctx->board[x][y - 1];
+        // HEAL & CLEAR: Board von unten nach oben kopieren (Shift Down)
+        for (s16 row = 19; row > 0; row--) {
+            memcpy(&ctx->board[row * 10], &ctx->board[(row - 1) * 10], 10);
         }
-        for (u16 x = 0; x < BOARD_WIDTH; x++) ctx->board[x][0] = 0;
+        memset(&ctx->board[0], 0, 10);
         set_game_comment("HEAL & CLEAR!", 90);
     } 
     else if (chance == 1) { 
@@ -171,12 +197,9 @@ void triggerGoodEffect() {
         set_game_comment("HEAL & SORT!", 90); 
     }
     else if (chance == 2) {
-        // Skulls auf dem Board in normale Blöcke verwandeln
-        for (u16 y = 0; y < BOARD_HEIGHT; y++) {
-            for (u16 x = 0; x < BOARD_WIDTH; x++) {
-                if (ctx->board[x][y] == ITEM_ID_SKULL) {
-                    ctx->board[x][y] = 1 + (random() % 7);
-                }
+        for (u16 i = 0; i < 200; i++) {
+            if (ctx->board[i] == ITEM_ID_SKULL) {
+                ctx->board[i] = 1 + (random() % 7);
             }
         }
         set_game_comment("SKULLS RECLAIMED!", 90);
@@ -192,19 +215,15 @@ void triggerGoodEffect() {
         set_game_comment("TIME FREEZE!", 90); 
     }
     else { 
-        // Rainbow: Permanent
         ctx->activeBadEffect = EFFECT_RAINBOW; 
         ctx->badEffectTimer = 0; 
         ctx->sortingRow = 0; 
         set_game_comment("RAINBOW POWER!", 90); 
     }
 
-    // Alle verbleibenden Herzen in bunte Steine verwandeln
-    for (u16 y = 0; y < BOARD_HEIGHT; y++) {
-        for (u16 x = 0; x < BOARD_WIDTH; x++) {
-            if (ctx->board[x][y] == ITEM_ID_HEART) {
-                ctx->board[x][y] = 1 + (random() % 7);
-            }
+    for (u16 i = 0; i < 200; i++) {
+        if (ctx->board[i] == ITEM_ID_HEART) {
+            ctx->board[i] = 1 + (random() % 7);
         }
     }
 
@@ -212,6 +231,7 @@ void triggerGoodEffect() {
     ctx->commentTimer = 60;
     ctx->boardFlags |= GF_NEEDS_DRAW;
 }
+
 
 
 void triggerBadEffect() {
@@ -229,6 +249,8 @@ case EFFECT_FULLSPEED:
 
         case EFFECT_SAME_TILES: 
             ctx->badEffectTimer = DUR_SAME_TILES_SPAWNS;
+            // Zufälligen Typ für den Fluch festlegen
+            ctx->forcedPieceType = random() % 7; 
             set_game_comment("SPEED / SAME!", 90); 
             break;
 
@@ -277,15 +299,32 @@ case EFFECT_HOLD_LOCK:
 
 void lockPiece() {
     bool lockedAbove = false;
-    transfer_piece_to_board();
-    for (u16 i = 0; i < 4; i++) {
-        if (ctx->pieceY + PIECES[ctx->type][ctx->rotation][i][1] < 0) lockedAbove = true;
+    u16 i;
+
+    // 1. TRANSFER: Schreibt die Steine ins Board.
+    // Diese Funktion MUSS intern 'is_within_board' und 'set_board_tile' nutzen.
+    transfer_piece_to_board(); 
+
+    // 2. GAME OVER CHECK: Nutzen der Hilfsmakros
+    for (i = 0; i < 4; i++) {
+        s16 gy = ctx->pieceY + PIECES[ctx->type][ctx->rotation][i][1];
+        s16 gx = ctx->pieceX + PIECES[ctx->type][ctx->rotation][i][0];
+
+        // Wenn der Stein zwar platziert wurde, aber ein Teil davon 
+        // laut 'is_within_board' außerhalb (oben) liegt -> Game Over.
+        if (!is_within_board(gx, gy) && gy < 0) {
+            lockedAbove = true;
+            break; 
+        }
     }
+
     SOUND_play(SND_PIECE_LOCK);
+
     if (lockedAbove) {
         SOUND_play(SND_GAME_OVER);
         play_game_over_animation();
     } else {
+        // clearLines nutzt intern 'get_board_tile' mit Bitshifts
         if (clearLines() == 0) {
             spawnPiece();
         }
@@ -331,84 +370,131 @@ bool tryRotate(u16 newRotation) {
 
 u16 clearLines() {
     u16 linesCleared = 0;
-    for (u16 y = 0; y < BOARD_HEIGHT; y++) {
+
+    for (u16 y = 0; y < 20; y++) {
         bool full = true;
         u16 h = 0, s = 0;
-        for (u16 x = 0; x < BOARD_WIDTH; x++) {
-            u8 t = ctx->board[x][y];
-            if (t == 0) { full = false; break; }
+        
+        // Einmalige Berechnung des Zeilen-Offsets (y * 10)
+        u16 rowOffset = (y << 3) + (y << 1);
+
+        for (u16 x = 0; x < 10; x++) {
+            // Direkter Zugriff auf das flache Array
+            u8 t = ctx->board[rowOffset + x];
+            
+            if (t == 0) { 
+                full = false; 
+                break; 
+            }
             if (t == ITEM_ID_HEART) h++;
             else if (t == ITEM_ID_SKULL) s++;
         }
-if (full) {
+
+        if (full) {
             linesCleared++;
-            SET_LINE_PENDING(y); // Makro nutzt boardFlags Bits 1-20
+            SET_LINE_PENDING(y); // Markiert die Zeile für die Animation
+
+            // Bestimmung des Füll-Typs für die Animation
             u8 f;
             if (h == 0 && s == 0) f = 0;
-            else if (h > s) { f = ITEM_ID_HEART; ctx->flags |= GF_HEART_TRIG; }   
-            else if (s > h) { f = ITEM_ID_SKULL; ctx->flags |= GF_SKULL_TRIG; }   
+            else if (h > s) { 
+                f = ITEM_ID_HEART; 
+                ctx->flags |= GF_HEART_TRIG; 
+            }   
+            else if (s > h) { 
+                f = ITEM_ID_SKULL; 
+                ctx->flags |= GF_SKULL_TRIG; 
+            }   
             else f = TILE_ID_FLASH;
-            for (u16 x = 0; x < BOARD_WIDTH; x++) ctx->board[x][y] = f;
+
+            // Zeile im Board mit dem Effekt-Tile füllen
+            for (u16 x = 0; x < 10; x++) {
+                ctx->board[rowOffset + x] = f;
+            }
         }
     }
+
     if (linesCleared > 0) {
         apply_scoring(linesCleared);
         ctx->comboCount++;
-        ctx->clearTimer = GET_TICKS(20);
+        
+        // Timer für die Lösch-Animation (z.B. Blinken)
+        ctx->clearTimer = GET_TICKS(20); 
+        
+        // Sound-Variation basierend auf Combo
         SOUND_play(52 + ctx->comboCount);
+        
+        // View-Update triggern
+        ctx->boardFlags |= GF_NEEDS_DRAW;
     } else {
         ctx->comboCount = 0;
     }
+
     return linesCleared;
 }
 
-// Die Game-Over Animation (Von oben nach unten Shadow-Pieces)
 void play_game_over_animation() {
-    for (u16 y = 0; y < BOARD_HEIGHT; y++) {
+    u16 x, y, i;
+
+    for (y = 0; y < 20; y++) {
         bool rowChanged = false;
-        for (u16 x = 0; x < BOARD_WIDTH; x++) {
-            if (ctx->board[x][y] != 0) {
-                ctx->board[x][y] = TILE_ID_GARBAGE; // ID 8 (Shadow)
+        // Zeilen-Offset berechnen: (y * 10)
+        u16 rowOffset = (y << 3) + (y << 1);
+
+        for (x = 0; x < 10; x++) {
+            // Zugriff auf das flache Board-Array
+            if (ctx->board[rowOffset + x] != 0) {
+                ctx->board[rowOffset + x] = TILE_ID_GARBAGE; // ID 8 (Shadow)
                 rowChanged = true;
             }
         }
-if (rowChanged) {
+
+        if (rowChanged) {
             ctx->boardFlags |= GF_NEEDS_DRAW;
+            // Da wir uns in einer blockierenden Animation befinden, 
+            // erzwingen wir das Zeichnen sofort
             drawBoard(); 
-            for(u16 i = 0; i < 3; i++) SYS_doVBlankProcess();
+            
+            // Kurze Pause für den visuellen Effekt (von oben nach unten)
+            for (i = 0; i < 3; i++) {
+                SYS_doVBlankProcess();
+            }
         }
     }
-    for(u16 i = 0; i < 40; i++) SYS_doVBlankProcess();
+
+    // Längere Pause am Ende der Animation (ca. 0.6s bei 60Hz)
+    for (i = 0; i < 40; i++) {
+        SYS_doVBlankProcess();
+    }
     
+    // Daten sichern und State wechseln
     config.currentScore = ctx->score;
     currentState = STATE_GAMEOVER;
 }
+
 
 void spawnPiece()
 {
     if (ctx == NULL) return;
 
-    // --- 1. STÜCKBASIERTE EFFEKTE DEKREMENTIEREN ---
+    // 1. EFFEKT-DEKREMENTIERUNG (Stückbasiert)
     if (ctx->activeBadEffect != EFFECT_NONE)
     {
-        // A) Fullspeed Logik (Zählt erst ab Timer <= 0 Steine)
-if (ctx->activeBadEffect == EFFECT_FULLSPEED)
-    {
-        // Wenn handle_environment bei 1 gestoppt hat, jetzt auf 0 setzen für Speed-Start
-        if (ctx->badEffectTimer == 1) ctx->badEffectTimer = 0;
-
-        if (ctx->badEffectTimer <= 0)
+        if (ctx->activeBadEffect == EFFECT_FULLSPEED)
         {
-            ctx->badEffectTimer--; 
-            if (ctx->badEffectTimer <= -DUR_FULLSPEED_SPAWNS)
+            if (ctx->badEffectTimer == 1) ctx->badEffectTimer = 0;
+            if (ctx->badEffectTimer <= 0)
             {
-                ctx->activeBadEffect = EFFECT_NONE;
-                ctx->badEffectTimer = 0;
-                ctx->lastActiveBadEffect = 99;
-                SOUND_play(SND_GOOD_ITEM);
+                ctx->badEffectTimer--; 
+                if (ctx->badEffectTimer <= -DUR_FULLSPEED_SPAWNS)
+                {
+                    ctx->activeBadEffect = EFFECT_NONE;
+                    ctx->badEffectTimer = 0;
+                    ctx->lastActiveBadEffect = 99;
+                    SOUND_play(SND_GOOD_ITEM);
+                }
             }
         }
-    }
         else if (ctx->activeBadEffect == EFFECT_SAME_TILES || 
                  ctx->activeBadEffect == EFFECT_I_RAIN)
         {
@@ -426,10 +512,9 @@ if (ctx->activeBadEffect == EFFECT_FULLSPEED)
         }
     }
 
-    // --- 2. SPAWN LOGIK ---
-    ctx->type = ctx->nextType; // Korrekt: 'type' statt 'curType'
+    // 2. TYP-WAHL (Bag oder Random)
+    ctx->type = ctx->nextType;
 
-    // Bag-System oder Zufall
     if (config.randMode == 0) {
         ctx->nextType = ctx->bag[ctx->bagIndex++];
         if (ctx->bagIndex >= 7) refillBag();
@@ -437,55 +522,63 @@ if (ctx->activeBadEffect == EFFECT_FULLSPEED)
         ctx->nextType = random() % 7;
     }
 
-    // Sonderregel für SAME_TILES: Typ erzwingen
-    if (ctx->activeBadEffect == EFFECT_SAME_TILES)
-    {
-        ctx->type = ctx->forcedPieceType; // Korrekt: 'forcedPieceType'
-    }
+    // Fluch-Überschreibung
+    if (ctx->activeBadEffect == EFFECT_SAME_TILES) ctx->type = ctx->forcedPieceType;
+    if (ctx->activeBadEffect == EFFECT_I_RAIN) ctx->type = 0; 
 
-    // Sonderregel für I_RAIN: Immer I-Piece (Typ 0)
-    if (ctx->activeBadEffect == EFFECT_I_RAIN)
-    {
-        ctx->type = 0; 
-    }
-
+    // 3. POSITIONIERUNG & CLAMPING
     ctx->rotation = 0;
-    ctx->pieceX = 3;
     ctx->pieceY = (ctx->type == 0) ? -1 : 0;
+
+    // Berechnung der horizontalen Ausdehnung für das Clamping (Persistent X)
+    s16 minRelX = 5, maxRelX = -5;
+    for (u16 i = 0; i < 4; i++) {
+        s16 px = PIECES[ctx->type][0][i][0];
+        if (px < minRelX) minRelX = px;
+        if (px > maxRelX) maxRelX = px;
+    }
+
+    // Sicherstellen, dass PieceX + minRelX >= 0 und PieceX + maxRelX <= 9
+    if (ctx->pieceX < -minRelX) ctx->pieceX = -minRelX;
+    if (ctx->pieceX > (9 - maxRelX)) ctx->pieceX = 9 - maxRelX;
+
+    // 4. STATUS-RESETS
     ctx->flags |= GF_CAN_HOLD;
     ctx->moveTimer = 0; 
-
-    // Item Spawn Logik aufrufen (war als ungenutzt markiert)
     handle_item_spawn_logic();
 
+    // 5. GHOST & VIEW UPDATE
     if (GET_FLAG(config.flags, FLAG_SHADOW)) calculate_ghost_y();
-    
     ctx->boardFlags |= GF_NEEDS_DRAW;
 
-    // Collision Check für Game Over
+    // 6. GAME OVER CHECK
     if (checkCollision(ctx->pieceX, ctx->pieceY, ctx->rotation))
     {
         SOUND_play(SND_GAME_OVER);
-        play_game_over_animation(); // Nutzt deine vorhandene Funktion
+        play_game_over_animation();
     }
 }
-
 
 bool handle_active_animations(GameContext* ctx) {
     if (ctx == NULL) return false;
 
-    // 1. Line-Clear Blinken (Pausiert das Spiel)
+    // 1. Line-Clear Blinken (Blockiert Steuerung)
     if (ctx->clearTimer > 0) {
         ctx->clearTimer--;
         if (ctx->clearTimer == 0) {
             finishLineClear();
-            if (ctx->sortingRow == -1) spawnPiece();
+            
+            // Spawn-Logik: Falls kein Effekt oder nur ein visueller Effekt (Rainbow/Shadow) aktiv ist
+            bool isVisual = (ctx->activeBadEffect == EFFECT_RAINBOW || ctx->activeBadEffect == EFFECT_SHADOW_BOARD);
+            if (ctx->sortingRow == -1 || isVisual) {
+                spawnPiece();
+            }
         }
-ctx->boardFlags |= GF_NEEDS_DRAW;
+        ctx->boardFlags |= GF_NEEDS_DRAW;
         return true; 
     }
 
-    // 2. Board-Verwandlungen (Shadow oder Rainbow)
+    // 2. Board-Animationen (Rainbow, Shadow, Sort)
     if (ctx->sortingRow != -1) {
         u16 y = ctx->sortingRow;
         bool isVisual = (ctx->activeBadEffect == EFFECT_RAINBOW || ctx->activeBadEffect == EFFECT_SHADOW_BOARD);
@@ -495,23 +588,25 @@ ctx->boardFlags |= GF_NEEDS_DRAW;
         else handle_sort_row(y);
 
         ctx->sortingRow++;
-ctx->boardFlags |= GF_NEEDS_DRAW;
+        ctx->boardFlags |= GF_NEEDS_DRAW;
 
-        if (ctx->sortingRow >= BOARD_HEIGHT) {
+        // Abschluss der Animation
+        if (ctx->sortingRow >= 20) {
             ctx->sortingRow = -1;
-            if (!isVisual) spawnPiece(); // Nur bei Sortierung pausieren
+            // Nur spawnen, wenn die Steuerung blockiert war (Sort-Effekt)
+            if (!isVisual) spawnPiece();
         }
-        if (!isVisual) return true; // Nur bei Sortierung Steuerung blockieren
+        
+        // Nur bei nicht-visuellen Effekten (Sortieren) die Steuerung sperren
+        if (!isVisual) return true; 
     }
 
-    // 3. Die Kette: Wenn Schatten aktiv ist, Timer runterzählen
+    // 3. Ketten-Effekt (Shadow zu Rainbow Transition)
     if (ctx->activeBadEffect == EFFECT_SHADOW_BOARD && ctx->badEffectTimer > 0) {
         ctx->badEffectTimer--;
-        
-        // Wenn die 5 Sekunden um sind -> Umschalten auf Rainbow
         if (ctx->badEffectTimer == 0) {
             ctx->activeBadEffect = EFFECT_RAINBOW;
-            ctx->sortingRow = 0; // Starte neue Animation: Licht kommt zurück
+            ctx->sortingRow = 0; 
             set_game_comment("RAINBOW REBIRTH!", 90);
             SOUND_play(SND_GOOD_ITEM);
         }
@@ -520,24 +615,42 @@ ctx->boardFlags |= GF_NEEDS_DRAW;
     return false; 
 }
 
-
 void finishLineClear() {
-    for (s16 y = BOARD_HEIGHT - 1; y >= 0; y--) {
-        if (GET_LINE_PENDING(y)) { // Bit-Abfrage
-            for (s16 yy = y; yy > 0; yy--) {
-                for (u16 x = 0; x < BOARD_WIDTH; x++) {
-                    ctx->board[x][yy] = ctx->board[x][yy - 1];
-                    // Verschieben der Pending-Bits im boardFlags Register
-                    if (GET_LINE_PENDING(yy - 1)) SET_LINE_PENDING(yy);
-                    else ctx->boardFlags &= ~(1UL << (yy + GF_PENDING_SHIFT));
+    for (s16 y = 19; y >= 0; y--) {
+        if (GET_LINE_PENDING(y)) {
+            // 1. Zeilen physisch verschieben
+            if (y > 0) {
+                // Kopiert alle Zeilen oberhalb (0 bis y-1) eine Position nach unten
+                for (s16 row = y; row > 0; row--) {
+                    memcpy(&ctx->board[row * 10], &ctx->board[(row - 1) * 10], 10);
                 }
             }
-            for (u16 x = 0; x < BOARD_WIDTH; x++) ctx->board[x][0] = 0;
-            ctx->boardFlags &= ~(1UL << (0 + GF_PENDING_SHIFT)); // Y0 Bit löschen
+            // Die neue oberste Zeile (Index 0) leeren
+            memset(&ctx->board[0], 0, 10);
+
+            // 2. Flags synchronisieren (Wichtig für Mehrfach-Linien)
+            // Bit 10 = Zeile 0, Bit 29 = Zeile 19
+            u32 currentBitPos = y + GF_PENDING_SHIFT;
+            u32 maskAbove = (1UL << currentBitPos) - 1;
+            
+            // Isoliere Flags der Zeilen oberhalb (0 bis y-1)
+            u32 pendingAbove = (ctx->boardFlags & maskAbove) & 0xFFFFFC00;
+            // Isoliere Flags der Zeilen unterhalb (y+1 bis 19)
+            u32 pendingBelow = (ctx->boardFlags & ~((1UL << (currentBitPos + 1)) - 1)) & 0xFFFFFC00;
+
+            // Flags neu zusammensetzen:
+            // - pendingBelow bleibt statisch
+            // - pendingAbove wird um 1 Bit nach links geschoben (Index + 1)
+            // - Das Flag der gerade gelöschten Zeile y wird überschrieben
+            // - Das neue Flag für Zeile 0 wird automatisch 0
+            ctx->boardFlags = (ctx->boardFlags & ~0xFFFFFC00) | pendingBelow | (pendingAbove << 1);
+
+            // Re-Check der aktuellen Zeile y, da dort nun der Inhalt von y-1 liegt
             y++; 
         }
     }
 
+    // Trigger für Item-Effekte
     if (ctx->flags & GF_HEART_TRIG) {
         triggerGoodEffect();
         ctx->flags &= ~GF_HEART_TRIG;
@@ -589,23 +702,48 @@ void performHold() {
 
 void addGarbageLine() {
     if (ctx == NULL) return;
-    for (u16 y = 0; y < BOARD_HEIGHT - 1; y++) {
-        for (u16 x = 0; x < BOARD_WIDTH; x++) ctx->board[x][y] = ctx->board[x][y + 1];
+
+    // 1. Board nach OBEN schieben (Zeile 1-19 auf 0-18)
+    for (u16 row = 0; row < 19; row++) {
+        memcpy(&ctx->board[row * 10], &ctx->board[(row + 1) * 10], 10);
     }
+
+    // 2. Neue Garbage-Zeile ganz unten generieren
     u8 randomColor = 1 + (random() % 7); 
-    u16 holeX = random() % BOARD_WIDTH;
-    for (u16 x = 0; x < BOARD_WIDTH; x++) {
-        ctx->board[x][BOARD_HEIGHT - 1] = (x == holeX) ? 0 : randomColor;
+    u16 holeX = random() % 10;
+    u16 bottomRow = 190; 
+
+    for (u16 x = 0; x < 10; x++) {
+        ctx->board[bottomRow + x] = (x == holeX) ? 0 : randomColor;
     }
+
+    // 3. Piece-Korrektur: Das Teil wird durch den Garbage physikalisch hochgedrückt
+    ctx->pieceY--;
+
+    // Falls das Teil jetzt oben anstößt (Decke oder statische Blöcke)
     if (checkCollision(ctx->pieceX, ctx->pieceY, ctx->rotation)) {
-        if (!checkCollision(ctx->pieceX, ctx->pieceY - 1, ctx->rotation)) ctx->pieceY--;
-        else currentState = STATE_GAMEOVER;
+        // Game Over, wenn kein Ausweichen nach oben mehr möglich
+        play_game_over_animation();
+        return;
     }
-if (GET_FLAG(config.flags, FLAG_SHADOW)) calculate_ghost_y();
+
+    // 4. Flags: Pending-Bits rücken mit dem Board nach oben (Y wird kleiner -> Bit-Index sinkt)
+    // Wir isolieren Bits 10-29 (0xFFFFFC00)
+    u32 lineFlags = (ctx->boardFlags & 0xFFFFFC00); 
+    lineFlags >>= 1; 
+    
+    // WICHTIG: Bit 9 löschen, falls ein Flag von Zeile 0 (Bit 10) dorthin gerutscht ist.
+    // Nur Bits ab 10 dürfen gesetzt bleiben.
+    lineFlags &= 0xFFFFFC00; 
+
+    // Flags neu zusammensetzen (Bit 0 für Draw-Status bleibt erhalten)
+    ctx->boardFlags = (ctx->boardFlags & ~0xFFFFFC00) | lineFlags;
+
+    if (GET_FLAG(config.flags, FLAG_SHADOW)) calculate_ghost_y();
+    
     SOUND_play(SND_GARBAGE);
     ctx->boardFlags |= GF_NEEDS_DRAW;
 }
-
 
 void update_comment_timer() {
     if (ctx->commentTimer > 0) {
@@ -631,13 +769,15 @@ void reset_game_logic() {
     if (ctx == NULL) return;
 
     // 1. Board & Basis-Daten
-    memset(ctx->board, 0, sizeof(ctx->board));
+    memset(ctx->board, 0, 200); // board[200]
     ctx->score = 0;
     ctx->linesTotal = 0;
     ctx->comboCount = 0;
     
-    // 2. Level-Berechnung (Optimiert)
-    // Nutzt config.speedLevel als Basis für das Start-Level
+    // Initialer Startwert für Persistent X
+    ctx->pieceX = 3; 
+
+    // 2. Level-Berechnung
     ctx->startLevel = (config.speedLevel == 2) ? 5 : 
                       (config.speedLevel == 3) ? 10 : 1;
     ctx->level = ctx->startLevel;
@@ -647,108 +787,153 @@ void reset_game_logic() {
     ctx->badEffectTimer = 0;
     ctx->sortingRow = -1;
     ctx->clearTimer = 0;
-
-ctx->moveTimer = 0;
+    ctx->moveTimer = 0;
     ctx->holdType = -1;
     
     if (GET_FLAG(config.flags, FLAG_HOLD)) ctx->flags |= GF_CAN_HOLD; 
     else ctx->flags &= ~GF_CAN_HOLD;
 
-    ctx->flags &= ~GF_HEART_TRIG;
-    ctx->flags &= ~GF_SKULL_TRIG;
-    
-    // Board Flags komplett zurücksetzen (Dirty Bit + alle Pending Lines)
+    ctx->flags &= ~(GF_HEART_TRIG | GF_SKULL_TRIG);
     ctx->boardFlags = GF_NEEDS_DRAW;
 
-
-    // 4. Garbage Timer (Zufallsvarianz)
+    // 4. Garbage Timer Initialisierung
     ctx->garbageTimer = 0;
     if (config.garbageFreq > 0) {
         u16 base = GARBAGE_INTERVALS[config.garbageFreq];
         ctx->garbageNextThreshold = GET_TICKS(base + (random() % 120) - 60);
+    } else {
+        ctx->garbageNextThreshold = 0; // Explizit nullen
     }
 
     // 5. RNG & Erster Stein
-refillBag();
+    refillBag();
+    ctx->nextType = ctx->bag[ctx->bagIndex++];
+    spawnPiece();
 
-ctx->nextType = ctx->bag[ctx->bagIndex++];
-
-spawnPiece();
-
-    // 6. UI-Cache Invalidierung
-    ctx->lastScore           = 0xFFFFFFFF; 
-    ctx->lastLevel           = 0xFFFF;
-    ctx->lastLinesNext       = 0xFFFF;
-    ctx->lastComboCount      = 0xFFFF;
+    // 6. UI-Cache Invalidierung (Sortiert nach Typ)
     ctx->lastActiveBadEffect = 99; 
     ctx->lastBadEffectTimer  = -1;
-ctx->lastNextType        = -2;
+    ctx->lastComboCount      = 0xFFFF;
     ctx->lastHoldType        = -2;
+    ctx->lastLevel           = 0xFFFF;
+    ctx->lastLinesNext       = 0xFFFF;
+    ctx->lastNextType        = -2;
+    ctx->lastScore           = 0xFFFFFFFF; 
 
     ctx->boardFlags |= GF_NEEDS_DRAW;
 }
 
 static void handle_rainbow_row(u16 y) {
+    // y % 7 für die Farbwahl (1-7)
     u8 rowColor = (y % 7) + 1;
-    for (u16 x = 0; x < BOARD_WIDTH; x++) {
-        // Jetzt werden auch graue Schatten-Tiles (ID 8) wieder bunt
-        if (ctx->board[x][y] != 0 && ctx->board[x][y] <= 10) {
-            ctx->board[x][y] = rowColor;
+    
+    u16 rowOffset = (y << 3) + (y << 1);
+
+    for (u16 x = 0; x < 10; x++) {
+        u16 index = rowOffset + x;
+        u8 tile = ctx->board[index];
+
+        // Prüfen auf belegte Tiles (ID 1-10)
+        if (tile != 0 && tile <= 10) {
+            ctx->board[index] = rowColor;
         }
     }
 }
+
 
 static void handle_shadow_row(u16 y) {
-    for (u16 x = 0; x < BOARD_WIDTH; x++) {
-        if (ctx->board[x][y] != 0 && ctx->board[x][y] < 10) {
-            ctx->board[x][y] = 8; // Graue Tiles
+    // Zeilen-Offset berechnen: (y << 3) + (y << 1) entspricht y * 10
+    u16 rowOffset = (y << 3) + (y << 1);
+
+    for (u16 x = 0; x < 10; x++) {
+        u16 index = rowOffset + x;
+        u8 tile = ctx->board[index];
+
+        // Nur farbige Tiles (1-9) in Schatten (8) umwandeln
+        if (tile != 0 && tile < 10) {
+            ctx->board[index] = 8;
         }
     }
 }
 
+
 static void handle_sort_row(u16 y) {
-    u8 tempRow[BOARD_WIDTH];
-    u16 filled = 0;
-    for (u16 x = 0; x < BOARD_WIDTH; x++) {
-        if (ctx->board[x][y] != 0) tempRow[filled++] = ctx->board[x][y];
+    u8 tempRow[10];
+    u16 x, filled = 0;
+    
+    // Offset-Berechnung via Bitshift: y * 10
+    u16 rowOffset = (y << 3) + (y << 1);
+
+    // 1. Phase: Nicht-leere Tiles sammeln
+    for (x = 0; x < 10; x++) {
+        u8 tile = ctx->board[rowOffset + x];
+        if (tile != 0) {
+            tempRow[filled++] = tile;
+        }
     }
-    for (u16 x = 0; x < filled; x++) ctx->board[x][y] = tempRow[x];
-    for (u16 x = filled; x < BOARD_WIDTH; x++) ctx->board[x][y] = 0;
+
+    // 2. Phase: Gesammelte Tiles linksbündig zurückschreiben
+    for (x = 0; x < filled; x++) {
+        ctx->board[rowOffset + x] = tempRow[x];
+    }
+
+    // 3. Phase: Rest der Zeile mit Nullen füllen
+    // Nutzt memset für effizientes Füllen auf dem 68k
+    if (filled < 10) {
+        memset(&ctx->board[rowOffset + filled], 0, 10 - filled);
+    }
 }
 
+
 void trigger_line_items(u16 y) {
-    for (u16 x = 0; x < BOARD_WIDTH; x++) {
-        if (ctx->board[x][y] == ITEM_ID_SKULL) triggerBadEffect();
-        if (ctx->board[x][y] == ITEM_ID_HEART) ctx->flags |= GF_HEART_TRIG;
+    // Einmalige Berechnung des Zeilen-Offsets: (y << 3) + (y << 1)
+    u16 rowOffset = (y << 3) + (y << 1);
+
+    for (u16 x = 0; x < 10; x++) {
+        u8 tile = ctx->board[rowOffset + x];
+
+        // Item-Checks
+        if (tile == ITEM_ID_SKULL) {
+            triggerBadEffect();
+        } 
+        else if (tile == ITEM_ID_HEART) {
+            ctx->flags |= GF_HEART_TRIG;
+        }
     }
 }
 
 void update_board_animations() {
-    // Sicherstellen, dass wir in einer gültigen Reihe sind
+    // Sicherheitscheck für gültige Indizes
     if (ctx->sortingRow == -1 || ctx->sortingRow > 19) return;
 
-    u16 y = ctx->sortingRow;
+    u16 y = (u16)ctx->sortingRow;
+    
+    // Einmalige Berechnung des Zeilen-Offsets: (y << 3) + (y << 1)
+    u16 rowOffset = (y << 3) + (y << 1);
 
-    // Wir schreiben die Zeile vom Puffer ins Board
+    // Zeile vom flachen Puffer ins flache Board schreiben
     for (u16 x = 0; x < 10; x++) {
-        ctx->board[x][y] = sortBuffer[x][y];
+        u16 index = rowOffset + x;
+        ctx->board[index] = sortBuffer[index];
     }
 
-    // Optional: Horizontal aufräumen
+    // Optional: Logik zur horizontalen Sortierung/Bereinigung
     handle_sort_row(y);
 
-    // Erhöhe den Index für den nächsten Frame
+    // Index für den nächsten Frame erhöhen
     ctx->sortingRow++;
 
-    // Erst wenn wir Reihe 19 fertig geschrieben haben, beenden wir
+    // Abschlussprüfung nach der letzten Reihe (19)
     if (ctx->sortingRow >= 20) {
-        ctx->sortingRow = -1; // Animation Ende
+        ctx->sortingRow = -1; // Animation beenden
         
-if (clearLines() == 0) {
+        // Prüfung auf neu entstandene Linien oder neuen Stein spawnen
+        if (clearLines() == 0) {
             spawnPiece();
         }
     }
 
+    // Grafik-Update für diesen Frame markieren
     ctx->boardFlags |= GF_NEEDS_DRAW;
 }
 

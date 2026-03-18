@@ -95,7 +95,7 @@ typedef struct GameContext {
     u16 flags;                  // Verhaltens-Flags (f16): CAN_HOLD, B2B, REVERSED, etc.
 
     // --- 8-Bit (u8 / Arrays / Strings) ---
-    u8 board[10][20];           // BOARD_WIDTH x BOARD_HEIGHT (200 Bytes)
+    u8 board[200];           // BOARD_WIDTH x BOARD_HEIGHT (200 Bytes)
     u8 bag[7];
     u8 bagIndex;
     char lastComment[20];

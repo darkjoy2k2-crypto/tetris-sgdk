@@ -20,6 +20,9 @@ typedef struct GameContext GameContext;
 extern const s8 PIECES[7][4][4][2];
 extern const u16 GARBAGE_INTERVALS[];
 
+
+
+
 // Funktionen
 bool checkCollision(s16 nx, s16 ny, u16 nr);
 void spawnPiece();
@@ -31,7 +34,7 @@ void performHold();
 void addGarbageLine();
 void triggerManualSort();
 void reset_game_logic();
-
+void calculate_ghost_y();
 void update_board_animations(); // Hinzugefügt
 bool handle_active_animations(GameContext *ctx);
 void set_game_comment(const char* text, u16 duration);

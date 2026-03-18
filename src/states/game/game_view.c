@@ -10,7 +10,7 @@
 #include <string.h>
 
 // --- Statische Variablen & Cache ---
-static u16 tileCache[BOARD_WIDTH][BOARD_HEIGHT];
+static u16 tileCache[200];
 u16 BG_TILE_START;
 u16 GAME_TILE_START;
 static u16 SKULL_TILE_IDX;
@@ -79,13 +79,10 @@ void load_background() {
 }
 
 void view_init_cache() {
-    for (u16 y = 0; y < BOARD_HEIGHT; y++) {
-        for (u16 x = 0; x < BOARD_WIDTH; x++) {
-            tileCache[x][y] = 0xFFFF; 
-        }
+    for (u16 i = 0; i < 200; i++) {
+        tileCache[i] = 0xFFFF;
     }
 }
-
 // --- Hilfsfunktionen ---
 
 void drawPreview(s16 type, u16 x, u16 y) {
@@ -103,28 +100,46 @@ void drawPreview(s16 type, u16 x, u16 y) {
 
 void view_draw_debug_memory()
 {
+    if (ctx == NULL) return;
+
     char str[16];
     VDP_setTextPalette(PAL3);
+    u16 x = 0;
 
-    // 1. Größe der Union (Fixer Footprint im RAM)
-    intToStr(sizeof(StateUnion), str, 1);
-    VDP_drawTextBG(VDP_BG_A, "UNION SIZE:", 0, 0);
-    VDP_drawTextBG(VDP_BG_A, str, 12, 0);
+    // X/Y/GY
+    intToStr(ctx->pieceX, str, 2); VDP_drawTextBG(VDP_BG_A, str, x, 0);
+    intToStr(ctx->pieceY, str, 2); VDP_drawTextBG(VDP_BG_A, str, x + 3, 0);
+    intToStr(ctx->ghostY, str, 2); VDP_drawTextBG(VDP_BG_A, str, x + 6, 0);
 
-    // 2. Aktuelle Adresse des GameContext Pointers (Hexadezimal)
-    // Zeigt an, wo genau im RAM die "Brücke" gerade steht
-    intToHex((u32)ctx, str, 8);
-    VDP_drawTextBG(VDP_BG_A, "CTX ADDR :", 0, 1);
-    VDP_drawTextBG(VDP_BG_A, str, 12, 1);
+    // T/NT/HT
+    intToStr(ctx->type, str, 1);     VDP_drawTextBG(VDP_BG_A, str, x, 1);
+    intToStr(ctx->nextType, str, 1); VDP_drawTextBG(VDP_BG_A, str, x + 2, 1);
+    intToStr(ctx->holdType, str, 2); VDP_drawTextBG(VDP_BG_A, str, x + 4, 1);
 
-    // 3. Freier Heap (SGDK Speicherverwaltung)
-    // Wenn dieser Wert sinkt, gibt es irgendwo ein MEM_alloc ohne MEM_free
-    uintToStr(MEM_getFree(), str, 1);
-    VDP_drawTextBG(VDP_BG_A, "FREE HEAP:", 0, 2);
-    VDP_drawTextBG(VDP_BG_A, str, 12, 2);
+    // EFF-ID/TMR
+    intToStr(ctx->activeBadEffect, str, 2); VDP_drawTextBG(VDP_BG_A, str, x, 2);
+    intToStr(ctx->badEffectTimer, str, 4);  VDP_drawTextBG(VDP_BG_A, str, x + 3, 2);
 
+    // GRB-T/TH
+    intToStr(ctx->garbageTimer, str, 4);         VDP_drawTextBG(VDP_BG_A, str, x, 3);
+    intToStr(ctx->garbageNextThreshold, str, 4); VDP_drawTextBG(VDP_BG_A, str, x + 5, 3);
+
+    // SRT/CLR/MOV
+    intToStr(ctx->sortingRow, str, 2); VDP_drawTextBG(VDP_BG_A, str, x, 4);
+    intToStr(ctx->clearTimer, str, 2); VDP_drawTextBG(VDP_BG_A, str, x + 3, 4);
+    intToStr(ctx->moveTimer, str, 3);  VDP_drawTextBG(VDP_BG_A, str, x + 6, 4);
+
+    // ITM-S/T
+    intToStr(ctx->itemSlot, str, 1); VDP_drawTextBG(VDP_BG_A, str, x, 5);
+    intToStr(ctx->itemType, str, 2); VDP_drawTextBG(VDP_BG_A, str, x + 2, 5);
+
+    // FLAGS (HEX)
+    intToHex(ctx->boardFlags, str, 8); VDP_drawTextBG(VDP_BG_A, str, x, 6);
+
+    // MEM
+    uintToStr(MEM_getFree(), str, 1); VDP_drawTextBG(VDP_BG_A, str, x, 7);
+    intToHex((u32)ctx, str, 8);       VDP_drawTextBG(VDP_BG_A, str, x, 8);
 }
-
 void view_update_ui(GameContext* ctx) {
     if (ctx == NULL) return;
     VDP_setTextPalette(PAL3);
@@ -207,94 +222,86 @@ u16 sec = (ctx->badEffectTimer + (GET_TICKS(60) - 1)) / GET_TICKS(60);
 void drawBoard() {
     if (ctx == NULL) return;
 
-    // 1. Board & Gitter zeichnen (Hintergrund und festliegende Steine)
     for (u16 y = 0; y < BOARD_HEIGHT; y++) {
-        // Blink-Check: Zeilen flackern während des Löschens
+        u16 rowOffset = (y << 3) + (y << 1);
         bool isClearingRow = (ctx->clearTimer > 0 && GET_LINE_PENDING(y)); 
         bool showFlash = isClearingRow && ((ctx->clearTimer >> (GET_FLAG(config.flags, FLAG_IS_PAL) ? 1 : 2)) & 1);
 
         for (u16 x = 0; x < BOARD_WIDTH; x++) {
             u16 tile;
-            u8 cell = ctx->board[x][y];
-            u8 priority = 1; // Standard für Blöcke: High Priority (1)
+            u8 cell = ctx->board[rowOffset + x];
+            u8 priority = 1;
 
             if (showFlash) {
-                tile = GAME_TILE_START + 8; // Weißes Flash-Tile
+                tile = GAME_TILE_START + 8;
             } else if (cell != 0) {
-                // Item- oder Block-Kacheln
                 if (cell == ITEM_ID_SKULL) tile = SKULL_TILE_IDX;
                 else if (cell == ITEM_ID_HEART) tile = HEART_TILE_IDX;
                 else tile = GAME_TILE_START + 1 + (cell - 1);
             } else {
-                // Leere Zelle (Spielfeld-Gitter)
                 tile = GAME_TILE_START;
-                priority = 0; // Gitter: Low Priority (0), damit Sprites davor liegen können
+                priority = 0;
             }
 
-            // Redraw nur bei Änderung (Tile Cache)
-            if (tile != tileCache[x][y]) {
+            if (tile != tileCache[rowOffset + x]) {
                 VDP_setTileMapXY(BG_A, TILE_ATTR_FULL(PAL2, priority, 0, 0, tile), RENDER_X + x, RENDER_Y + y);
-                tileCache[x][y] = tile;
+                tileCache[rowOffset + x] = tile;
             }
         }
     }
 
-    // 2. Schatten Rendering (Ghost Piece)
     if (GET_FLAG(config.flags, FLAG_SHADOW) && ctx->clearTimer == 0) {
         for (u16 i = 0; i < 4; i++) {
             s16 gx = ctx->pieceX + PIECES[ctx->type][ctx->rotation][i][0];
             s16 gy = ctx->ghostY + PIECES[ctx->type][ctx->rotation][i][1];
             if (gy >= 0) {
-                // Ghost Piece bleibt im Hintergrund (Priority 0)
                 VDP_setTileMapXY(BG_A, TILE_ATTR_FULL(PAL2, 0, 0, 0, GAME_TILE_START + 8), RENDER_X + gx, RENDER_Y + gy);
-                tileCache[gx][gy] = 0xFFFF; // Cache invalidieren für nächsten Frame
+                tileCache[gx + ((gy << 3) + (gy << 1))] = 0xFFFF;
             }
         }
     }
 
-    // 3. Aktiver Tetromino (Fallendes Teil)
     if (ctx->clearTimer == 0) {
         for (u16 i = 0; i < 4; i++) {
             s16 px = ctx->pieceX + PIECES[ctx->type][ctx->rotation][i][0];
             s16 py = ctx->pieceY + PIECES[ctx->type][ctx->rotation][i][1];
             if (py >= 0) {
-                // Ermittlung, ob dieser Block ein Item (Schädel/Herz) trägt
                 u16 tile = (i == ctx->itemSlot) ? 
-                           ((ctx->itemType == ITEM_ID_SKULL) ? SKULL_TILE_IDX : HEART_TILE_IDX) : 
-                           (GAME_TILE_START + 1 + ctx->type);
+                            ((ctx->itemType == ITEM_ID_SKULL) ? SKULL_TILE_IDX : HEART_TILE_IDX) : 
+                            (GAME_TILE_START + 1 + ctx->type);
                 
-                // AKTIVER TETROMINO: HIGH PRIORITY (1)
-                // Ermöglicht es dem Sprite-System, den Schädel hinter dem Stein zu zeichnen
                 VDP_setTileMapXY(BG_A, TILE_ATTR_FULL(PAL2, 1, 0, 0, tile), RENDER_X + px, RENDER_Y + py);
-                tileCache[px][py] = 0xFFFF;
+                tileCache[px + ((py << 3) + (py << 1))] = 0xFFFF;
             }
         }
     }
 
-// RICHTIG: (Spalte + Versatz) * 8
-Vect2D_s16 pPos = { 
-    .x = (RENDER_X + ctx->pieceX) << 3, 
-    .y = (RENDER_Y + ctx->pieceY) << 3 
-};
+    Vect2D_s16 pPos = { 
+        .x = (RENDER_X + ctx->pieceX) << 3, 
+        .y = (RENDER_Y + ctx->pieceY) << 3 
+    };
 
-Vect2D_s16 sPos = { 
-    .x = (RENDER_X + ctx->pieceX) << 3, 
-    .y = (RENDER_Y + ctx->ghostY) << 3
-};
+    Vect2D_s16 sPos = { 
+        .x = (RENDER_X + ctx->pieceX) << 3, 
+        .y = (RENDER_Y + ctx->ghostY) << 3
+    };
 
-sprites_sync_game(pPos, sPos, ctx->activeBadEffect);
+    sprites_sync_game(pPos, sPos, ctx->activeBadEffect);
 }
 
+
 void view_animate_grayscale() {
-    for (s16 y = 0; y < BOARD_HEIGHT; y++) {
-        for (u16 x = 0; x < BOARD_WIDTH; x++) {
-            if (ctx->board[x][y] != 0) {
+    for (s16 y = 0; y < 20; y++) {
+        u16 rowOffset = (y << 3) + (y << 1);
+        for (u16 x = 0; x < 10; x++) {
+            if (ctx->board[rowOffset + x] != 0) {
                 VDP_setTileMapXY(BG_A, TILE_ATTR_FULL(PAL2, 0, 0, 0, GAME_TILE_START + 8), RENDER_X + x, RENDER_Y + y);
             }
         }
         SYS_doVBlankProcess();
     }
 }
+
 
 void view_fade_in_frame() {
     u16 target_pal[16];

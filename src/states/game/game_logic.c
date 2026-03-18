@@ -30,6 +30,8 @@ const s8 PIECES[7][4][4][2] = {
 // Sicherstellen, dass dies oben in game_logic.c steht:
 static u8 sortBuffer[200];
 
+
+
 void triggerManualSort() {
     if (ctx == NULL || ctx->sortingRow != -1) return;
 
@@ -562,17 +564,13 @@ void spawnPiece()
 bool handle_active_animations(GameContext* ctx) {
     if (ctx == NULL) return false;
 
-    // 1. Line-Clear Blinken (Blockiert Steuerung)
+    // 1. Line-Clear Blinken
     if (ctx->clearTimer > 0) {
         ctx->clearTimer--;
         if (ctx->clearTimer == 0) {
             finishLineClear();
-            
-            // Spawn-Logik: Falls kein Effekt oder nur ein visueller Effekt (Rainbow/Shadow) aktiv ist
             bool isVisual = (ctx->activeBadEffect == EFFECT_RAINBOW || ctx->activeBadEffect == EFFECT_SHADOW_BOARD);
-            if (ctx->sortingRow == -1 || isVisual) {
-                spawnPiece();
-            }
+            if (ctx->sortingRow == -1 || isVisual) spawnPiece();
         }
         ctx->boardFlags |= GF_NEEDS_DRAW;
         return true; 
@@ -590,23 +588,32 @@ bool handle_active_animations(GameContext* ctx) {
         ctx->sortingRow++;
         ctx->boardFlags |= GF_NEEDS_DRAW;
 
-        // Abschluss der Animation
         if (ctx->sortingRow >= 20) {
             ctx->sortingRow = -1;
-            // Nur spawnen, wenn die Steuerung blockiert war (Sort-Effekt)
-            if (!isVisual) spawnPiece();
+            
+            // FIX: Wenn ein visueller Effekt (Rainbow) endet, Zustand auf NONE setzen
+            if (isVisual) {
+                ctx->activeBadEffect = EFFECT_NONE;
+                ctx->lastActiveBadEffect = 99; // Sprite-Update erzwingen
+                SOUND_play(SND_GOOD_ITEM);
+            } else {
+                spawnPiece();
+            }
         }
-        
-        // Nur bei nicht-visuellen Effekten (Sortieren) die Steuerung sperren
         if (!isVisual) return true; 
     }
 
-    // 3. Ketten-Effekt (Shadow zu Rainbow Transition)
+    // 3. Transition: Shadow zu Rainbow
     if (ctx->activeBadEffect == EFFECT_SHADOW_BOARD && ctx->badEffectTimer > 0) {
         ctx->badEffectTimer--;
         if (ctx->badEffectTimer == 0) {
             ctx->activeBadEffect = EFFECT_RAINBOW;
             ctx->sortingRow = 0; 
+            
+            // WICHTIG: Cache invalidieren, da sich die IDs im Board massiv ändern
+            // Falls tileCache global/extern ist:
+            // memset(tileCache, 0xFF, 400); 
+            
             set_game_comment("RAINBOW REBIRTH!", 90);
             SOUND_play(SND_GOOD_ITEM);
         }
@@ -703,47 +710,47 @@ void performHold() {
 void addGarbageLine() {
     if (ctx == NULL) return;
 
-    // 1. Board nach OBEN schieben (Zeile 1-19 auf 0-18)
+    // 1. Board physisch nach OBEN schieben (Y-1)
     for (u16 row = 0; row < 19; row++) {
         memcpy(&ctx->board[row * 10], &ctx->board[(row + 1) * 10], 10);
     }
 
-    // 2. Neue Garbage-Zeile ganz unten generieren
+    // 2. Neue Garbage-Zeile ganz unten (Y=19) generieren
     u8 randomColor = 1 + (random() % 7); 
     u16 holeX = random() % 10;
-    u16 bottomRow = 190; 
+    // Zeile 19 beginnt bei Index 190
+    memset(&ctx->board[190], randomColor, 10);
+    ctx->board[190 + holeX] = 0;
 
-    for (u16 x = 0; x < 10; x++) {
-        ctx->board[bottomRow + x] = (x == holeX) ? 0 : randomColor;
-    }
-
-    // 3. Piece-Korrektur: Das Teil wird durch den Garbage physikalisch hochgedrückt
+    // 3. Piece-Push: Der aktive Stein rückt mit dem Board nach oben
     ctx->pieceY--;
 
-    // Falls das Teil jetzt oben anstößt (Decke oder statische Blöcke)
+    // Sofortiger Game-Over Check, falls das Teil nun in statische Blöcke gedrückt wurde
     if (checkCollision(ctx->pieceX, ctx->pieceY, ctx->rotation)) {
-        // Game Over, wenn kein Ausweichen nach oben mehr möglich
         play_game_over_animation();
         return;
     }
 
-    // 4. Flags: Pending-Bits rücken mit dem Board nach oben (Y wird kleiner -> Bit-Index sinkt)
-    // Wir isolieren Bits 10-29 (0xFFFFFC00)
+    // 4. FLAGS FIX: Pending-Bits rücken nach oben (Richtung Bit 0)
+    // Wir isolieren Bits 10-29 (Pending Lines)
     u32 lineFlags = (ctx->boardFlags & 0xFFFFFC00); 
+    
+    // Shift nach rechts verringert den Bit-Index (entspricht Y-1)
     lineFlags >>= 1; 
     
-    // WICHTIG: Bit 9 löschen, falls ein Flag von Zeile 0 (Bit 10) dorthin gerutscht ist.
-    // Nur Bits ab 10 dürfen gesetzt bleiben.
+    // WICHTIG: Das Bit, das auf Pos 9 gerutscht ist, MUSS gelöscht werden
     lineFlags &= 0xFFFFFC00; 
 
-    // Flags neu zusammensetzen (Bit 0 für Draw-Status bleibt erhalten)
+    // System-Flags (Bit 0-9) erhalten und neue Line-Flags einsetzen
     ctx->boardFlags = (ctx->boardFlags & ~0xFFFFFC00) | lineFlags;
 
+    // 5. Update & Sound
     if (GET_FLAG(config.flags, FLAG_SHADOW)) calculate_ghost_y();
     
     SOUND_play(SND_GARBAGE);
     ctx->boardFlags |= GF_NEEDS_DRAW;
 }
+
 
 void update_comment_timer() {
     if (ctx->commentTimer > 0) {

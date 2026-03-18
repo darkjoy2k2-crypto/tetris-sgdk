@@ -25,13 +25,16 @@ StateUnion *sctx = NULL;
 // Falls currentScore in states.h VOR playerName steht, müssen die Werte getauscht werden.
 // Hier basierend auf deiner Fehlermeldung (config.currentScore bekommt "ABC"):
 GlobalConfig config = {
-    0,                  // 1. currentScore
-    "ABC",              // 2. playerName
-    0,                  // 3. randMode
-    1,                  // 4. speedLevel
-    1,                  // 5. garbageFreq
-    1,                  // 6. itemMode
-    FLAG_SHADOW | FLAG_HOLD | FLAG_NEXT | FLAG_MUSIC | FLAG_SOUND | FLAG_BG // 7. flags
+    0,                                      // 1. currentScore
+    "ABC",                                  // 2. playerName
+    0,                                      // 3. randMode
+    1,                                      // 4. speedLevel
+    1,                                      // 5. garbageFreq
+    1,                                      // 6. itemMode
+    FLAG_SHADOW | FLAG_HOLD | FLAG_NEXT | 
+    FLAG_MUSIC | FLAG_SOUND | FLAG_BG,      // 7. flags (DEBUG ist aus)
+    6,                                     // 8. thresholdLR (Standard DAS)
+    3                                       // 9. thresholdSD (Standard Softdrop)
 };
 
 
@@ -85,7 +88,6 @@ int main() {
     initHighscores();
     initStateMachine();
     
-    SYS_showFrameLoad(TRUE);
 
     // 3. Hintergrund-System initialisieren
     menu_bg_init(); 

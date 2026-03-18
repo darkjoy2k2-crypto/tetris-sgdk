@@ -30,9 +30,12 @@ typedef struct HighscoreContext {
     bool needsRefresh;
 } HighscoreContext;
 
-typedef struct OptionsContext{
+typedef struct OptionsContext {
     u16 cursor;
-    u16 flags;      // Lokale Kopie zum Bearbeiten
+    u16 subCursor;
+    u16 flags;
+    u16 thresholdLR;  // Lokale Kopie für Links/Rechts Sensitivität
+    u16 thresholdSD;  // Lokale Kopie für Softdrop Sensitivität
     bool needsRedraw;
 } OptionsContext;
 
@@ -116,13 +119,15 @@ typedef union StateUnion {
 // --- 3. GLOBALER APP-KONTEXT & CONFIG ---
 
 typedef struct GlobalConfig {
-    u32 currentScore;    // 1. (u32)
-    char playerName[4];  // 2. (char[4])
-    u16 randMode;        // 3. (u16)
-    u16 speedLevel;      // 4. (u16)
-    u16 garbageFreq;     // 5. (u16)
-    u16 itemMode;        // 6. (u16)
-    u16 flags;           // 7. (u16) - Hier liegt das FLAG_BG
+    u32 currentScore;
+    char playerName[4];
+    u16 randMode;
+    u16 speedLevel;
+    u16 garbageFreq;
+    u16 itemMode;
+    u16 flags;
+    u16 thresholdLR; // Neu: Links/Rechts Auto-Repeat
+    u16 thresholdSD; // Neu: Softdrop Intervall
 } GlobalConfig;
 
 typedef struct HighscoreEntry {
@@ -158,6 +163,7 @@ typedef struct StateHandler {
 #define FLAG_SOUND       (1 << 4)
 #define FLAG_MUSIC       (1 << 5)
 #define FLAG_BG          (1 << 6)
+#define FLAG_DEBUG       (1 << 7)
 
 // Makros
 #define SET_FLAG(v, f)    ((v) |= (f))

@@ -16,7 +16,7 @@ u16 GAME_TILE_START;
 static u16 SKULL_TILE_IDX;
 static u16 HEART_TILE_IDX;
 
-// --- Initialisierung ---
+
 
 void view_draw_debug_bag(GameContext* ctx) {
     if (ctx == NULL) return;
@@ -213,6 +213,7 @@ u16 sec = (ctx->badEffectTimer + (GET_TICKS(60) - 1)) / GET_TICKS(60);
         ctx->lastActiveBadEffect = ctx->activeBadEffect;
         ctx->lastBadEffectTimer = ctx->badEffectTimer;
     }
+    if (GET_FLAG(config.flags, FLAG_DEBUG)) 
         view_draw_debug_memory();
 
 }
@@ -222,73 +223,95 @@ u16 sec = (ctx->badEffectTimer + (GET_TICKS(60) - 1)) / GET_TICKS(60);
 void drawBoard() {
     if (ctx == NULL) return;
 
-    for (u16 y = 0; y < BOARD_HEIGHT; y++) {
+    u16 rowData[10];
+    s16 pX[4], pY[4], sX[4], sY[4];
+    bool hasShadow = GET_FLAG(config.flags, FLAG_SHADOW) && ctx->clearTimer == 0;
+
+    // 1. Positionen des aktiven Steins und Schattens vorab berechnen (spart Zeit im Loop)
+    for (u16 i = 0; i < 4; i++) {
+        pX[i] = ctx->pieceX + PIECES[ctx->type][ctx->rotation][i][0];
+        pY[i] = ctx->pieceY + PIECES[ctx->type][ctx->rotation][i][1];
+        if (hasShadow) {
+            sX[i] = ctx->pieceX + PIECES[ctx->type][ctx->rotation][i][0];
+            sY[i] = ctx->ghostY + PIECES[ctx->type][ctx->rotation][i][1];
+        }
+    }
+
+    // 2. Kombinierter Loop: Board + Piece + Shadow
+    for (u16 y = 0; y < 20; y++) {
         u16 rowOffset = (y << 3) + (y << 1);
         bool isClearingRow = (ctx->clearTimer > 0 && GET_LINE_PENDING(y)); 
         bool showFlash = isClearingRow && ((ctx->clearTimer >> (GET_FLAG(config.flags, FLAG_IS_PAL) ? 1 : 2)) & 1);
+        bool rowDirty = false;
 
-        for (u16 x = 0; x < BOARD_WIDTH; x++) {
-            u16 tile;
-            u8 cell = ctx->board[rowOffset + x];
-            u8 priority = 1;
+        for (u16 x = 0; x < 10; x++) {
+            u16 tile = GAME_TILE_START; // Default: Leer
+            u8 priority = 0;
 
+            // Logische Hierarchie: Flash > Active Piece > Shadow > Board
             if (showFlash) {
                 tile = GAME_TILE_START + 8;
-            } else if (cell != 0) {
-                if (cell == ITEM_ID_SKULL) tile = SKULL_TILE_IDX;
-                else if (cell == ITEM_ID_HEART) tile = HEART_TILE_IDX;
-                else tile = GAME_TILE_START + 1 + (cell - 1);
+                priority = 1;
             } else {
-                tile = GAME_TILE_START;
-                priority = 0;
+                // Ist hier ein Teil des aktiven Steins?
+                bool isPiece = false;
+                if (ctx->clearTimer == 0) {
+                    for (u16 i = 0; i < 4; i++) {
+                        if (pX[i] == (s16)x && pY[i] == (s16)y) {
+                            tile = (i == ctx->itemSlot) ? 
+                                    ((ctx->itemType == 11) ? SKULL_TILE_IDX : HEART_TILE_IDX) : 
+                                    (GAME_TILE_START + 1 + ctx->type);
+                            priority = 1;
+                            isPiece = true;
+                            break;
+                        }
+                    }
+                }
+
+                // Wenn kein aktiver Stein, ist hier der Schatten?
+                if (!isPiece && hasShadow) {
+                    for (u16 i = 0; i < 4; i++) {
+                        if (sX[i] == (s16)x && sY[i] == (s16)y) {
+                            tile = GAME_TILE_START + 8;
+                            priority = 0;
+                            isPiece = true; // "Besetzt" markieren
+                            break;
+                        }
+                    }
+                }
+
+                // Wenn beides nicht, nimm das statische Board
+                if (!isPiece) {
+                    u8 cell = ctx->board[rowOffset + x];
+                    if (cell != 0) {
+                        priority = 1;
+                        if (cell == 11)      tile = SKULL_TILE_IDX;
+                        else if (cell == 12) tile = HEART_TILE_IDX;
+                        else                 tile = GAME_TILE_START + 1 + (cell - 1);
+                    }
+                }
             }
 
-            if (tile != tileCache[rowOffset + x]) {
-                VDP_setTileMapXY(BG_A, TILE_ATTR_FULL(PAL2, priority, 0, 0, tile), RENDER_X + x, RENDER_Y + y);
-                tileCache[rowOffset + x] = tile;
+            u16 attr = TILE_ATTR_FULL(PAL2, priority, 0, 0, tile);
+            rowData[x] = attr;
+
+            if (attr != tileCache[rowOffset + x]) {
+                rowDirty = true;
             }
+        }
+
+        // Zeichnen (Nur wenn sich wirklich was in der Zeile geändert hat)
+        if (rowDirty) {
+            VDP_setTileMapDataRow(BG_A, rowData, RENDER_Y + y, RENDER_X, 10, CPU);
+            for (u16 i = 0; i < 10; i++) tileCache[rowOffset + i] = rowData[i];
         }
     }
 
-    if (GET_FLAG(config.flags, FLAG_SHADOW) && ctx->clearTimer == 0) {
-        for (u16 i = 0; i < 4; i++) {
-            s16 gx = ctx->pieceX + PIECES[ctx->type][ctx->rotation][i][0];
-            s16 gy = ctx->ghostY + PIECES[ctx->type][ctx->rotation][i][1];
-            if (gy >= 0) {
-                VDP_setTileMapXY(BG_A, TILE_ATTR_FULL(PAL2, 0, 0, 0, GAME_TILE_START + 8), RENDER_X + gx, RENDER_Y + gy);
-                tileCache[gx + ((gy << 3) + (gy << 1))] = 0xFFFF;
-            }
-        }
-    }
-
-    if (ctx->clearTimer == 0) {
-        for (u16 i = 0; i < 4; i++) {
-            s16 px = ctx->pieceX + PIECES[ctx->type][ctx->rotation][i][0];
-            s16 py = ctx->pieceY + PIECES[ctx->type][ctx->rotation][i][1];
-            if (py >= 0) {
-                u16 tile = (i == ctx->itemSlot) ? 
-                            ((ctx->itemType == ITEM_ID_SKULL) ? SKULL_TILE_IDX : HEART_TILE_IDX) : 
-                            (GAME_TILE_START + 1 + ctx->type);
-                
-                VDP_setTileMapXY(BG_A, TILE_ATTR_FULL(PAL2, 1, 0, 0, tile), RENDER_X + px, RENDER_Y + py);
-                tileCache[px + ((py << 3) + (py << 1))] = 0xFFFF;
-            }
-        }
-    }
-
-    Vect2D_s16 pPos = { 
-        .x = (RENDER_X + ctx->pieceX) << 3, 
-        .y = (RENDER_Y + ctx->pieceY) << 3 
-    };
-
-    Vect2D_s16 sPos = { 
-        .x = (RENDER_X + ctx->pieceX) << 3, 
-        .y = (RENDER_Y + ctx->ghostY) << 3
-    };
-
+    // 3. Effekte (Hardware Sprites)
+    Vect2D_s16 pPos = { .x = (RENDER_X + ctx->pieceX) << 3, .y = (RENDER_Y + ctx->pieceY) << 3 };
+    Vect2D_s16 sPos = { .x = (RENDER_X + ctx->pieceX) << 3, .y = (RENDER_Y + ctx->ghostY) << 3 };
     sprites_sync_game(pPos, sPos, ctx->activeBadEffect);
 }
-
 
 void view_animate_grayscale() {
     for (s16 y = 0; y < 20; y++) {

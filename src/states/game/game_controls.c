@@ -28,7 +28,7 @@ bool controls_update(GameContext *gctx) {
         vBtnHardDrop = BUTTON_RIGHT;
     }
 
-    // --- 2. BEWEGUNG (DAS - Delayed Auto Shift) ---
+    // --- 2. BEWEGUNG (DAS - Nutzt config.thresholdLR) ---
     u16 currentDir = (joyState & vBtnLeft) ? vBtnLeft : ((joyState & vBtnRight) ? vBtnRight : 0);
     
     if (currentDir != 0) {
@@ -43,13 +43,16 @@ bool controls_update(GameContext *gctx) {
             ctx->dasDir = currentDir;
         } else if (ctx->dasDir == currentDir) {
             ctx->dasTimer++;
-            if (ctx->dasTimer >= 6 && (ctx->dasTimer - 6) % 2 == 0) {
+            // Nutzt den Threshold aus den Optionen für die initiale Verzögerung
+            if (ctx->dasTimer >= config.thresholdLR) {
                 s16 step = (currentDir == vBtnLeft) ? -1 : 1;
                 if (!checkCollision(ctx->pieceX + step, ctx->pieceY, ctx->rotation)) {
                     ctx->pieceX += step;
                     moved = true;
                     SOUND_play(SND_MOVE);
                 }
+                // Nach dem Threshold: Wiederholung alle 2 Frames für flüssiges Gleiten
+                ctx->dasTimer = config.thresholdLR - 2; 
             }
         }
     } else {
@@ -81,8 +84,8 @@ bool controls_update(GameContext *gctx) {
     }
 
     // --- 4. HOLD ---
-if (GET_FLAG(config.flags, FLAG_HOLD) && (changed & BUTTON_C)) {
-            if (ctx->activeBadEffect != EFFECT_HOLD_LOCK) {
+    if (GET_FLAG(config.flags, FLAG_HOLD) && (changed & BUTTON_C)) {
+        if (ctx->activeBadEffect != EFFECT_HOLD_LOCK) {
             performHold();
             moved = true; 
         } else {
@@ -91,48 +94,36 @@ if (GET_FLAG(config.flags, FLAG_HOLD) && (changed & BUTTON_C)) {
     }
 
     // --- 5. HARD DROP ---
-// --- 5. HARD DROP ---
-    // Nutzt 'changed' für Flankenerkennung (muss losgelassen worden sein)
     if (changed & vBtnHardDrop) {
         SOUND_play(SND_HARD_DROP);
-        
-        // 1. Teleportation nach unten
         while (!checkCollision(ctx->pieceX, ctx->pieceY + 1, ctx->rotation)) {
             ctx->pieceY++;
         }
-        
-        // 2. WICHTIG: ghostY angleichen, um Diskrepanzen im selben Frame zu vermeiden
         ctx->ghostY = ctx->pieceY;
-
-        // 3. LockPiece aufrufen
-        // FAKT: lockPiece ruft intern bereits clearLines() und spawnPiece() auf!
         lockPiece();
-        
-        // Der manuelle Aufruf von spawnPiece() wurde hier ENTFERNT.
         moved = true;
     }
 
-    // --- 6. SELECT TRIGGER (Manual Sort) ---
-    // --- 6. DEBUG TRIGGER (Statt Manual Sort jetzt No-Rotate Fluch) ---
-// --- 6. DEBUG TRIGGER (EFFECT_FULLSPEED via START) ---
+    // --- 6. DEBUG / EFFECT TRIGGER ---
+// --- 6. DEBUG / MANUAL TRIGGER (Confusion Test) ---
+    // Nutzt die physische START-Taste, um EFFECT_REVERSED zu testen
     if (changed & BUTTON_START) {
-        // Falls ein Effekt aktiv ist, schalten wir ihn aus (Toggle)
         if (ctx->activeBadEffect != EFFECT_NONE) {
+            // Effekt sofort beenden
             ctx->activeBadEffect = EFFECT_NONE;
             ctx->badEffectTimer = 0;
-            ctx->lastActiveBadEffect = 99; // Erzwingt Sprite-Reset
+            ctx->lastActiveBadEffect = 99; 
             SOUND_play(SND_GOOD_ITEM);
+            set_game_comment("CLEARED", 60);
         } else {
-            // FULLSPEED aktivieren: 120 Frames Piepen + 300 Frames High-Speed
-            ctx->activeBadEffect = EFFECT_FULLSPEED;
-            ctx->badEffectTimer = 120 + (DUR_FULLSPEED_SPAWNS * 60); 
-            ctx->lastActiveBadEffect = 99; // Erzwingt Sprite-Sync
+            // Confusion (REVERSED) manuell aktivieren
+            ctx->activeBadEffect = EFFECT_REVERSED;
+            ctx->badEffectTimer = DUR_REVERSED_TICKS; 
+            ctx->lastActiveBadEffect = 99; // WICHTIG: Triggert sprites_sync_game
             
-            // Erstes Warnsignal sofort
-           //SOUND_play(SND_ALERT);
-            set_game_comment("GET READY...", 60);
+            set_game_comment("CONFUSION!", 90);
+            SOUND_play(SND_BAD_ITEM);
         }
-        
         moved = true; 
     }
 

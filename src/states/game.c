@@ -46,12 +46,11 @@ static bool handle_gravity(GameContext *gctx)
         }
     }
 
-    // 3. Finaler Check
-    u16 finalThreshold = threshold;
+u16 finalThreshold = threshold;
     
     if (joyState & vBtnSoftDrop) {
-        // Festwert für konstante Geschwindigkeit (2 Frames pro Fallschritt)
-        finalThreshold = 4; 
+        // Nutzt den dynamischen Wert aus den Optionen (Standard: 2)
+        finalThreshold = config.thresholdSD; 
     } else if (ctx->activeBadEffect == EFFECT_FREEZE) {
         finalThreshold = 9999;
     }

@@ -2,18 +2,21 @@
 #include "states/sound_test.h"
 #include "sound_manager.h"
 #include "states/states.h"
+#include "menu_bg.h"
 
-typedef struct SoundTestCtx {
-    u16 currentID;
-    bool needsDraw; // Flag für selektives Neuzeichnen
-} SoundTestCtx;
-
-static SoundTestCtx* ctx = NULL;
+static SoundTestContext* ctx = NULL;
 
 void sound_test_init() {
-    ctx = MEM_alloc(sizeof(SoundTestCtx));
+    // Brücke zur globalen Union schlagen
+    ctx = &sctx->soundtest;
+
+    // Hintergrund-Modul konfigurieren
+    menu_bg_set_mode(BG_MODE_MENU);
+    menu_bg_set_active(GET_FLAG(config.flags, FLAG_BG));
+
+    // Initialisierung der Werte (Speicher wurde in main.c genullt)
     ctx->currentID = 1;
-    ctx->needsDraw = true; // Initiales Zeichnen erzwingen
+    ctx->needsDraw = true;
 }
 
 void sound_test_init_draw() {
@@ -66,9 +69,7 @@ void sound_test_draw() {
 }
 
 void sound_test_cleanup() {
-    if (ctx != NULL) {
-        MEM_free(ctx);
-        ctx = NULL;
-    }
+    // Nur Pointer lösen, kein MEM_free
     VDP_clearTextArea(0, 0, 40, 28);
+    ctx = NULL;
 }

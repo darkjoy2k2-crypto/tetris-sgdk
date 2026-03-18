@@ -2,6 +2,7 @@
 #include "sprites.h"
 #include <string.h>
 #include "states/game/game_core.h"
+#include "states/states.h"
 
 // Definition des Arrays (Größe muss mit Header übereinstimmen)
 GameSprite gameSprites[4]; 
@@ -72,27 +73,17 @@ static void _setup_sprite(u8 idx, u8 type, bool prio, u8 depth, bool visible) {
 }
 
 void sprites_sync_game(Vect2D_s16 piecePos, Vect2D_s16 shadowPos, u8 activeEffect) {
-    if (ctx == NULL) return;
 
-// 1. RELATIVER VERSATZ (Innerhalb des 4x4 Gitters)
-    // Wir holen die Grid-Koordinaten des Item-Slots
-    s16 gridX = PIECES[ctx->type][ctx->rotation][ctx->itemSlot][0];
-    s16 gridY = PIECES[ctx->type][ctx->rotation][ctx->itemSlot][1];
+    // Prüfung der globalen Union
+    if (sctx == NULL) return;
 
-    // Umrechnung in Pixel (1 Tile = 8 Pixel)
-    s16 bx = gridX << 3;
-    s16 by = gridY << 3;
-
-    // 2. ABSOLUTE POSITIONIERUNG
-    // piecePos ist bereits (RENDER_X + pieceX) * 8
+    // 1. ABSOLUTE POSITIONIERUNG
+    // piecePos/shadowPos sind bereits vorberechnete Pixel-Koordinaten
     gameSprites[INDEX_PIECE].x  = piecePos.x;
     gameSprites[INDEX_PIECE].y  = piecePos.y;
 
-    gameSprites[INDEX_SHADOW].x = shadowPos.x ;
+    gameSprites[INDEX_SHADOW].x = shadowPos.x;
     gameSprites[INDEX_SHADOW].y = shadowPos.y;
-
-
-
 
     // UI-Sprites (Bitshift << 3 für Tile -> Pixel Umrechnung)
     gameSprites[INDEX_NEXT].x = UI_X_NEXT << 3; 
@@ -101,24 +92,8 @@ void sprites_sync_game(Vect2D_s16 piecePos, Vect2D_s16 shadowPos, u8 activeEffec
     gameSprites[INDEX_HOLD].x = UI_X_HOLD << 3;  
     gameSprites[INDEX_HOLD].y = UI_Y_HOLD << 3;
 
-    // 2. Zustands-Konfiguration aller Slots
+    // 2. Zustands-Konfiguration (Sortiert nach Effekt-Typ)
     switch (activeEffect) {
-        case EFFECT_NO_ROTATE:
-            _setup_sprite(INDEX_PIECE,  SPRITE_TYPE_NOROTATE, PRIO_HIGH, DEPTH_FOREGROUND, TRUE);
-            _setup_sprite(INDEX_SHADOW,   0, 0, 0, FALSE);
-            _setup_sprite(INDEX_NEXT,   0, 0, 0, FALSE);
-            _setup_sprite(INDEX_HOLD,   0, 0, 0, FALSE);
-            break;
-
-
-        case EFFECT_REVERSED:
-            _setup_sprite(INDEX_PIECE,  SPRITE_TYPE_SPIRAL, PRIO_LOW,  DEPTH_BACKGROUND, TRUE);
-            _setup_sprite(INDEX_SHADOW, 0, 0, 0, FALSE);
-            _setup_sprite(INDEX_NEXT,   0, 0, 0, FALSE);
-            _setup_sprite(INDEX_HOLD,   0, 0, 0, FALSE);
-            break;
-            break;
-
         case EFFECT_HIDE_NEXT:
             _setup_sprite(INDEX_PIECE,  0, 0, 0, FALSE);
             _setup_sprite(INDEX_SHADOW, 0, 0, 0, FALSE);
@@ -132,8 +107,21 @@ void sprites_sync_game(Vect2D_s16 piecePos, Vect2D_s16 shadowPos, u8 activeEffec
             _setup_sprite(INDEX_NEXT,   0, 0, 0, FALSE);
             _setup_sprite(INDEX_HOLD,   SPRITE_TYPE_SKULL, PRIO_HIGH, DEPTH_FOREGROUND, TRUE);
             break;
-        case EFFECT_FULLSPEED:
-        case EFFECT_SAME_TILES:
+
+        case EFFECT_NO_ROTATE:
+            _setup_sprite(INDEX_PIECE,  SPRITE_TYPE_NOROTATE, PRIO_HIGH, DEPTH_FOREGROUND, TRUE);
+            _setup_sprite(INDEX_SHADOW, 0, 0, 0, FALSE);
+            _setup_sprite(INDEX_NEXT,   0, 0, 0, FALSE);
+            _setup_sprite(INDEX_HOLD,   0, 0, 0, FALSE);
+            break;
+
+        case EFFECT_REVERSED:
+            _setup_sprite(INDEX_PIECE,  SPRITE_TYPE_SPIRAL, PRIO_LOW,  DEPTH_BACKGROUND, TRUE);
+            _setup_sprite(INDEX_SHADOW, 0, 0, 0, FALSE);
+            _setup_sprite(INDEX_NEXT,   0, 0, 0, FALSE);
+            _setup_sprite(INDEX_HOLD,   0, 0, 0, FALSE);
+            break;
+
         default: // EFFECT_NONE oder Effekte ohne Sprite-Bedarf
             _setup_sprite(INDEX_PIECE,  0, 0, 0, FALSE);
             _setup_sprite(INDEX_SHADOW, 0, 0, 0, FALSE);
@@ -142,8 +130,6 @@ void sprites_sync_game(Vect2D_s16 piecePos, Vect2D_s16 shadowPos, u8 activeEffec
             break;
     }
 }
-
-
 
 /**
  * Verarbeitet Animationen und Hardware-Updates.
@@ -208,4 +194,8 @@ void sprites_set_visible(u8 index, bool visible) {
         if (visible) gameSprites[index].attr |= SPRITE_ATTR_VISIBLE;
         else gameSprites[index].attr &= ~SPRITE_ATTR_VISIBLE;
     }
+}
+
+void sprites_cleanup() {
+    SPR_reset();
 }

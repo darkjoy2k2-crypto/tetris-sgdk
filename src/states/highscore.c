@@ -1,42 +1,34 @@
 #include <genesis.h>
 #include "states/highscore.h"
 #include "states/states.h"
+#include "menu_bg.h"
 #include "fonts.h"
 #include "gfx.h"
 
-typedef struct HighscoreContext {
-    u16 displayTimer;
-} HighscoreContext;
-
-static HighscoreContext* hCtx = NULL;
+static HighscoreContext* ctx = NULL;
 
 void highscore_init() {
-    // Speicher-Management (Sicherheitshalber aufräumen falls nötig)
-    if (hCtx != NULL) {
-        MEM_free(hCtx);
-    }
+    // Brücke schlagen
+    ctx = &sctx->highscore;
     
-    hCtx = MEM_alloc(sizeof(HighscoreContext));
-    hCtx->displayTimer = 0;
+    // Initialisierung (Speicher wurde in main.c genullt)
+    ctx->displayTimer = 0;
     
-    // Logik-Reset: Die isNew-Flags werden erst im Cleanup zurückgesetzt, 
-    // damit die init_draw sie noch zum Markieren nutzen kann.
+    // Hintergrund-Handling
+    menu_bg_set_mode(BG_MODE_MENU);
+    menu_bg_set_active(GET_FLAG(config.flags, FLAG_BG));
 }
 
 void highscore_init_draw() {
-    if (hCtx == NULL) return;
+    if (ctx == NULL) return;
     UI_init_fonts_and_palettes();
-    // 1. Screen vorbereiten
-    VDP_clearTextArea(0, 0, 40, 28);
     
+    VDP_clearTextArea(0, 0, 40, 28);
 
-
-    // 3. Header zeichnen
     VDP_setTextPalette(PAL2);
     VDP_drawText("--- TOP 10 RANKING ---", 9, 4);
     VDP_drawText("RANK   NAME  SCORE", 11, 8);
     
-    // 4. Liste rendern
     char txtRank[4];
     char txtScore[12];
     for (u16 i = 0; i < 10; i++) {
@@ -44,7 +36,6 @@ void highscore_init_draw() {
         sprintf(txtScore, "%6ld", highscores[i].score);
         u16 y = 10 + i;
 
-        // Markierung für neue Rekorde via Palette
         if (highscores[i].isNew) {
             VDP_setTextPalette(PAL1);
         } else {
@@ -58,37 +49,29 @@ void highscore_init_draw() {
 }
 
 void highscore_update() {
-    if (hCtx == NULL) return;
+    if (ctx == NULL) return;
 
-    // Flankenerkennung: Bei irgendeinem Tastendruck zurück zum Titel
     if (joyState & ~lastJoyState) {
         currentState = STATE_TITLE;
         return;
     }
 
-    // Automatischer Timeout
-    hCtx->displayTimer++;
-    if (hCtx->displayTimer >= 420) {
+    ctx->displayTimer++;
+    if (ctx->displayTimer >= 420) {
         currentState = STATE_TITLE;
     }
 }
 
 void highscore_draw() {
-    // Hier ist aktuell nichts zu tun, da die Highscore-Liste statisch ist.
-    // Falls du später animierte "New Record"-Blinker willst, kämen sie hier rein.
+    // Statische Anzeige, keine Logik erforderlich
 }
 
 void highscore_cleanup() {
-    // Speicher freigeben
-    if (hCtx != NULL) {
-        MEM_free(hCtx);
-        hCtx = NULL;
-    }
-
-    // Flags zurücksetzen, nachdem alles gezeichnet wurde
+    // isNew zurücksetzen, bevor der State gewechselt wird
     for (u16 i = 0; i < 10; i++) {
         highscores[i].isNew = false;
     }
 
     VDP_clearTextArea(0, 0, 40, 28);
+    ctx = NULL;
 }

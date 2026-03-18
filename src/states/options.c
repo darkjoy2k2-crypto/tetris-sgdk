@@ -1,22 +1,17 @@
 #include <genesis.h>
+#include <string.h>
+#include "gfx.h"
 #include "states/options.h"
 #include "states/states.h"
 #include "sound_manager.h"
 #include "menu_bg.h"
 #include "fonts.h"
-#include <string.h>
-
-typedef struct {
-    u16 cursor;
-    u16 flags;      // Lokale Kopie zum Bearbeiten
-    bool needsRedraw;
-} OptionsContext;
 
 static OptionsContext* ctx = NULL;
 
-// Hilfsfunktion für das Zeichnen der Zeilen (Immitiert game_select)
+// Hilfsfunktion für das Zeichnen der Zeilen
 static void draw_option_line(u16 row, char* label, u16 currentVal, char* options[], u16 numOptions, bool isSelected) {
-    u16 y = 10 + (row * 2);
+    u16 y = 10 + (row << 1); // Bitshift statt Multiplikation
     u16 x = 6;
 
     VDP_setTextPalette(isSelected ? PAL1 : PAL3);
@@ -35,17 +30,23 @@ static void draw_option_line(u16 row, char* label, u16 currentVal, char* options
 }
 
 void options_init() {
-    ctx = MEM_alloc(sizeof(OptionsContext));
-    memset(ctx, 0, sizeof(OptionsContext));
+    // Brücke zur globalen Union
+    ctx = &sctx->options;
 
+    // Initialisierung der Werte
     ctx->cursor = 0;
     ctx->flags = config.flags;
     ctx->needsRedraw = true;
+
+    // Hintergrund-System für Options-Screen konfigurieren
+    menu_bg_set_mode(BG_MODE_MENU);
+    menu_bg_set_active(GET_FLAG(config.flags, FLAG_BG));
 }
 
 void options_init_draw() {
     if (ctx == NULL) return;
 
+    // Fonts und Paletten sicherstellen
     UI_init_fonts_and_palettes();
 
     VDP_clearTextArea(0, 0, 40, 28);
@@ -83,9 +84,12 @@ void options_update() {
         switch(ctx->cursor) {
             case 0: // MUSIC
                 TOGGLE_FLAG(ctx->flags, FLAG_MUSIC);
-                // Sofort-Feedback: Musik an/aus
-                if (GET_FLAG(ctx->flags, FLAG_MUSIC)) SOUND_playMusic();
-                else SOUND_stopMusic();
+                if (GET_FLAG(ctx->flags, FLAG_MUSIC)) {
+                    SOUND_playMusic();
+                } else {
+                    // Falls SOUND_stopMusic fehlt, nutze XGM_stopPlay()
+                    XGM_stopPlay(); 
+                }
                 break;
 
             case 1: // SOUND
@@ -94,19 +98,17 @@ void options_update() {
 
             case 2: // BACKGROUND
                 TOGGLE_FLAG(ctx->flags, FLAG_BG);
-                // Hier rufen wir die menu_bg direkt auf für den Live-Effekt
+                // Live-Feedback für den Hintergrund
                 menu_bg_set_active(GET_FLAG(ctx->flags, FLAG_BG));
                 break;
 
-            case 3: // SYSTEM (Read-Only Info)
-                ctx->needsRedraw = true;
+            case 3: // SYSTEM
                 break;
         }
     }
 
-    // Zurück zum Titel (Übernahme der Werte)
+    // Zurück zum Titel und Übernahme der Flags
     if ((joyState & (BUTTON_START | BUTTON_B)) && !(lastJoyState & (BUTTON_START | BUTTON_B))) {
-        // Flags speichern (IS_PAL schützen)
         config.flags = (ctx->flags & ~FLAG_IS_PAL) | (config.flags & FLAG_IS_PAL);
         currentState = STATE_TITLE;
     }
@@ -118,25 +120,15 @@ void options_draw() {
     char* optsOnOff[] = {"OFF", "ON "};
     char* optsSystem[] = {"NTSC", "PAL "};
 
-    // Zeile 0: Musik
     draw_option_line(0, "MUSIC:", GET_FLAG(ctx->flags, FLAG_MUSIC) ? 1 : 0, optsOnOff, 2, (ctx->cursor == 0));
-    
-    // Zeile 1: Sound
     draw_option_line(1, "SOUND:", GET_FLAG(ctx->flags, FLAG_SOUND) ? 1 : 0, optsOnOff, 2, (ctx->cursor == 1));
-
-    // Zeile 2: Background (Hier beispielhaft FLAG_SHADOW genutzt)
-draw_option_line(2, "BACKGRD:", GET_FLAG(ctx->flags, FLAG_BG) ? 1 : 0, optsOnOff, 2, (ctx->cursor == 2));
-
-    // Zeile 3: System (Nur zur Info, kein Toggle möglich)
+    draw_option_line(2, "BACKGRD:", GET_FLAG(ctx->flags, FLAG_BG) ? 1 : 0, optsOnOff, 2, (ctx->cursor == 2));
     draw_option_line(3, "SYSTEM:", GET_FLAG(config.flags, FLAG_IS_PAL) ? 1 : 0, optsSystem, 2, (ctx->cursor == 3));
 
     ctx->needsRedraw = false;
 }
 
 void options_cleanup() {
-    if (ctx != NULL) {
-        MEM_free(ctx);
-        ctx = NULL;
-    }
     VDP_clearTextArea(0, 0, 40, 28);
+    ctx = NULL;
 }

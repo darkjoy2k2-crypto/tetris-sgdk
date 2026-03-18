@@ -58,5 +58,6 @@ void sprites_init();
 void sprites_update();
 void sprites_sync_game(Vect2D_s16 piecePos, Vect2D_s16 shadowPos, u8 activeEffect);
 void sprites_set_visible(u8 index, bool visible);
+void sprites_cleanup();
 
 #endif

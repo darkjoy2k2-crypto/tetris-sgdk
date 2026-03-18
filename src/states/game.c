@@ -14,39 +14,39 @@
 #include "states/game/game_view.h"
 #include "states/game/game_controls.h"
 
-GameContext *ctx = NULL;
+GameContext* ctx = NULL;
 
 const u16 GRAVITY_SPEEDS[] = {9999, 60, 30, 15};
 const u16 GARBAGE_INTERVALS[] = {0, 1200, 600, 300};
 
 // Ganz am Ende von game_logic.c einfügen:
 
-static bool handle_gravity(GameContext *ctx)
+static bool handle_gravity(GameContext *gctx)
 {
     u16 vBtnSoftDrop = (ctx->activeBadEffect == EFFECT_REVERSED) ? BUTTON_LEFT : BUTTON_DOWN;
     bool moved = false;
     ctx->moveTimer++;
 
     // 1. Basis-Geschwindigkeit berechnen
-    s16 threshold = GET_TICKS(60 - ((ctx->level - 1) * 3));
+    // Multiplikation mit 3 via Bitshift gelöst: (n << 1) + n
+    u16 levelOffset = ((ctx->level - 1) << 1) + (ctx->level - 1);
+    s16 threshold = GET_TICKS(60 - levelOffset);
     if (threshold < 3) threshold = 3;
 
-    // 2. FULLSPEED Logik (Warnung vs. Action)
-if (ctx->activeBadEffect == EFFECT_FULLSPEED)
+    // 2. FULLSPEED Logik
+    if (ctx->activeBadEffect == EFFECT_FULLSPEED)
     {
-        // Warnphase: Nur piepen, solange der Timer über 1 ist
         if (ctx->badEffectTimer > 1) 
         {
             if (ctx->badEffectTimer % 60 == 0) SOUND_play(SND_ALERT);
         } 
-        // Aktivphase: Sobald spawnPiece auf 0 oder kleiner schaltet
         else if (ctx->badEffectTimer <= 0) 
         {
             threshold = 2; 
         }
     }
 
-    // 3. Finaler Check (Soft-Drop oder Freeze)
+    // 3. Finaler Check
     u16 finalThreshold = threshold;
     
     if (joyState & vBtnSoftDrop) {
@@ -79,10 +79,11 @@ if (ctx->activeBadEffect == EFFECT_FULLSPEED)
     return moved;
 }
 
-static void handle_environment(GameContext *ctx, bool moved)
+
+
+static void handle_environment(GameContext *gctx, bool moved)
 {
-    if (ctx == NULL)
-        return;
+
 
     // 1. Garbage Logik (Zeitbasierte neue Zeilen)
     if (ctx->garbageTimer >= ctx->garbageNextThreshold)
@@ -141,13 +142,9 @@ if (ctx->badEffectTimer > 0)
 // --- REINE LOGIK INITIALISIERUNG ---
 void game_init()
 {
-    // 1. Speicher-Lifecycle
-    if (ctx != NULL)
-    {
-        MEM_free(ctx);
-        ctx = NULL;
-    }
-    ctx = MEM_alloc(sizeof(GameContext));
+    ctx = &sctx->game;
+    if (ctx == NULL)
+        return;
 
     // 2. Logik-Reset aufrufen
     reset_game_logic();
@@ -157,10 +154,9 @@ void game_init()
     UI_init_fonts_and_palettes();
     SOUND_init();
 
+    // Hintergrund für das Spiel konfigurieren
     menu_bg_set_mode(BG_MODE_SPACE);
-    menu_bg_set_active(true);
-
-    // 4. Initiale Sprite-Berechnung
+    menu_bg_set_active(GET_FLAG(config.flags, FLAG_BG));
 }
 
 void game_init_draw()
@@ -245,10 +241,8 @@ void game_draw()
 
 void game_cleanup()
 {
-    if (ctx != NULL)
-    {
-        MEM_free(ctx);
-        ctx = NULL;
-    }
+    // Nur lokalen Pointer lösen, kein MEM_free
     VDP_clearPlane(BG_A, TRUE);
+    sprites_cleanup(); // Falls vorhanden, um Hardware-Sprites zu entladen
+    ctx = NULL;
 }

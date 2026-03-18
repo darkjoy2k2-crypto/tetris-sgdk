@@ -34,4 +34,5 @@ void reset_game_logic();
 
 void update_board_animations(); // Hinzugefügt
 bool handle_active_animations(GameContext *ctx);
+void set_game_comment(const char* text, u16 duration);
 bool tryRotate(u16 newRotation);

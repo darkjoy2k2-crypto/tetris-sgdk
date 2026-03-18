@@ -8,17 +8,7 @@
 #include "gfx.h"
 
 // Der lokale Kontext für diesen State
-typedef struct SelectContext {
-    u16 cursor;
-    char name[4];
-    u16 nameCharIdx;
-    u16 randMode;
-    u16 speedLevel;
-    u16 garbageFreq;
-    u16 itemMode;
-    u16 flags;          // Temporäre Flags für das Menü
-    bool needsRedraw;
-} SelectContext;
+
 
 static SelectContext* ctx = NULL;
 
@@ -72,9 +62,12 @@ static void draw_name_entry(bool isSelected) {
 // --- State System Funktionen ---
 
 void select_init() {
-    // Speicher reservieren und nullen
-    ctx = MEM_alloc(sizeof(SelectContext));
-    memset(ctx, 0, sizeof(SelectContext));
+    // Brücke zur globalen Union schlagen
+    ctx = &sctx->select;
+
+    // Hintergrund-System konfigurieren
+    menu_bg_set_mode(BG_MODE_MENU);
+    menu_bg_set_active(GET_FLAG(config.flags, FLAG_BG));
 
     // Aktuelle Konfiguration in den lokalen Kontext spiegeln
     ctx->cursor = 0;
@@ -91,7 +84,6 @@ void select_init() {
     ctx->flags = config.flags;
 
     ctx->needsRedraw = true;
-    menu_bg_set_active(true);
 }
 
 void select_init_draw() {
@@ -210,9 +202,7 @@ void select_draw() {
 }
 
 void select_cleanup() {
-    if (ctx != NULL) {
-        MEM_free(ctx);
-        ctx = NULL;
-    }
+    // Nur Pointer lösen, kein MEM_free
     VDP_clearTextArea(0, 0, 40, 28);
+    ctx = NULL;
 }

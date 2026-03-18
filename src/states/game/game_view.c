@@ -6,6 +6,7 @@
 #include "gfx.h"
 #include "fonts.h"
 #include "bg.h"
+#include "sprite.h"
 #include <string.h>
 
 // --- Statische Variablen & Cache ---
@@ -99,6 +100,31 @@ void drawPreview(s16 type, u16 x, u16 y) {
 
 // --- UI Rendering ---
 
+
+void view_draw_debug_memory()
+{
+    char str[16];
+    VDP_setTextPalette(PAL3);
+
+    // 1. Größe der Union (Fixer Footprint im RAM)
+    intToStr(sizeof(StateUnion), str, 1);
+    VDP_drawTextBG(VDP_BG_A, "UNION SIZE:", 0, 0);
+    VDP_drawTextBG(VDP_BG_A, str, 12, 0);
+
+    // 2. Aktuelle Adresse des GameContext Pointers (Hexadezimal)
+    // Zeigt an, wo genau im RAM die "Brücke" gerade steht
+    intToHex((u32)ctx, str, 8);
+    VDP_drawTextBG(VDP_BG_A, "CTX ADDR :", 0, 1);
+    VDP_drawTextBG(VDP_BG_A, str, 12, 1);
+
+    // 3. Freier Heap (SGDK Speicherverwaltung)
+    // Wenn dieser Wert sinkt, gibt es irgendwo ein MEM_alloc ohne MEM_free
+    uintToStr(MEM_getFree(), str, 1);
+    VDP_drawTextBG(VDP_BG_A, "FREE HEAP:", 0, 2);
+    VDP_drawTextBG(VDP_BG_A, str, 12, 2);
+
+}
+
 void view_update_ui(GameContext* ctx) {
     if (ctx == NULL) return;
     VDP_setTextPalette(PAL3);
@@ -172,6 +198,8 @@ u16 sec = (ctx->badEffectTimer + (GET_TICKS(60) - 1)) / GET_TICKS(60);
         ctx->lastActiveBadEffect = ctx->activeBadEffect;
         ctx->lastBadEffectTimer = ctx->badEffectTimer;
     }
+        view_draw_debug_memory();
+
 }
 
 // --- Haupt-Board Rendering ---

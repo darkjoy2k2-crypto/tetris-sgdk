@@ -9,7 +9,6 @@
 void gameover_init() {
     // 1. Logik-Setup
     menu_bg_set_mode(BG_MODE_MENU);
-    
     // Da wir keine dynamischen Variablen im GameOver-Kontext brauchen, 
     // verzichten wir hier auf ein MEM_alloc.
 }

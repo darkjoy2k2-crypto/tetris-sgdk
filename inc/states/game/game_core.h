@@ -16,53 +16,7 @@
 
 extern const s8 PIECES[7][4][4][2];
 
-typedef struct GameContext {
-    // --- 32-Bit (u32 / f32) ---
-    u32 score;         
-    u32 lastScore;     
-    u32 boardFlags;             // Board-Zustand (f32): NEEDS_DRAW (Bit 0), PENDING_LINES (Bit 1-20)
 
-    // --- 16-Bit (u16 / s16 / f16) ---
-    u16 level;
-    u16 lastLevel;
-    u16 startLevel;
-    u16 linesTotal;
-    u16 lastLinesNext;
-    u16 comboCount;
-    u16 lastComboCount;
-    s16 pieceX;
-    s16 pieceY;
-    s16 ghostY;        
-    u16 type;
-    u16 rotation;
-    s16 nextType;
-    s16 lastNextType;
-    s16 holdType;
-    s16 lastHoldType;
-    u16 moveTimer;
-    u16 dasTimer;
-    u16 dasDir;
-    u16 clearTimer;             
-    u16 garbageTimer;          
-    u16 garbageNextThreshold;  
-    u16 commentTimer;
-    u16 itemSpawnCounter;
-    u16 itemSlot;
-    u16 itemType; 
-    s16 badEffectTimer;     
-    u16 activeBadEffect;    
-    u16 lastActiveBadEffect; 
-    s16 lastBadEffectTimer;
-    s16 forcedPieceType;    
-    s16 sortingRow; 
-    u16 flags;                  // Verhaltens-Flags (f16): CAN_HOLD, B2B, REVERSED, etc.
-
-    // --- 8-Bit (u8 / Arrays / Strings) ---
-    u8 board[10][20];           // BOARD_WIDTH x BOARD_HEIGHT (200 Bytes)
-    u8 bag[7];
-    u8 bagIndex;
-    char lastComment[20];
-} GameContext;
 
 // --- Effekt-Definitionen ---
 #define EFFECT_NONE         0

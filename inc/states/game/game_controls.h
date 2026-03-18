@@ -8,4 +8,4 @@
  * Berücksichtigt Spezialeffekte wie EFFECT_REVERSED.
  * @return bool: True, wenn eine Bewegung stattgefunden hat (für needsBoardDraw).
  */
-bool controls_update(GameContext *ctx);
+bool controls_update(GameContext *gctx);

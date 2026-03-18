@@ -1,10 +1,11 @@
 #include <genesis.h>
-#include "states/states.h"
-#include "states/game/game_controls.h"
-#include "states/game/game_logic.h"
 #include "sound_manager.h"
+#include "states/game/game_core.h"
+#include "states/game/game_view.h" // Enthält Prototyp für set_game_comment
+#include "states/game/game_logic.h" // Für checkCollision, lockPiece, performHold
+#include "states/states.h"
 
-bool controls_update(GameContext *ctx) {
+bool controls_update(GameContext *gctx) {
     if (ctx == NULL) return false;
 
     u16 changed = joyState & ~lastJoyState;

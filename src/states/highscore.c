@@ -33,7 +33,6 @@ void highscore_init_draw() {
         sprintf(txtScore, "%6ld", config.highscores[i].score);
         u16 y = 10 + i;
 
-        // u16 Prüfung für isNew
         if (config.highscores[i].isNew != 0) {
             VDP_setTextPalette(PAL1);
         } else {
@@ -49,24 +48,37 @@ void highscore_init_draw() {
 void highscore_update() {
     if (ctx == NULL) return;
 
-    if (joyState & (BUTTON_START | BUTTON_A | BUTTON_B | BUTTON_C)) {
-        if (!(lastJoyState & (BUTTON_START | BUTTON_A | BUTTON_B | BUTTON_C))) {
+    bool input = (joyState & (BUTTON_START | BUTTON_A | BUTTON_B | BUTTON_C)) && 
+                 !(lastJoyState & (BUTTON_START | BUTTON_A | BUTTON_B | BUTTON_C));
+
+    if (input || ctx->displayTimer >= 420) {
+        // Prüfen ob gespeichert werden muss
+        bool needsSave = FALSE;
+        for (u16 i = 0; i < 10; i++) {
+            if (config.highscores[i].isNew != 0) {
+                needsSave = TRUE;
+                break;
+            }
+        }
+
+        // RAM bereinigen bevor wir gehen
+        config.currentScore = 0;
+
+        if (needsSave) {
+            currentState = STATE_SAVE;
+        } else {
             currentState = STATE_TITLE;
-            return;
         }
     }
 
     ctx->displayTimer++;
-    if (ctx->displayTimer >= 420) {
-        currentState = STATE_TITLE;
-    }
 }
 
 void highscore_draw() {
 }
 
 void highscore_cleanup() {
-    // isNew Flag nach Anzeige löschen
+    // Alle isNew Markierungen löschen
     for (u16 i = 0; i < 10; i++) {
         config.highscores[i].isNew = 0;
     }

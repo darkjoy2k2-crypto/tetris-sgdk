@@ -104,6 +104,11 @@ typedef struct GameContext {
     char lastComment[20];
 } GameContext;
 
+typedef struct {
+    u16 timer;
+    bool textVisible;
+} SaveContext;
+
 // --- 2. DIE ZENTRALE UNION ---
 // Alle Context-Strukturen teilen sich denselben RAM
 
@@ -114,29 +119,16 @@ typedef union StateUnion {
     HighscoreContext highscore;
     OptionsContext   options;
     SoundTestContext soundtest;
+    SaveContext      save;
 } StateUnion;
 
 // --- 3. GLOBALER APP-KONTEXT & CONFIG ---
 
 typedef struct HighscoreEntry {
-    u32 score;
-    char name[4];
-    bool isNew;
-} HighscoreEntry;
-
-typedef struct GlobalConfig {
-    u32 currentScore;
-    char playerName[4];
-    u16 randMode;
-    u16 speedLevel;
-    u16 garbageFreq;
-    u16 itemMode;
-    u16 flags;
-    u16 thresholdLR;
-    u16 thresholdSD;
-    HighscoreEntry highscores[10]; // Gesamte Größe: 10 * 10 Bytes = 100 Bytes
-} GlobalConfig;
-
+    u32 score;      // 4 Bytes
+    char name[4];   // 4 Bytes
+    u16 isNew;      // 2 Bytes (Padding eingebaut, damit jeder Eintrag 10 Bytes groß ist)
+} HighscoreEntry;   // Gesamt: 10 Bytes -> Sicher für das Array
 
 
 typedef enum GameState {
@@ -147,8 +139,31 @@ typedef enum GameState {
     STATE_SOUNDTEST,
     STATE_GAMEOVER,
     STATE_HIGHSCORE,
-    STATE_OPTIONS
+    STATE_OPTIONS,
+    STATE_SAVE
 } GameState;
+
+typedef struct GlobalConfig {
+    u32 currentScore;   // Offset 0
+    char playerName[4]; // Offset 4
+    u16 randMode;       // Offset 8
+    u16 speedLevel;     // Offset 10
+    u16 garbageFreq;    // Offset 12
+    u16 itemMode;       // Offset 14
+    u16 flags;          // Offset 16
+    u16 thresholdLR;    // Offset 18
+    u16 thresholdSD;    // Offset 20
+    
+    // Das Array ist jetzt 10 * 10 = 100 Bytes groß
+    HighscoreEntry highscores[10]; // Offset 22 bis 121
+
+    // GameState folgt auf Offset 122 (Gerade Adresse -> Sicher!)
+    GameState preferredState; 
+} GlobalConfig;
+
+
+
+
 
 typedef struct StateHandler {
     void (*init)();

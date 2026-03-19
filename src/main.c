@@ -12,7 +12,7 @@
 #include "states/options.h"
 #include "menu_bg.h"
 #include "fonts.h"
-#include "save_manager.h"
+#include "states/save_manager.h"
 
 // --- GLOBALE VARIABLEN ---
 GameState currentState = STATE_TITLE;
@@ -39,11 +39,12 @@ GlobalConfig config = {
         {7000, "VDP", 0},  {6000, "ACE", 0}, {5000, "SKY", 0},
         {4000, "DAN", 0},  {3000, "EVA", 0}, {2000, "MAX", 0},
         {1000, "JOE", 0}
-    }
+    },
+    STATE_NONE
 };
 
 
-StateHandler states[8]; 
+StateHandler states[9]; 
 HighscoreEntry highscores[10]; 
 
 void initStateMachine() {
@@ -54,6 +55,7 @@ void initStateMachine() {
     states[STATE_GAMEOVER]  = (StateHandler){ gameover_init,   gameover_init_draw,   gameover_update,   gameover_draw,   gameover_cleanup };
     states[STATE_HIGHSCORE] = (StateHandler){ highscore_init,  highscore_init_draw,  highscore_update,  highscore_draw,  highscore_cleanup };
     states[STATE_OPTIONS]   = (StateHandler){ options_init,    options_init_draw,    options_update,    options_draw,    options_cleanup };
+    states[STATE_SAVE]      = (StateHandler){ save_init,       saving_init_draw,     saving_update,     saving_draw,     saving_cleanup };
 }
 
 void initHighscores() {

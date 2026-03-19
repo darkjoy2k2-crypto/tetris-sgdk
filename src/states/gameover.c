@@ -7,7 +7,7 @@
 #include "fonts.h"
 #include "states/highscore.h"
 #include "menu_bg.h"
-#include "save_manager.h"
+#include "states/save_manager.h"
 
 void gameover_init() {
     menu_bg_set_mode(BG_MODE_MENU);
@@ -52,8 +52,6 @@ void gameover_update() {
         check_and_update_highscore(config.currentScore);
         
         // 2. SRAM-Sync: Den gesamten Context (inkl. neuer Highscores) sichern
-        save_highscores();
-        
         currentState = STATE_HIGHSCORE;
     }
 }

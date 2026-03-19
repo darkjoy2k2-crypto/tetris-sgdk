@@ -6,7 +6,6 @@
 #include "sound_manager.h"
 #include "menu_bg.h"
 #include "fonts.h"
-#include "save_manager.h"
 
 static OptionsContext* ctx = NULL;
 
@@ -85,10 +84,11 @@ void options_update() {
                 else if (goRight || (pressedA && ctx->subCursor == 0)) ctx->subCursor = 1;
 
                 if (pressedA) {
-                    if (ctx->subCursor == 0) { // RELOAD
-                        save_load();
-                        options_init(); // Re-Init lokaler Context
+                    if (ctx->subCursor == 1) { // RELOAD
+                        config.preferredState = STATE_OPTIONS;
+                        currentState = STATE_SAVE;
                         SOUND_play(SND_RESET);
+                        return;
                     } else { // RESET DEFAULTS
                         ctx->thresholdLR = 10; ctx->thresholdSD = 2;
                         ctx->flags = (FLAG_SHADOW | FLAG_HOLD | FLAG_NEXT | FLAG_SOUND | FLAG_MUSIC | FLAG_BG);
@@ -111,13 +111,20 @@ void options_update() {
         }
     }
 
-    if ((joyState & (BUTTON_START | BUTTON_B)) && !(lastJoyState & (BUTTON_START | BUTTON_B))) {
+    if ((joyState & (BUTTON_START)) && !(lastJoyState & (BUTTON_START))) {
         config.flags = (ctx->flags & ~FLAG_IS_PAL) | (config.flags & FLAG_IS_PAL);
         config.thresholdLR = ctx->thresholdLR;
         config.thresholdSD = ctx->thresholdSD;
-        save_options();
+        currentState = STATE_SAVE;
+    }
+
+    if ((joyState & (BUTTON_B)) && !(lastJoyState & (BUTTON_B))) {
         currentState = STATE_TITLE;
     }
+
+
+
+
 }
 
 void options_draw() {

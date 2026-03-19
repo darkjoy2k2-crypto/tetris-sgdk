@@ -18,7 +18,8 @@
         {
             "label": "run",
             "type": "shell",
-            "command": "${env:GDK}\\kega\\fusion.exe",
+        //    "command": "${env:GDK}\\kega\\fusion.exe",
+            "command": "${env:GDK}\\blastem\\blastem.exe",
             "args": [
                 "${workspaceFolder}\\out\\rom.bin"
             ],

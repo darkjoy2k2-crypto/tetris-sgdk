@@ -118,6 +118,12 @@ typedef union StateUnion {
 
 // --- 3. GLOBALER APP-KONTEXT & CONFIG ---
 
+typedef struct HighscoreEntry {
+    u32 score;
+    char name[4];
+    bool isNew;
+} HighscoreEntry;
+
 typedef struct GlobalConfig {
     u32 currentScore;
     char playerName[4];
@@ -126,15 +132,12 @@ typedef struct GlobalConfig {
     u16 garbageFreq;
     u16 itemMode;
     u16 flags;
-    u16 thresholdLR; // Neu: Links/Rechts Auto-Repeat
-    u16 thresholdSD; // Neu: Softdrop Intervall
+    u16 thresholdLR;
+    u16 thresholdSD;
+    HighscoreEntry highscores[10]; // Gesamte Größe: 10 * 10 Bytes = 100 Bytes
 } GlobalConfig;
 
-typedef struct HighscoreEntry {
-    u32 score;
-    char name[4];
-    bool isNew;
-} HighscoreEntry;
+
 
 typedef enum GameState {
     STATE_NONE = 0,

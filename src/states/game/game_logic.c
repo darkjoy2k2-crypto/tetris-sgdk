@@ -335,16 +335,26 @@ void lockPiece() {
 
 void check_and_update_highscore(u32 score) {
     s16 insertIdx = -1;
+    
+    // 1. Prüfen, ob der Score für die Top 10 reicht
     for (u16 i = 0; i < 10; i++) {
-        highscores[i].isNew = false;
-        if (insertIdx == -1 && score > highscores[i].score) insertIdx = i;
+        config.highscores[i].isNew = 0; // Alle alten "Neu"-Markierungen löschen
+        if (insertIdx == -1 && score > config.highscores[i].score) {
+            insertIdx = (s16)i;
+        }
     }
+
+    // 2. Wenn ein Platz gefunden wurde, Liste nach unten schieben
     if (insertIdx != -1) {
-        for (u16 i = 9; i > insertIdx; i--) highscores[i] = highscores[i - 1];
-        strncpy(highscores[insertIdx].name, config.playerName, 3);
-        highscores[insertIdx].name[3] = '\0';
-        highscores[insertIdx].score = score;
-        highscores[insertIdx].isNew = true;
+        for (u16 i = 9; i > (u16)insertIdx; i--) {
+            config.highscores[i] = config.highscores[i - 1];
+        }
+
+        // 3. Neuen Eintrag setzen
+        strncpy(config.highscores[insertIdx].name, config.playerName, 3);
+        config.highscores[insertIdx].name[3] = '\0';
+        config.highscores[insertIdx].score = score;
+        config.highscores[insertIdx].isNew = 1; // Markierung für Highscore-Screen
     }
 }
 
@@ -469,8 +479,11 @@ void play_game_over_animation() {
         SYS_doVBlankProcess();
     }
     
-    // Daten sichern und State wechseln
     config.currentScore = ctx->score;
+    
+    // Highscore berechnen UND im SRAM sichern (Wichtig!)
+    check_and_update_highscore(config.currentScore);
+    
     currentState = STATE_GAMEOVER;
 }
 

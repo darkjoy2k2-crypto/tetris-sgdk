@@ -12,6 +12,7 @@
 #include "states/options.h"
 #include "menu_bg.h"
 #include "fonts.h"
+#include "save_manager.h"
 
 // --- GLOBALE VARIABLEN ---
 GameState currentState = STATE_TITLE;
@@ -21,20 +22,24 @@ u16 lastJoyState = 0;
 
 StateUnion *sctx = NULL; 
 
-// WICHTIG: Die Reihenfolge muss exakt der struct GlobalConfig in states.h entsprechen.
-// Falls currentScore in states.h VOR playerName steht, müssen die Werte getauscht werden.
-// Hier basierend auf deiner Fehlermeldung (config.currentScore bekommt "ABC"):
 GlobalConfig config = {
-    0,                                      // 1. currentScore
-    "ABC",                                  // 2. playerName
-    0,                                      // 3. randMode
-    1,                                      // 4. speedLevel
-    1,                                      // 5. garbageFreq
-    1,                                      // 6. itemMode
+    0,                                      // currentScore
+    "ABC",                                  // playerName
+    0,                                      // randMode
+    1,                                      // speedLevel
+    1,                                      // garbageFreq
+    1,                                      // itemMode
     FLAG_SHADOW | FLAG_HOLD | FLAG_NEXT | 
-    FLAG_MUSIC | FLAG_SOUND | FLAG_BG,      // 7. flags (DEBUG ist aus)
-    6,                                     // 8. thresholdLR (Standard DAS)
-    3                                       // 9. thresholdSD (Standard Softdrop)
+    FLAG_MUSIC | FLAG_SOUND | FLAG_BG,      // flags
+    6,                                      // thresholdLR
+    3,                                      // thresholdSD
+    // 10 Highscore-Plätze (Initialwerte, falls SRAM leer ist)
+    {
+        {10000, "PET", 0}, {9000, "SGK", 0}, {8000, "CPU", 0},
+        {7000, "VDP", 0},  {6000, "ACE", 0}, {5000, "SKY", 0},
+        {4000, "DAN", 0},  {3000, "EVA", 0}, {2000, "MAX", 0},
+        {1000, "JOE", 0}
+    }
 };
 
 
@@ -52,13 +57,18 @@ void initStateMachine() {
 }
 
 void initHighscores() {
+    // Falls save_init() fehlschlägt, können wir hier Defaults setzen
+    // Ansonsten greifen wir im Spiel nur noch über config.highscores[i] zu
     char* names[] = {"PET", "SGK", "CPU", "VDP", "ACE", "SKY", "DAN", "EVA", "MAX", "JOE"};
     for (u16 i = 0; i < 10; i++) {
-        strncpy(highscores[i].name, names[i], 3);
-        highscores[i].name[3] = '\0';
-        highscores[i].score = (10 - i) * 1000;
+        strncpy(config.highscores[i].name, names[i], 3);
+        config.highscores[i].name[3] = '\0';
+        config.highscores[i].score = (10 - i) * 1000;
+        config.highscores[i].isNew = 0;
     }
 }
+
+
 
 int main() {
     // 1. Hardware-Basis-Inits
@@ -86,6 +96,7 @@ int main() {
     VDP_setTextPalette(PAL3);
     
     initHighscores();
+    save_init();
     initStateMachine();
     
 

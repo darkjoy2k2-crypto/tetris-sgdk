@@ -1,4 +1,6 @@
 #include <genesis.h>
+#include <string.h>
+
 #include "states/highscore.h"
 #include "states/states.h"
 #include "menu_bg.h"
@@ -8,20 +10,15 @@
 static HighscoreContext* ctx = NULL;
 
 void highscore_init() {
-    // Brücke schlagen
     ctx = &sctx->highscore;
-    
-    // Initialisierung (Speicher wurde in main.c genullt)
     ctx->displayTimer = 0;
     
-    // Hintergrund-Handling
     menu_bg_set_mode(BG_MODE_MENU);
     menu_bg_set_active(GET_FLAG(config.flags, FLAG_BG));
 }
 
 void highscore_init_draw() {
     if (ctx == NULL) return;
-    UI_init_fonts_and_palettes();
     
     VDP_clearTextArea(0, 0, 40, 28);
 
@@ -33,17 +30,18 @@ void highscore_init_draw() {
     char txtScore[12];
     for (u16 i = 0; i < 10; i++) {
         sprintf(txtRank, "%2d.", i + 1);
-        sprintf(txtScore, "%6ld", highscores[i].score);
+        sprintf(txtScore, "%6ld", config.highscores[i].score);
         u16 y = 10 + i;
 
-        if (highscores[i].isNew) {
+        // u16 Prüfung für isNew
+        if (config.highscores[i].isNew != 0) {
             VDP_setTextPalette(PAL1);
         } else {
             VDP_setTextPalette(PAL3);
         }
 
         VDP_drawText(txtRank, 11, y);
-        VDP_drawText(highscores[i].name, 17, y);
+        VDP_drawText(config.highscores[i].name, 17, y);
         VDP_drawText(txtScore, 23, y);
     }
 }
@@ -51,9 +49,11 @@ void highscore_init_draw() {
 void highscore_update() {
     if (ctx == NULL) return;
 
-    if (joyState & ~lastJoyState) {
-        currentState = STATE_TITLE;
-        return;
+    if (joyState & (BUTTON_START | BUTTON_A | BUTTON_B | BUTTON_C)) {
+        if (!(lastJoyState & (BUTTON_START | BUTTON_A | BUTTON_B | BUTTON_C))) {
+            currentState = STATE_TITLE;
+            return;
+        }
     }
 
     ctx->displayTimer++;
@@ -63,13 +63,12 @@ void highscore_update() {
 }
 
 void highscore_draw() {
-    // Statische Anzeige, keine Logik erforderlich
 }
 
 void highscore_cleanup() {
-    // isNew zurücksetzen, bevor der State gewechselt wird
+    // isNew Flag nach Anzeige löschen
     for (u16 i = 0; i < 10; i++) {
-        highscores[i].isNew = false;
+        config.highscores[i].isNew = 0;
     }
 
     VDP_clearTextArea(0, 0, 40, 28);

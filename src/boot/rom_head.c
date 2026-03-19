@@ -23,10 +23,10 @@ const ROMHeader rom_header = {
 #endif
     0xE0FF0000,
     0xE0FFFFFF,
-    "RA",
-    0xF820,
-    0x00200000,
-    0x0020FFFF,
+    "RA",               // SRAM vorhanden
+    0xF820,             // Backup-Flags (Standard für SRAM)
+    0x00200000,         // Start-Adresse (WICHTIG: 01 am Ende für Odd-Byte)
+    0x002001FF,         // End-Adresse
     "            ",
     "VIBE CODE... SEE WHAT AI CAN DO FOR YOU ",
     "JUE             "

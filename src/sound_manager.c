@@ -5,7 +5,7 @@
 typedef struct SoundEntry {
     const u8* data;
     u32 size;
-} SoundEntry;
+} __attribute__((aligned(2))) SoundEntry;
 
 // Master-Array für alle 99 Sounds (WAV_001 bis WAV_099)
 static const SoundEntry sfx_bank[100] = {

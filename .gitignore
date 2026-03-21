@@ -8,17 +8,29 @@
 !/res/**
 !/inc/
 !/inc/**
+!/py/
+!/py/**
 
 # Spezialfall /out:
-# Wir erlauben den Ordner, ignorieren aber sofort ALLES darin rekursiv
+# Wir erlauben den Ordner, ignorieren aber den gesamten Inhalt (Objektdateien etc.)
 !/out/
 /out/**
 
-# Jetzt die einzige Ausnahme für die ROM
-!/out/rom.bin
+# AUSNAHMEN für die fertigen ROMs (Diese sollen eingecheckt werden)
+!/out/tetr-vibe.gen
+!/out/tetr-vibe-debug.gen
 
-# Gitignore selbst
+# Alte rom.bin explizit ignorieren (falls sie noch existiert)
+/out/rom.bin
+
+# VS Code & Projekt-Konfigurationen
+!/.vscode/
+!/.vscode/**
 !/.gitignore
-out/rom.out
-out/rom.out
-out/src/gameover.o
+
+# Metadaten und temporäre Dateien ignorieren
+*.o
+*.d
+*.out
+*.res
+*.s

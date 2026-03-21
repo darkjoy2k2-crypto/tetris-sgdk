@@ -12,25 +12,37 @@
 !/py/**
 
 # Spezialfall /out:
-# Wir erlauben den Ordner, ignorieren aber den gesamten Inhalt (Objektdateien etc.)
+# Wir erlauben den Ordner, ignorieren aber den gesamten Inhalt rekursiv
 !/out/
 /out/**
 
-# AUSNAHMEN für die fertigen ROMs (Diese sollen eingecheckt werden)
+# --- AUSNAHMEN IM OUT-ORDNER ---
+
+# 1. Die fertigen ROM-Builds
 !/out/tetr-vibe.gen
 !/out/tetr-vibe-debug.gen
 
-# Alte rom.bin explizit ignorieren (falls sie noch existiert)
+# 2. Die Symbol-Tabelle für Debugging/Profiling
+!/out/symbol.txt
+
+# --- BLOCKIERUNGEN IM OUT-ORDNER ---
+
+# Den Ressourcen-Zwischenspeicher explizit ignorieren
+/out/res/
+
+# Alte Standard-Build-Dateien ignorieren
 /out/rom.bin
+/out/rom.out
+
+# --- ALLGEMEINE PROJEKTDATEIEN ---
 
 # VS Code & Projekt-Konfigurationen
 !/.vscode/
 !/.vscode/**
 !/.gitignore
 
-# Metadaten und temporäre Dateien ignorieren
+# Metadaten und temporäre Build-Files
 *.o
 *.d
-*.out
 *.res
 *.s

@@ -27,37 +27,34 @@ static bool handle_gravity(GameContext *gctx)
     bool moved = false;
     ctx->moveTimer++;
 
-    // 1. Basis-Geschwindigkeit berechnen
     u16 levelOffset = ((ctx->level - 1) << 1) + (ctx->level - 1);
     s16 threshold = GET_TICKS(60 - levelOffset);
     if (threshold < 3) threshold = 3;
 
-// 2. FULLSPEED Logik
     if (ctx->activeBadEffect == EFFECT_FULLSPEED)
     {
         if (ctx->badEffectTimer > 1) 
         {
             if (ctx->badEffectTimer % 60 == 0) SOUND_play(SND_ALERT);
         } 
-        // Korrektur: Auch bei Timer-Stand 1 (Sirene vorbei) sofort Speed aktivieren
         else if (ctx->badEffectTimer <= 1) 
         {
             threshold = 2; 
         }
     }
 
-u16 finalThreshold = threshold;
+    u16 finalThreshold = threshold;
     
     if (joyState & vBtnSoftDrop) {
-        // Nutzt den dynamischen Wert aus den Optionen (Standard: 2)
         finalThreshold = config.thresholdSD; 
     } else if (ctx->activeBadEffect == EFFECT_FREEZE) {
         finalThreshold = 9999;
     }
 
-    // 4. Bewegung ausführen
     if (ctx->moveTimer >= finalThreshold)
     {
+        KLog_U2("GRAVITY: Timer reached threshold. Timer:", ctx->moveTimer, "Threshold:", finalThreshold);
+        
         if (!checkCollision(ctx->pieceX, ctx->pieceY + 1, ctx->rotation))
         {
             ctx->pieceY++;
@@ -69,6 +66,7 @@ u16 finalThreshold = threshold;
         }
         else
         {
+            KLog_U2("GRAVITY: Collision below at X:", ctx->pieceX, "Y:", ctx->pieceY + 1);
             lockPiece();
             moved = true;
         }
@@ -79,10 +77,13 @@ u16 finalThreshold = threshold;
 }
 
 
-
 static void handle_environment(GameContext *gctx, bool moved)
 {
-    if (gctx == NULL) return;
+    if (gctx == NULL)
+    {
+        KLog("ENVIRONMENT: Error - gctx is NULL");
+        return;
+    }
 
     // 1. Garbage Logik
     if (config.garbageFreq > 0 && gctx->activeBadEffect != EFFECT_FREEZE)
@@ -90,6 +91,8 @@ static void handle_environment(GameContext *gctx, bool moved)
         gctx->garbageTimer++;
         if (gctx->garbageTimer >= gctx->garbageNextThreshold)
         {
+            KLog_U2("ENVIRONMENT: Garbage Triggered. Timer:", gctx->garbageTimer, "Threshold:", gctx->garbageNextThreshold);
+            
             addGarbageLine();
             
             // WICHTIG: Nach Garbage hat sich das Board verändert. 
@@ -100,6 +103,8 @@ static void handle_environment(GameContext *gctx, bool moved)
             u16 base = GARBAGE_INTERVALS[config.garbageFreq];
             gctx->garbageNextThreshold = GET_TICKS(base + (random() % 120) - 60);
             gctx->boardFlags |= GF_NEEDS_DRAW;
+            
+            KLog_U1("ENVIRONMENT: New Garbage Threshold set to:", gctx->garbageNextThreshold);
         }
     }
 
@@ -127,10 +132,13 @@ static void handle_environment(GameContext *gctx, bool moved)
                 gctx->badEffectTimer--;
                 if (gctx->badEffectTimer <= 0)
                 {
+                    KLog_U1("ENVIRONMENT: Bad Effect Expired. ID:", gctx->activeBadEffect);
+                    
                     if (gctx->activeBadEffect == EFFECT_HOLD_LOCK)
                     {
                         if (GET_FLAG(config.flags, FLAG_HOLD)) gctx->flags |= GF_CAN_HOLD;
                         gctx->holdType = gctx->lastHoldType;
+                        KLog("ENVIRONMENT: HOLD_LOCK released.");
                     }
                     gctx->activeBadEffect = EFFECT_NONE;
                     gctx->lastActiveBadEffect = 99;
@@ -161,6 +169,7 @@ void game_init()
     menu_bg_set_active(GET_FLAG(config.flags, FLAG_BG));
 }
 
+
 void game_init_draw()
 {
     // Sicherheitscheck: Ohne Context kein Zeichnen
@@ -189,36 +198,42 @@ void game_init_draw()
 void game_update()
 {
     if (ctx == NULL)
+    {
+        KLog("GAME_UPDATE: Error - Context is NULL");
         return;
+    }
 
-    // 1. Animationen (z.B. Zeilen löschen) blockieren Steuerung
     if (handle_active_animations(ctx))
     {
         lastJoyState = joyState;
-        // Hardware-Animationen der Sprites trotzdem weiterlaufen lassen
         sprites_update();
         return;
     }
 
-    // 2. Eingabe verarbeiten
     bool moved = controls_update(ctx);
+    if (moved) 
+    {
+        KLog("GAME_UPDATE: Player movement detected.");
+    }
 
-    // 3. Schwerkraft
     if (handle_gravity(ctx))
+    {
         moved = true;
+        KLog("GAME_UPDATE: Gravity move occurred.");
+    }
 
-    // 4. Logik-Timer (Effekte, Schatten, Garbage)
     handle_environment(ctx, moved);
 
-    // 5. Sprite-Animationen (Hardware-Update)
-    // Ersetzt update_curse_sprites, da die Logik nun in sprite.c kapselt ist
     sprites_update();
 
     if (moved)
+    {
         ctx->boardFlags |= GF_NEEDS_DRAW;
+    }
 
     lastJoyState = joyState;
 }
+
 
 void game_draw()
 {

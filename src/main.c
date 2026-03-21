@@ -1,5 +1,6 @@
 #include <genesis.h>
 #include <string.h>
+#include <kdebug.h> // Erforderlich für KLog/KDebug-Ausgaben in BlastEm
 
 #include "states/states.h"
 #include "states/title.h"
@@ -23,29 +24,28 @@ u16 lastJoyState = 0;
 StateUnion *sctx = NULL; 
 
 GlobalConfig config = {
-    0,                                      // currentScore
-    "ABC",                                  // playerName
-    0,                                      // randMode
-    1,                                      // speedLevel
-    1,                                      // garbageFreq
-    1,                                      // itemMode
-    FLAG_SHADOW | FLAG_HOLD | FLAG_NEXT | 
-    FLAG_MUSIC | FLAG_SOUND | FLAG_BG,      // flags
-    6,                                      // thresholdLR
-    3,                                      // thresholdSD
-    // 10 Highscore-Plätze (Initialwerte, falls SRAM leer ist)
-    {
-        {10000, "PET", 0}, {9000, "SGK", 0}, {8000, "CPU", 0},
-        {7000, "VDP", 0},  {6000, "ACE", 0}, {5000, "SKY", 0},
-        {4000, "DAN", 0},  {3000, "EVA", 0}, {2000, "MAX", 0},
-        {1000, "JOE", 0}
+    .serializable = {
+        .currentScore = 0,
+        .playerName = "ABC",
+        .randMode = 0,
+        .speedLevel = 1,
+        .garbageFreq = 1,
+        .itemMode = 1,
+        .flags = FLAG_SHADOW | FLAG_HOLD | FLAG_NEXT | FLAG_MUSIC | FLAG_SOUND | FLAG_BG,
+        .thresholdLR = 6,
+        .thresholdSD = 3,
+        .highscores = {
+            {10000, "PET", 0}, {9000, "SGK", 0}, {8000, "CPU", 0},
+            {7000, "VDP", 0},  {6000, "ACE", 0}, {5000, "SKY", 0},
+            {4000, "DAN", 0},  {3000, "EVA", 0}, {2000, "MAX", 0},
+            {1000, "JOE", 0}
+        }
     },
-    STATE_NONE
+    .preferredState = STATE_NONE,
+    .sramop = SRAM_NONE
 };
 
-
 StateHandler states[9]; 
-HighscoreEntry highscores[10]; 
 
 void initStateMachine() {
     states[STATE_TITLE]     = (StateHandler){ title_init,      title_init_draw,      title_update,      title_draw,      title_cleanup };
@@ -55,24 +55,25 @@ void initStateMachine() {
     states[STATE_GAMEOVER]  = (StateHandler){ gameover_init,   gameover_init_draw,   gameover_update,   gameover_draw,   gameover_cleanup };
     states[STATE_HIGHSCORE] = (StateHandler){ highscore_init,  highscore_init_draw,  highscore_update,  highscore_draw,  highscore_cleanup };
     states[STATE_OPTIONS]   = (StateHandler){ options_init,    options_init_draw,    options_update,    options_draw,    options_cleanup };
-    states[STATE_SAVE]      = (StateHandler){ save_init,       saving_init_draw,     saving_update,     saving_draw,     saving_cleanup };
+    states[STATE_SAVE]      = (StateHandler){ saving_init,     saving_init_draw,     saving_update,     saving_draw,     saving_cleanup };
 }
 
 void initHighscores() {
-    // Falls save_init() fehlschlägt, können wir hier Defaults setzen
-    // Ansonsten greifen wir im Spiel nur noch über config.highscores[i] zu
     char* names[] = {"PET", "SGK", "CPU", "VDP", "ACE", "SKY", "DAN", "EVA", "MAX", "JOE"};
     for (u16 i = 0; i < 10; i++) {
         strncpy(config.highscores[i].name, names[i], 3);
         config.highscores[i].name[3] = '\0';
-        config.highscores[i].score = (10 - i) * 1000;
+        config.highscores[i].score = (u32)((10 - i) * 1000);
         config.highscores[i].isNew = 0;
     }
 }
 
+int main(bool hardReset) {
+    // 0. KDebug Test-Ausgabe (Erscheint sofort im BlastEm Terminal)
+    KLog("!n");    KLog("--- LOG RESET: NEW SESSION STARTED ---");    
+    KLog("--- BOOT SEQUENCE START ---");
+    KLog_U1("Hard Reset: ", hardReset);
 
-
-int main() {
     // 1. Hardware-Basis-Inits
     JOY_init();
     
@@ -80,16 +81,20 @@ int main() {
     sctx = MEM_alloc(sizeof(StateUnion));
     if (sctx == NULL) {
         VDP_drawText("FATAL: MEMORY FULL", 10, 10);
+        KLog("CRITICAL: MEM_alloc failed for sctx!");
         while(1); 
     }
     memset(sctx, 0, sizeof(StateUnion));
 
+    // Region Check
     if (IS_PAL_SYSTEM) {
         SET_FLAG(config.flags, FLAG_IS_PAL);
         VDP_setScreenHeight240();
+        KLog("Region: PAL System detected.");
     } else {
         CLEAR_FLAG(config.flags, FLAG_IS_PAL);
         VDP_setScreenHeight224();
+        KLog("Region: NTSC System detected.");
     }
 
     // 2. Ressourcen laden
@@ -97,14 +102,13 @@ int main() {
     PAL_setPalette(PAL3, PAL_FONT_CLEAR.data, CPU);
     VDP_setTextPalette(PAL3);
     
+    // Inits
     initHighscores();
-    save_init();
     initStateMachine();
     
-
     // 3. Hintergrund-System initialisieren
     menu_bg_init(); 
-    menu_bg_set_active(true);
+    menu_bg_set_active(TRUE);
     menu_bg_set_mode(BG_MODE_MENU);
 
     joyState = JOY_readJoypad(JOY_1);
@@ -113,17 +117,25 @@ int main() {
     SOUND_init(); 
     SOUND_playMusic();
 
+    // Start-Zustand: SRAM Initialisierung über SaveManager
+    KLog("MAIN: Switching to STATE_SAVE (SRAM_INIT)");
+    currentState = STATE_SAVE;
+    config.sramop = SRAM_INIT;
+    
     // 4. Hauptschleife
     while(1) {
         joyState = JOY_readJoypad(JOY_1);
 
         // State-Wechsel-Logik
         if (currentState != lastState) {
+            KLog_U1("STATE_CHANGE: Old State = ", lastState);
+            KLog_U1("STATE_CHANGE: New State = ", currentState);
+
             if (lastState != STATE_NONE) {
                 states[lastState].cleanup();
             }
 
-            // RAM-Bereich für den neuen State säubern
+            // RAM-Bereich für den neuen State säubern (Union-Gefahr verhindern)
             memset(sctx, 0, sizeof(StateUnion));
 
             lastJoyState = joyState; 
@@ -136,7 +148,7 @@ int main() {
         states[currentState].update();
         states[currentState].draw();
         
-        // Hintergrund-Animation (Persistent über States hinweg)
+        // Hintergrund-Animation
         menu_bg_update();
 
         lastJoyState = joyState;

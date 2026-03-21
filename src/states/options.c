@@ -34,6 +34,7 @@ void options_init() {
     menu_bg_set_mode(BG_MODE_MENU);
     menu_bg_set_active(GET_FLAG(ctx->flags, FLAG_BG));
     SYS_showFrameLoad(GET_FLAG(ctx->flags, FLAG_DEBUG));
+    
 }
 
 void options_init_draw() {
@@ -49,6 +50,7 @@ void options_init_draw() {
 void options_update() {
     if (ctx == NULL) return;
 
+    // 1. Navigation (Cursor hoch/runter)
     if ((joyState & BUTTON_DOWN) && !(lastJoyState & BUTTON_DOWN)) {
         ctx->cursor = (ctx->cursor + 1) % 6;
         SOUND_play(SND_MOVE);
@@ -64,11 +66,15 @@ void options_update() {
     bool goLeft   = (joyState & BUTTON_LEFT)  && !(lastJoyState & BUTTON_LEFT);
     bool pressedA = (joyState & BUTTON_A)     && !(lastJoyState & BUTTON_A);
 
+    // 2. Werte anpassen oder Sonderfunktionen (Reload/Reset)
     if (goRight || goLeft || pressedA) {
         ctx->needsRedraw = true;
-        if (ctx->cursor == 2) { 
-            if (pressedA) { ctx->subCursor = (ctx->subCursor + 1) % 2; SOUND_play(SND_MOVE); }
-            else {
+        
+        if (ctx->cursor == 2) { // SENSIBILITY
+            if (pressedA) { 
+                ctx->subCursor = (ctx->subCursor + 1) % 2; 
+                SOUND_play(SND_MOVE); 
+            } else {
                 SOUND_play(SND_ROTATE);
                 if (ctx->subCursor == 0) {
                     if (goRight && ctx->thresholdLR > 2) ctx->thresholdLR--;
@@ -78,29 +84,30 @@ void options_update() {
                     else if (goLeft && ctx->thresholdSD < 10) ctx->thresholdSD++;
                 }
             }
-        } else if (ctx->cursor == 5) {
+        } 
+        else if (ctx->cursor == 5) { // SYSTEM (RELOAD / RESET)
             if (pressedA || goLeft || goRight) {
-                if (goLeft || (pressedA && ctx->subCursor == 1)) ctx->subCursor = 0;
-                else if (goRight || (pressedA && ctx->subCursor == 0)) ctx->subCursor = 1;
+                if (goLeft) ctx->subCursor = 0;
+                else if (goRight) ctx->subCursor = 1;
 
                 if (pressedA) {
-                    if (ctx->subCursor == 1) { // RELOAD
-                        config.preferredState = STATE_OPTIONS;
+                    if (ctx->subCursor == 0) { // ZIEL 1: RELOAD SETTINGS
+                        config.sramop = SRAM_LOAD;
+                        config.preferredState = STATE_OPTIONS; // Zurück ins Menü
                         currentState = STATE_SAVE;
                         SOUND_play(SND_RESET);
                         return;
-                    } else { // RESET DEFAULTS
-                        ctx->thresholdLR = 10; ctx->thresholdSD = 2;
+                    } else { // RESET DEFAULTS (Nur RAM)
+                        ctx->thresholdLR = 10; 
+                        ctx->thresholdSD = 2;
                         ctx->flags = (FLAG_SHADOW | FLAG_HOLD | FLAG_NEXT | FLAG_SOUND | FLAG_MUSIC | FLAG_BG);
                         if (config.flags & FLAG_IS_PAL) ctx->flags |= FLAG_IS_PAL;
-                        SYS_showFrameLoad(FALSE);
-                        menu_bg_set_active(GET_FLAG(ctx->flags, FLAG_BG));
-                        if (GET_FLAG(ctx->flags, FLAG_MUSIC)) SOUND_playMusic(); else XGM_stopPlay();
                         SOUND_play(SND_RESET);
                     }
                 } else { SOUND_play(SND_MOVE); }
             }
-        } else {
+        } 
+        else { // TOGGLE FLAGS
             SOUND_play(SND_ROTATE);
             switch(ctx->cursor) {
                 case 0: TOGGLE_FLAG(ctx->flags, FLAG_MUSIC); if (GET_FLAG(ctx->flags, FLAG_MUSIC)) SOUND_playMusic(); else XGM_stopPlay(); break;
@@ -111,20 +118,35 @@ void options_update() {
         }
     }
 
+    // 3. ZIEL 2: START = SPEICHERN & TITEL
+// 3. ZIEL 2: START = SPEICHERN & TITEL
     if ((joyState & (BUTTON_START)) && !(lastJoyState & (BUTTON_START))) {
+        // Debug vor der Übergabe
+        KLog_U1("DEBUG_OPTIONS: ctx->thresholdLR = ", ctx->thresholdLR);
+        KLog_U1("DEBUG_OPTIONS: ctx->thresholdSD = ", ctx->thresholdSD);
+
+        // Übergabe an globale Config
         config.flags = (ctx->flags & ~FLAG_IS_PAL) | (config.flags & FLAG_IS_PAL);
         config.thresholdLR = ctx->thresholdLR;
         config.thresholdSD = ctx->thresholdSD;
+
+        // Debug nach der Übergabe
+        KLog_U1("DEBUG_OPTIONS: config.thresholdLR = ", config.thresholdLR);
+        KLog_U1("DEBUG_OPTIONS: config.thresholdSD = ", config.thresholdSD);
+
+        config.sramop = SRAM_SAVE;
+        config.preferredState = STATE_TITLE; 
         currentState = STATE_SAVE;
+        
+        KLog("DEBUG_OPTIONS: Switching to STATE_SAVE now...");
+        return;
     }
 
+    // 4. ZIEL 3: B = TITEL OHNE SPEICHERN
     if ((joyState & (BUTTON_B)) && !(lastJoyState & (BUTTON_B))) {
         currentState = STATE_TITLE;
+        return;
     }
-
-
-
-
 }
 
 void options_draw() {

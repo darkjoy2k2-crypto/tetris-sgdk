@@ -52,7 +52,7 @@ void highscore_update() {
                  !(lastJoyState & (BUTTON_START | BUTTON_A | BUTTON_B | BUTTON_C));
 
     if (input || ctx->displayTimer >= 420) {
-        // Prüfen ob gespeichert werden muss
+        // Prüfen ob ein neuer Eintrag markiert ist
         bool needsSave = FALSE;
         for (u16 i = 0; i < 10; i++) {
             if (config.highscores[i].isNew != 0) {
@@ -61,14 +61,23 @@ void highscore_update() {
             }
         }
 
-        // RAM bereinigen bevor wir gehen
+        // RAM-Cleanup: Score nullen
         config.currentScore = 0;
 
         if (needsSave) {
+            // Auftrag für den Save-Manager
+            config.sramop = SRAM_SAVE;
+            config.preferredState = STATE_TITLE; // Nach dem Save zum Titel
             currentState = STATE_SAVE;
+            //currentState = STATE_TITLE;
+
         } else {
+            // Kein neuer Rekord, direkt zum Titel
+            config.sramop = SRAM_NONE;
+            config.preferredState = STATE_NONE;
             currentState = STATE_TITLE;
         }
+        return;
     }
 
     ctx->displayTimer++;

@@ -4,68 +4,111 @@
 #include <string.h>
 #include "bg.h"
 
-
 // --- TEIL 1: SRAM HARDWARE-ZUGRIFF ---
 
-void save_options() {
-    SRAM_enable(); 
-    u8 *ptr = (u8*)&config;
-    // Größe berechnen: Alles vor dem Highscore-Array
-    u16 size = (u16)((u32)&config.highscores - (u32)&config);
+void save_execute() {
+    KLog("SRAM_EXECUTE: Start...");
+    KLog_U2("RAM_CHECK: LR=", config.thresholdLR, " SD=", config.thresholdSD);
+    KLog_U1("RAM_CHECK: flags=", config.flags);
+
+    SRAM_enable();
+    
+    // Header schreiben
+    SRAM_writeLong(ADDR_MAGIC, SAVE_MAGIC);
+    SRAM_writeLong(ADDR_VERSION, SAVE_VERSION);
+    
+    // Pointer auf den gepackten Block
+    u8 *ptr = (u8*)&config.serializable;
+    u16 size = sizeof(Serializable);
+    
+    KLog_U1("SRAM_HW: Writing serializable block, size: ", size);
+    
+    // Da wir 'packed' nutzen, können wir die Struktur Byte für Byte spiegeln
     for (u16 i = 0; i < size; i++) {
         SRAM_writeByte(ADDR_OPTIONS + i, ptr[i]);
     }
+    
     SRAM_disable();
+    KLog("SRAM_HW: Disabled. SRAM_EXECUTE: Finished.");
 }
 
-void save_highscores() {
+bool save_verify() {
+    KLog("SRAM_VERIFY: Starting Integrity Check...");
     SRAM_enable();
-    u8 *ptr = (u8*)&config.highscores;
-    u16 size = (u16)sizeof(config.highscores);
-    for (u16 i = 0; i < size; i++) {
-        SRAM_writeByte(ADDR_HIGHSCORES + i, ptr[i]);
+    
+    u32 magic = SRAM_readLong(ADDR_MAGIC);
+    u32 version = SRAM_readLong(ADDR_VERSION);
+    
+    if (magic != SAVE_MAGIC || version != SAVE_VERSION) {
+        KLog_U1("SRAM_VERIFY: Header Mismatch! Magic found: ", magic);
+        SRAM_disable();
+        return FALSE;
     }
-    SRAM_disable();
-}
 
-void save_execute() {
-    SRAM_enable();
-    SRAM_writeLong(ADDR_MAGIC, SAVE_MAGIC);
-    SRAM_writeLong(ADDR_VERSION, SAVE_VERSION);
+    u8 *ptr = (u8*)&config.serializable;
+    u16 size = sizeof(Serializable);
+    
+    for (u16 i = 0; i < size; i++) {
+        u8 sramByte = SRAM_readByte(ADDR_OPTIONS + i);
+        if (ptr[i] != sramByte) {
+            KLog_U1("SRAM_VERIFY: Difference at index ", i);
+            SRAM_disable();
+            return FALSE;
+        }
+    }
+    
     SRAM_disable();
-
-    // Teilfunktionen nutzen ihre eigenen Enable/Disable Zyklen
-    save_options();
-    save_highscores();
+    KLog("SRAM_VERIFY: Success. SRAM matches RAM.");
+    return TRUE;
 }
 
 void save_load() {
-    SRAM_enableRO();
+    KLog("SRAM_LOAD: Start reading...");
+    SRAM_enable();
     
-    // 1. Optionen laden
-    u8 *ptr = (u8*)&config;
-    // WICHTIG: Die Größe wird nur bis zum Anfang der Highscores berechnet
-    u16 size_opt = (u16)((u32)&config.highscores - (u32)&config);
-    for (u16 i = 0; i < size_opt; i++) {
+    u8 *ptr = (u8*)&config.serializable;
+    u16 size = sizeof(Serializable);
+    
+    for (u16 i = 0; i < size; i++) {
         ptr[i] = SRAM_readByte(ADDR_OPTIONS + i);
-    }
-
-    // 2. Highscores laden
-    u8 *h_ptr = (u8*)&config.highscores;
-    u16 size_h = (u16)sizeof(config.highscores);
-    for (u16 i = 0; i < size_h; i++) {
-        h_ptr[i] = SRAM_readByte(ADDR_HIGHSCORES + i);
     }
     
     SRAM_disable();
+    KLog("SRAM_LOAD: Finished.");
+    KLog_U2("SRAM_LOAD_RESULT: LR=", config.thresholdLR, " SD=", config.thresholdSD);
+}
 
-    // preferredState wird NICHT geladen und bleibt auf dem aktuellen RAM-Wert
-    // Wir setzen ihn hier höchstens auf einen Sicherheits-Default, falls nötig:
-    // config.preferredState = STATE_NONE; 
+void save_clear() {
+    KLog("SRAM_CLEAR: Initializing RAM with Defaults...");
+    
+    config.serializable.currentScore = 0;
+    strncpy(config.serializable.playerName, "ABC", 3);
+    config.serializable.playerName[3] = '\0';
+    
+    config.serializable.randMode = 0;
+    config.serializable.speedLevel = 1;
+    config.serializable.garbageFreq = 1;
+    config.serializable.itemMode = 1;
+    config.serializable.flags = FLAG_SHADOW | FLAG_HOLD | FLAG_NEXT | FLAG_MUSIC | FLAG_SOUND | FLAG_BG;
+    
+    // Werkseinstellungen Sensibilität
+    config.serializable.thresholdLR = 6;
+    config.serializable.thresholdSD = 3;
+
+    char* names[] = {"PET", "SGK", "CPU", "VDP", "ACE", "SKY", "DAN", "EVA", "MAX", "JOE"};
+    for(u16 i = 0; i < 10; i++) {
+        strncpy(config.serializable.highscores[i].name, names[i], 3);
+        config.serializable.highscores[i].name[3] = '\0';
+        config.serializable.highscores[i].score = (u32)((10 - i) * 1000);
+        config.serializable.highscores[i].isNew = 0;
+    }
+    
+    save_execute();
 }
 
 void save_init() {
-    SRAM_enableRO();
+    KLog("SRAM_INIT: Check Hardware Header...");
+    SRAM_enable();
     u32 magic = SRAM_readLong(ADDR_MAGIC);
     u32 version = SRAM_readLong(ADDR_VERSION);
     SRAM_disable();
@@ -73,31 +116,9 @@ void save_init() {
     if (magic == SAVE_MAGIC && version == SAVE_VERSION) {
         save_load();
     } else {
+        KLog("SRAM_INIT: Fresh SRAM detected. Formatting...");
         save_clear();
     }
-}
-
-void save_clear() {
-    // RAM-Defaults setzen
-    config.currentScore = 0;
-    strncpy(config.playerName, "ABC", 4);
-    config.randMode = 0;
-    config.speedLevel = 1;
-    config.garbageFreq = 0;
-    config.itemMode = 1;
-    config.flags = FLAG_SHADOW | FLAG_HOLD | FLAG_NEXT | FLAG_MUSIC | FLAG_SOUND | FLAG_BG;
-    config.thresholdLR = 10;
-    config.thresholdSD = 2;
-
-    char* names[] = {"PET", "SGK", "CPU", "VDP", "ACE", "SKY", "DAN", "EVA", "MAX", "JOE"};
-    for(u16 i = 0; i < 10; i++) {
-        strncpy(config.highscores[i].name, names[i], 3);
-        config.highscores[i].name[3] = '\0';
-        config.highscores[i].score = (10 - i) * 1000;
-        config.highscores[i].isNew = 0;
-    }
-    
-    save_execute();
 }
 
 // --- TEIL 2: STATE-LOGIK (STATE_SAVE) ---
@@ -106,68 +127,86 @@ void saving_init() {
     SaveContext *ctx = &sctx->save;
     ctx->timer = 0;
     ctx->textVisible = TRUE;
+    ctx->errorOccurred = FALSE;
 
-    menu_bg_set_mode(BG_MODE_MENU);
-    
-    // Palette schwarz für Fade-In Start
-    u16 target_pal[16];
-    memcpy(target_pal, game_bg.palette->data, 16 * 2);
-    
     VDP_clearTextArea(0, 0, 40, 28);
-    VDP_setTextPalette(PAL1); // Gold/Gelb laut UI_init
-    VDP_drawText("SAVING DATA...", 13, 12);
-    VDP_drawText("DO NOT TURN OFF CONSOLE", 8, 14);
+    // Sicherstellen, dass das Menü-System weiß, welcher Hintergrund aktiv ist
+    menu_bg_set_active(GET_FLAG(config.flags, FLAG_BG));
+    
+    PAL_fadeInPalette(PAL1, game_bg.palette->data, 30, TRUE);
+}
 
-    // Fade In (1/2 Sekunde = 30 Frames)
-    PAL_fadeInPalette(PAL2, game_bg.palette->data, GET_TICKS(30),true);
+void saving_init_draw() {
+    VDP_drawText("DO NOT TURN OFF CONSOLE!", 8, 12);
 }
 
 void saving_update() {
     SaveContext *ctx = &sctx->save;
+
+    if (ctx->errorOccurred) {
+        if (joyState & (BUTTON_A | BUTTON_B | BUTTON_START)) {
+            config.sramop = SRAM_NONE;
+            currentState = STATE_TITLE;
+        }
+        return;
+    }
+
     ctx->timer++;
 
-    // Blinken-Phase (insgesamt 2 Sekunden, startet nach Fade-In)
-    // Blinkt 4x (alle 15 Frames Toggle -> 30 Frames pro Zyklus)
-        if (ctx->timer % 15 == 0) {
-            ctx->textVisible = !ctx->textVisible;
-            if (ctx->textVisible) {
-                VDP_drawText("SAVING DATA...", 13, 12);
+    // Verzögerung, damit der User den Text lesen kann
+    if (ctx->timer == 60) {
+        if (config.sramop == SRAM_SAVE) {
+            save_execute();
+            if (!save_verify()) {
+                ctx->errorOccurred = TRUE;
+                VDP_clearTextArea(0, 14, 40, 4);
+                VDP_setTextPalette(PAL0);
+                VDP_drawText("SAVE CORRUPTED!", 12, 14);
+                VDP_drawText("PRESS BUTTON TO CONTINUE", 8, 16);
+            }
+        } 
+        else if (config.sramop == SRAM_LOAD) {
+            save_load();
+        }
+        else if (config.sramop == SRAM_INIT) {
+            save_init();
+        }
+    }
+
+    if (!ctx->errorOccurred) {
+        if (ctx->timer == 90) {
+            PAL_fadeOut(0, 63, 20, TRUE);
+        }
+
+        if (ctx->timer > 115) {
+            config.sramop = SRAM_NONE;
+            // Falls preferredState gesetzt wurde (z.B. zurück zu Options), dahin wechseln
+            if (config.preferredState != STATE_NONE) {
+                currentState = config.preferredState;
+                config.preferredState = STATE_NONE;
             } else {
-                VDP_clearText(13, 12, 14);
+                currentState = STATE_TITLE;
             }
         }
-
-    // In der 3. Sekunde (Frame 180) wird gespeichert
-    if (ctx->timer == 60) {
-        // Text sicherheitshalber wieder anzeigen
-        save_execute();
     }
-
-    // In der 4. Sekunde (Frame 240) Fade-Out (1/2 Sekunde)
-    if (ctx->timer == 90) {
-        PAL_fadeOut(0, 63, 30, TRUE);
-    }
-
-    // Nach Abschluss des Fades zum Ranking
-    if (ctx->timer > 120) {
-        if (config.preferredState == STATE_NONE){
-        currentState = STATE_TITLE;
-        }            
-        else{
-        currentState = config.preferredState;
-           config.preferredState = STATE_NONE;
-        }
-        
-
-    }
-}
-
-void saving_init_draw() {
-    // Platzhalter für Handler-Kompatibilität
 }
 
 void saving_draw() {
-    // Platzhalter für Handler-Kompatibilität
+    SaveContext *ctx = &sctx->save;
+    if (ctx->errorOccurred) return;
+
+    char* msg = "WORKING...";
+    u16 x = 15;
+
+    if (config.sramop == SRAM_INIT) { msg = "CHECKING DATA..."; x = 12; }
+    else if (config.sramop == SRAM_LOAD) { msg = "LOADING DATA...";  x = 13; }
+    else if (config.sramop == SRAM_SAVE) { msg = "SAVING DATA...";   x = 14; }
+
+    if (ctx->timer % 20 == 0) {
+        ctx->textVisible = !ctx->textVisible;
+        if (ctx->textVisible) VDP_drawText(msg, x, 14);
+        else VDP_clearText(x, 14, 16);
+    }
 }
 
 void saving_cleanup() {

@@ -1,14 +1,11 @@
 #include <genesis.h>
+#include <string.h>
 #include "states/game_select.h"
 #include "states/states.h"
 #include "sound_manager.h"
-#include <string.h>
 #include "menu_bg.h"
 #include "fonts.h"
 #include "gfx.h"
-
-// Der lokale Kontext für diesen State
-
 
 static SelectContext* ctx = NULL;
 
@@ -18,7 +15,6 @@ static void draw_menu_line(u16 row, char* label, u16 currentVal, char* options[]
     u16 y = 8 + (row * 2);
     u16 x = 4;
 
-    // Standard-Palette für das Label (Gelb/Gold bei Selektion)
     VDP_setTextPalette(isSelected ? PAL1 : PAL3);
     VDP_drawText(isSelected ? ">" : " ", x, y);
     x += 2;
@@ -26,9 +22,7 @@ static void draw_menu_line(u16 row, char* label, u16 currentVal, char* options[]
     VDP_drawText(label, x, y);
     x += 12;
 
-    // Optionen zeichnen
     for (u16 i = 0; i < numOptions; i++) {
-        // Selektierte Option leuchtet (PAL2 - Rot oder Highlight)
         if (i == currentVal) VDP_setTextPalette(PAL2);
         else VDP_setTextPalette(PAL3);
 
@@ -49,7 +43,6 @@ static void draw_name_entry(bool isSelected) {
     x += 12;
 
     for (u16 i = 0; i < 3; i++) {
-        // Aktueller Buchstabe in der Bearbeitung wird hervorgehoben
         if (isSelected && ctx->nameCharIdx == i) VDP_setTextPalette(PAL2);
         else VDP_setTextPalette(PAL3);
 
@@ -62,14 +55,11 @@ static void draw_name_entry(bool isSelected) {
 // --- State System Funktionen ---
 
 void select_init() {
-    // Brücke zur globalen Union schlagen
     ctx = &sctx->select;
 
-    // Hintergrund-System konfigurieren
     menu_bg_set_mode(BG_MODE_MENU);
     menu_bg_set_active(GET_FLAG(config.flags, FLAG_BG));
 
-    // Aktuelle Konfiguration in den lokalen Kontext spiegeln
     ctx->cursor = 0;
     strncpy(ctx->name, config.playerName, 3);
     ctx->name[3] = '\0';
@@ -79,20 +69,17 @@ void select_init() {
     ctx->speedLevel = config.speedLevel;
     ctx->garbageFreq = config.garbageFreq;
     ctx->itemMode = config.itemMode;
-    
-    // Kopie der Flags für die Bearbeitung im Menü
     ctx->flags = config.flags;
 
     ctx->needsRedraw = true;
+    KLog("SELECT: Init finished.");
 }
 
 void select_init_draw() {
     if (ctx == NULL) return;
 
-    // Zentrale Farb- und Font-Initialisierung aufrufen
     UI_init_fonts_and_palettes();   
 
-    // Statische UI-Elemente
     VDP_clearTextArea(0, 0, 40, 28);
     VDP_setTextPalette(PAL1);
     VDP_drawText("--- GAME SETTINGS ---", 10, 4);
@@ -103,7 +90,6 @@ void select_init_draw() {
 void select_update() {
     if (ctx == NULL) return;
 
-    // 1. Vertikale Navigation
     if ((joyState & BUTTON_DOWN) && !(lastJoyState & BUTTON_DOWN)) {
         ctx->cursor = (ctx->cursor + 1) % 8;
         SOUND_play(SND_MOVE);
@@ -115,7 +101,6 @@ void select_update() {
         ctx->needsRedraw = true;
     }
 
-    // 2. Werte-Manipulation (Links/Rechts oder A)
     bool goRight  = (joyState & BUTTON_RIGHT) && !(lastJoyState & BUTTON_RIGHT);
     bool goLeft   = (joyState & BUTTON_LEFT)  && !(lastJoyState & BUTTON_LEFT);
     bool pressedA = (joyState & BUTTON_A)     && !(lastJoyState & BUTTON_A);
@@ -124,7 +109,6 @@ void select_update() {
         ctx->needsRedraw = true;
         
         if (ctx->cursor == 0) {
-            // --- Namenseingabe ---
             char c = ctx->name[ctx->nameCharIdx];
             if (goRight) {
                 c = (c == 'Z') ? 'A' : c + 1;
@@ -140,46 +124,61 @@ void select_update() {
                 SOUND_play(SND_MOVE);
             }
         } else {
-            // --- Menü-Optionen ---
             SOUND_play(SND_ROTATE);
             s16 dir = goLeft ? -1 : 1;
             switch(ctx->cursor) {
                 case 1: ctx->randMode    = (ctx->randMode + dir + 2) % 2; break;
                 case 2: ctx->speedLevel  = (ctx->speedLevel + dir + 4) % 4; break;
                 case 3: ctx->garbageFreq = (ctx->garbageFreq + dir + 4) % 4; break;
-                
-                // Bit-Flags umschalten (Nutzt die neuen flexiblen Makros)
                 case 4: TOGGLE_FLAG(ctx->flags, FLAG_SHADOW); break; 
                 case 5: TOGGLE_FLAG(ctx->flags, FLAG_HOLD);   break;
                 case 6: TOGGLE_FLAG(ctx->flags, FLAG_NEXT);   break;
-                
                 case 7: ctx->itemMode    = (ctx->itemMode + dir + 4) % 4; break;
             }
         }
     }
 
-    // 3. Übernahme in die globale Config und Start des Spiels
     if ((joyState & BUTTON_START) && !(lastJoyState & BUTTON_START)) {
+        KLog("SELECT: START pressed. Checking for changes...");
+
+        // Vergleich Name
+        bool nameChanged = (strcmp(config.playerName, ctx->name) != 0);        // Vergleich Flags (PAL-Flag ignorieren)
+        bool flagsChanged = ((config.flags & ~FLAG_IS_PAL) != (ctx->flags & ~FLAG_IS_PAL));
+        // Vergleich Rest
+        bool settingsChanged = (config.randMode != ctx->randMode) || 
+                               (config.speedLevel != ctx->speedLevel) || 
+                               (config.garbageFreq != ctx->garbageFreq) || 
+                               (config.itemMode != ctx->itemMode);
+
+        bool needsSave = (nameChanged || flagsChanged || settingsChanged);
+
+        // Werte übertragen
         strncpy(config.playerName, ctx->name, 3);
         config.playerName[3] = '\0';
-        
         config.randMode    = ctx->randMode;
         config.speedLevel  = ctx->speedLevel;
         config.garbageFreq = ctx->garbageFreq;
         config.itemMode    = ctx->itemMode;
-        
-        // Flags übertragen: Alle Gameplay-Flags vom Kontext, 
-        // aber das FLAG_IS_PAL bleibt fest im globalen config.flags
         config.flags = (ctx->flags & ~FLAG_IS_PAL) | (config.flags & FLAG_IS_PAL);
 
-        currentState = STATE_GAME;
+        if (needsSave) {
+            KLog_U1("SELECT: Changes detected! Name:", nameChanged);
+            KLog_U1("SELECT: Flags:", flagsChanged);
+            KLog_U1("SELECT: Logic:", settingsChanged);
+            
+            config.sramop = SRAM_SAVE;
+            config.preferredState = STATE_GAME;
+            currentState = STATE_SAVE;
+        } else {
+            KLog("SELECT: No changes. Direct to game.");
+            currentState = STATE_GAME;
+        }
     }
 }
 
 void select_draw() {
     if (ctx == NULL || !ctx->needsRedraw) return;
 
-    // UI zeichnen
     draw_name_entry(ctx->cursor == 0);
 
     char* optsRand[]   = {"Fair", "Chaos"};
@@ -190,19 +189,16 @@ void select_draw() {
     draw_menu_line(1, "Random:",   ctx->randMode,   optsRand,   2, (ctx->cursor == 1));
     draw_menu_line(2, "Speed:",    ctx->speedLevel,  optsLevels, 4, (ctx->cursor == 2));
     draw_menu_line(3, "Garbage:",  ctx->garbageFreq, optsLevels, 4, (ctx->cursor == 3));
-    
-    // Abfrage der Flags für die Anzeige (GET_FLAG Makro)
     draw_menu_line(4, "Shadow:",   GET_FLAG(ctx->flags, FLAG_SHADOW) ? 1 : 0, optsOnOff, 2, (ctx->cursor == 4));
     draw_menu_line(5, "Hold:",     GET_FLAG(ctx->flags, FLAG_HOLD)   ? 1 : 0, optsOnOff, 2, (ctx->cursor == 5));
     draw_menu_line(6, "Next:",     GET_FLAG(ctx->flags, FLAG_NEXT)   ? 1 : 0, optsOnOff, 2, (ctx->cursor == 6));
-    
     draw_menu_line(7, "Items:",    ctx->itemMode,    optsItems,  4, (ctx->cursor == 7));
     
     ctx->needsRedraw = false;
 }
 
 void select_cleanup() {
-    // Nur Pointer lösen, kein MEM_free
     VDP_clearTextArea(0, 0, 40, 28);
     ctx = NULL;
+    KLog("SELECT: Cleanup finished.");
 }

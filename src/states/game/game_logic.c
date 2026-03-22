@@ -9,6 +9,8 @@
 #include "sounds.h"
 #include "sprite.h"
 
+static bool highscoreUpdated = false;
+
 void triggerBadEffect();
 static void handle_item_spawn_logic();
 void play_game_over_animation();
@@ -361,6 +363,8 @@ void lockPiece() {
 
 
 void check_and_update_highscore(u32 score) {
+    if (highscoreUpdated) return; // Eintrag schon gemacht
+
     s16 insertIdx = -1;
     
     // 1. Prüfen, ob der Score für die Top 10 reicht
@@ -383,6 +387,8 @@ void check_and_update_highscore(u32 score) {
         config.highscores[insertIdx].score = score;
         config.highscores[insertIdx].isNew = 1; // Markierung für Highscore-Screen
     }
+
+    highscoreUpdated = true;
 }
 
 bool tryRotate(u16 newRotation) {
@@ -466,7 +472,10 @@ u16 clearLines() {
         KLog_U2("CLEAR_LINES: Lines cleared:", linesCleared, "Combo:", ctx->comboCount + 1);
         // Timer für Blink-Animation: 2x blinken = ~20 Frames
         ctx->clearTimer = GET_TICKS(20); 
-        
+
+        // Sound direkt beim Start der Einfärb-/Blinkanimation
+        SOUND_play(52 + ctx->comboCount + 1);
+
         ctx->boardFlags |= GF_NEEDS_DRAW;
     } else {
         ctx->comboCount = 0;
@@ -692,7 +701,7 @@ void finishLineClear() {
     if (linesFound > 0) {
         ctx->comboCount++;
         apply_scoring(linesFound);
-        SOUND_play(52 + ctx->comboCount);
+        // Sound schon bei clearLines gespielt, hier keine zusätzliche Soundcall.
     } else {
         ctx->comboCount = 0;
     }
@@ -808,10 +817,8 @@ void addGarbageLine() {
     memset(&ctx->board[190], randomColor, 10);
     ctx->board[190 + holeX] = 0;
 
-    // 3. Piece-Push: Der aktive Stein rückt mit dem Board nach oben
-    ctx->pieceY--;
-
-    // Sofortiger Game-Over Check, falls das Teil nun in statische Blöcke gedrückt wurde
+    // 3. Piece-Push vermeiden: aktive Figur unverändert lassen
+    // Bei Folge-Kollision: Game Over (keine automatische Verschiebung).
     if (checkCollision(ctx->pieceX, ctx->pieceY, ctx->rotation)) {
         play_game_over_animation();
         return;
@@ -882,6 +889,7 @@ void reset_game_logic() {
     ctx->sortingRow = -1;
     ctx->clearTimer = 0;
     ctx->clearingLineMask = 0;  // Reset blink animation mask
+    highscoreUpdated = false;
     ctx->moveTimer = 0;
     ctx->holdType = -1;
     

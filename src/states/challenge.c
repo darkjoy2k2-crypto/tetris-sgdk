@@ -1,5 +1,6 @@
 #include "states/challenge.h"
 #include "states/states.h"
+#include "states/game/game_conditions.h"
 #include "gfx.h"
 #include <genesis.h>
 #include "sound_manager.h"
@@ -380,9 +381,28 @@ void challenge_init(void) {
     ctx = &sctx->challenge;
     challenge_build_translation_table();
 
+    if (config.runtime.gameMode == GAME_MODE_CHALLENGE &&
+        config.runtime.challengeResult != CHALLENGE_RESULT_NONE &&
+        config.runtime.challengeLevelId < CHALLENGE_LEVEL_COUNT) {
+        if (config.runtime.challengeResult == CHALLENGE_RESULT_SUCCESS) {
+            challenge_mark_cleared((u8)config.runtime.challengeLevelId);
+            SOUND_play(SND_LINE_CLEAR);
+        } else {
+            SOUND_play(SND_ALERT);
+        }
+
+        config.runtime.challengeResult = CHALLENGE_RESULT_NONE;
+        config.runtime.gameMode = GAME_MODE_FREEGAME;
+    }
+
     /* Test-start point: 3rd row, 1st column (1-based) => x=0, y=2 */
-    ctx->cursor_x = 0;
-    ctx->cursor_y = 2;
+    if (config.runtime.challengeLevelId < CHALLENGE_LEVEL_COUNT) {
+        ctx->cursor_x = (u8)(config.runtime.challengeLevelId & 15);
+        ctx->cursor_y = (u8)(config.runtime.challengeLevelId >> 4);
+    } else {
+        ctx->cursor_x = 0;
+        ctx->cursor_y = 2;
+    }
     ctx->current_level_id = (ctx->cursor_y * 16) + ctx->cursor_x;
     ctx->needsRedraw = TRUE;
     ctx->holdDir = 0;
@@ -412,7 +432,7 @@ void challenge_init_draw(void) {
     VDP_setTextPalette(PAL2);
     VDP_drawText("--- CHALLENGE ---", 12, 2);
     VDP_setTextPalette(PAL3);
-    VDP_drawText("A: CLEAR  C: SAVE+BACK", 6, 27);
+    VDP_drawText("START: PLAY  C: SAVE+BACK", 5, 27);
     ctx->needsRedraw = TRUE;
 }
 
@@ -503,7 +523,7 @@ void challenge_draw(void) {
         VDP_setTextPalette(PAL3);
         sprintf(info, "%03d: %s", display_number, level_name);
         VDP_drawText(info, 2, 24);
-        VDP_drawText("A: CLEAR  C: SAVE+BACK", 6, 27);
+        VDP_drawText("START: PLAY  C: SAVE+BACK", 5, 27);
     }
 
     ctx->needsRedraw = FALSE;
@@ -526,7 +546,7 @@ void challenge_update(void) {
     bool goRight = (joyState & BUTTON_RIGHT) && !(lastJoyState & BUTTON_RIGHT);
     bool goUp = (joyState & BUTTON_UP) && !(lastJoyState & BUTTON_UP);
     bool goDown = (joyState & BUTTON_DOWN) && !(lastJoyState & BUTTON_DOWN);
-    bool pressedA = (joyState & BUTTON_A) && !(lastJoyState & BUTTON_A);
+    bool pressedStart = (joyState & BUTTON_START) && !(lastJoyState & BUTTON_START);
     bool pressedC = (joyState & BUTTON_C) && !(lastJoyState & BUTTON_C);
 
     (void)goLeft;
@@ -537,21 +557,18 @@ void challenge_update(void) {
     challenge_apply_dpad_repeat(holdLeft, holdRight, holdUp, holdDown,
                                 pressLeft, pressRight, pressUp, pressDown);
     
-    /* Handle A button */
-    if (pressedA) {
+    if (pressedStart) {
         u8 level_id = ctx->current_level_id;
-        
+
         if (!challenge_is_unlocked(level_id)) {
             SOUND_play(SND_ALERT);
         } else {
-            if (!challenge_is_cleared(level_id)) {
-                challenge_mark_cleared(level_id);
-                challenge_rebuild_frontier();
-                ctx->needsRedraw = TRUE;
-                SOUND_play(SND_LINE_CLEAR);
-            } else {
-                SOUND_play(SND_MOVE);
-            }
+            config.runtime.gameMode = GAME_MODE_CHALLENGE;
+            config.runtime.challengeLevelId = level_id;
+            config.runtime.challengeResult = CHALLENGE_RESULT_NONE;
+            game_conditions_set_challenge_training();
+            SOUND_play(SND_MENU_SELECT);
+            currentState = STATE_GAME;
         }
     }
 

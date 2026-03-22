@@ -9,6 +9,7 @@
 #define NEXT_Y        6  
 #define HOLD_Y       10 
 #include "states/states.h"
+#include "states/game/game_conditions.h"
 #define UI_X_NEXT 26  // Spalte für Next-Fenster
 #define UI_Y_NEXT 4   // Zeile für Next-Fenster
 #define UI_X_HOLD 26  // Spalte für Hold-Fenster

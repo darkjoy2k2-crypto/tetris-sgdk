@@ -15,6 +15,7 @@ u16 BG_TILE_START;
 u16 GAME_TILE_START;
 static u16 SKULL_TILE_IDX;
 static u16 HEART_TILE_IDX;
+static u16 stageClearBlinkTick;
 
 
 
@@ -167,14 +168,14 @@ void view_update_ui(GameContext* ctx) {
     }
 
     bool hideNext = (ctx->activeBadEffect == EFFECT_HIDE_NEXT);
-if (GET_FLAG(config.flags, FLAG_NEXT)) {
+if (gc_has_rule(GC_RULE_SHOW_NEXT)) {
     if (hideNext) drawPreview(-1, UI_X, NEXT_Y);
     else drawPreview(ctx->nextType, UI_X, NEXT_Y);
 
     ctx->lastNextType = ctx->nextType;
 }
 
-if (GET_FLAG(config.flags, FLAG_HOLD) && ctx->holdType != ctx->lastHoldType) {
+if (gc_has_rule(GC_RULE_ALLOW_HOLD) && ctx->holdType != ctx->lastHoldType) {
             drawPreview(ctx->holdType, UI_X, HOLD_Y);
         ctx->lastHoldType = ctx->holdType;
     }
@@ -219,8 +220,21 @@ u16 sec = (ctx->badEffectTimer + (GET_TICKS(60) - 1)) / GET_TICKS(60);
         ctx->lastActiveBadEffect = ctx->activeBadEffect;
         ctx->lastBadEffectTimer = ctx->badEffectTimer;
     }
-    if (GET_FLAG(config.flags, FLAG_DEBUG)) 
+    if (gc_has_rule(GC_RULE_DEBUG_UI)) 
         view_draw_debug_memory();
+
+    if (config.runtime.gameMode == GAME_MODE_CHALLENGE && gameConditions.success) {
+        stageClearBlinkTick++;
+        if (((stageClearBlinkTick >> 4) & 1) != 0) {
+            VDP_setTextPalette(PAL1);
+            VDP_drawTextBG(VDP_BG_A, "STAGE CLEAR", 29, 26);
+        } else {
+            VDP_drawTextBG(VDP_BG_A, "           ", 29, 26);
+        }
+    } else {
+        stageClearBlinkTick = 0;
+        VDP_drawTextBG(VDP_BG_A, "           ", 29, 26);
+    }
 
 }
 
@@ -231,7 +245,7 @@ void drawBoard() {
 
     u16 rowData[10];
     s16 pX[4], pY[4], sX[4], sY[4];
-    bool hasShadow = GET_FLAG(config.flags, FLAG_SHADOW) && ctx->clearTimer == 0;
+    bool hasShadow = gc_has_rule(GC_RULE_ALLOW_SHADOW) && ctx->clearTimer == 0;
 
     // 1. Positionen des aktiven Steins und Schattens vorab berechnen (spart Zeit im Loop)
     for (u16 i = 0; i < 4; i++) {

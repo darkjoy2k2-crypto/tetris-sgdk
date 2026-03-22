@@ -28,7 +28,7 @@ bool controls_update(GameContext *gctx) {
         vBtnHardDrop = BUTTON_RIGHT;
     }
 
-    // --- 2. BEWEGUNG (DAS - Nutzt config.thresholdLRInitial + config.thresholdLRRepeat) ---
+    // --- 2. BEWEGUNG (DAS - über gameConditions) ---
     u16 currentDir = (joyState & vBtnLeft) ? vBtnLeft : ((joyState & vBtnRight) ? vBtnRight : 0);
     
     if (currentDir != 0) {
@@ -41,7 +41,7 @@ bool controls_update(GameContext *gctx) {
             }
             ctx->dasTimer = 0;
             ctx->dasDir = currentDir;
-            ctx->dasNextThreshold = config.thresholdLRInitial;
+            ctx->dasNextThreshold = gameConditions.thresholdLRInitial;
         } else if (ctx->dasDir == currentDir) {
             ctx->dasTimer++;
             if (ctx->dasTimer >= ctx->dasNextThreshold) {
@@ -52,13 +52,13 @@ bool controls_update(GameContext *gctx) {
                     SOUND_play(SND_MOVE);
                 }
                 ctx->dasTimer = 0;
-                ctx->dasNextThreshold = config.thresholdLRRepeat;
+                ctx->dasNextThreshold = gameConditions.thresholdLRRepeat;
             }
         }
     } else {
         ctx->dasTimer = 0;
         ctx->dasDir = 0;
-        ctx->dasNextThreshold = config.thresholdLRInitial;
+        ctx->dasNextThreshold = gameConditions.thresholdLRInitial;
     }
 
     // --- 3. ROTATION (Wall-Kicks) ---
@@ -85,7 +85,7 @@ bool controls_update(GameContext *gctx) {
     }
 
     // --- 4. HOLD ---
-    if (GET_FLAG(config.flags, FLAG_HOLD) && (changed & BUTTON_C)) {
+    if (gc_has_rule(GC_RULE_ALLOW_HOLD) && (changed & BUTTON_C)) {
         if (ctx->activeBadEffect != EFFECT_HOLD_LOCK) {
             performHold();
             moved = true; 

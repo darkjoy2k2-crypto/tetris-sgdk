@@ -10,13 +10,68 @@
 #include "sound_manager.h"
 #include "states/states.h"
 #include "states/game/game_core.h"
+#include "states/game/game_conditions.h"
 #include "states/game/game_logic.h"
 #include "states/game/game_view.h"
 #include "states/game/game_controls.h"
 
 GameContext* ctx = NULL;
+GameConditions gameConditions;
 
 const u16 GARBAGE_INTERVALS[] = {0, 1200, 1000, 850, 700, 580, 460, 340, 240, 120};
+
+static void game_conditions_reset_goals(void)
+{
+    gameConditions.goalFlags = 0;
+    gameConditions.goalScore = 0;
+    gameConditions.goalLines = 0;
+    gameConditions.goalHearts = 0;
+    gameConditions.goalSkulls = 0;
+    gameConditions.goalTimeSec = 0;
+    gameConditions.goalSurviveLines = 0;
+    gameConditions.goalPieceLimit = 0;
+    gameConditions.success = FALSE;
+}
+
+void game_conditions_set_from_select(const SelectContext *selectCtx)
+{
+    if (selectCtx == NULL) return;
+
+    gameConditions.speedLevel = selectCtx->speedLevel;
+    gameConditions.garbageFreq = selectCtx->garbageFreq;
+    gameConditions.thresholdLRInitial = config.thresholdLRInitial;
+    gameConditions.thresholdLRRepeat = config.thresholdLRRepeat;
+    gameConditions.thresholdSD = config.thresholdSD;
+    gameConditions.ruleFlags = 0;
+
+    if (GET_FLAG(selectCtx->flags, FLAG_SHADOW)) gameConditions.ruleFlags |= GC_RULE_ALLOW_SHADOW;
+    if (GET_FLAG(selectCtx->flags, FLAG_HOLD)) gameConditions.ruleFlags |= GC_RULE_ALLOW_HOLD;
+    if (GET_FLAG(selectCtx->flags, FLAG_NEXT)) gameConditions.ruleFlags |= GC_RULE_SHOW_NEXT;
+    if (GET_FLAG(selectCtx->flags, FLAG_DEBUG)) gameConditions.ruleFlags |= GC_RULE_DEBUG_UI;
+    if (selectCtx->randMode != 0) gameConditions.ruleFlags |= GC_RULE_RANDOM_CHAOS;
+
+    if (selectCtx->itemMode != 0) {
+        gameConditions.ruleFlags |= GC_RULE_ITEMS_ENABLED;
+        if (selectCtx->itemMode == 2) gameConditions.ruleFlags |= GC_RULE_ITEMS_GOOD_ONLY;
+        if (selectCtx->itemMode == 3) gameConditions.ruleFlags |= GC_RULE_ITEMS_BAD_ONLY;
+    }
+
+    game_conditions_reset_goals();
+}
+
+void game_conditions_set_challenge_training(void)
+{
+    gameConditions.speedLevel = 1;
+    gameConditions.garbageFreq = 0;
+    gameConditions.thresholdLRInitial = config.thresholdLRInitial;
+    gameConditions.thresholdLRRepeat = config.thresholdLRRepeat;
+    gameConditions.thresholdSD = config.thresholdSD;
+    gameConditions.ruleFlags = GC_RULE_ALLOW_SHADOW | GC_RULE_ALLOW_HOLD | GC_RULE_SHOW_NEXT;
+
+    game_conditions_reset_goals();
+    gameConditions.goalFlags = GC_GOAL_SCORE;
+    gameConditions.goalScore = 1000;
+}
 
 // Ganz am Ende von game_logic.c einfügen:
 
@@ -27,7 +82,7 @@ static bool handle_gravity(GameContext *gctx)
     bool moved = false;
     ctx->moveTimer++;
 
-    u16 speedSetting = (config.speedLevel > SPEED_LEVEL_MAX) ? SPEED_LEVEL_MAX : config.speedLevel;
+    u16 speedSetting = (gameConditions.speedLevel > SPEED_LEVEL_MAX) ? SPEED_LEVEL_MAX : gameConditions.speedLevel;
     u16 levelOffset = ((ctx->level - 1) << 1) + (ctx->level - 1);
     s16 threshold = GET_TICKS(60 - levelOffset);
 
@@ -58,7 +113,7 @@ static bool handle_gravity(GameContext *gctx)
     u16 finalThreshold = threshold;
     
     if (joyState & vBtnSoftDrop) {
-        finalThreshold = config.thresholdSD;
+        finalThreshold = gameConditions.thresholdSD;
     } else if (ctx->activeBadEffect == EFFECT_FREEZE) {
         finalThreshold = 9999;
     }
@@ -106,7 +161,7 @@ static bool handle_environment(GameContext *gctx)
     bool blinkActive = (gctx->clearTimer > 0);
 
     // Garbage-Check: WENN (keine Marker) UND (kein Blink-Timer)
-    u16 garbageSetting = (config.garbageFreq > GARBAGE_FREQ_MAX) ? GARBAGE_FREQ_MAX : config.garbageFreq;
+    u16 garbageSetting = (gameConditions.garbageFreq > GARBAGE_FREQ_MAX) ? GARBAGE_FREQ_MAX : gameConditions.garbageFreq;
 
     if (garbageSetting > 0 && gctx->activeBadEffect != EFFECT_FREEZE && 
         !markersPresent && !blinkActive)
@@ -155,7 +210,7 @@ static bool handle_environment(GameContext *gctx)
                     // Clean up effect-specific state
                     switch(gctx->activeBadEffect) {
                         case EFFECT_HOLD_LOCK:
-                            if (GET_FLAG(config.flags, FLAG_HOLD)) gctx->flags |= GF_CAN_HOLD;
+                            if (gc_has_rule(GC_RULE_ALLOW_HOLD)) gctx->flags |= GF_CAN_HOLD;
                             gctx->holdType = gctx->lastHoldType;
                             KLog("ENVIRONMENT: HOLD_LOCK released.");
                             break;

@@ -18,6 +18,33 @@ static void handle_rainbow_row(u16 y);
 static void handle_shadow_row(u16 y);
 static void handle_sort_row(u16 y);
 
+static void route_session_end(bool challengeSuccess)
+{
+    config.currentScore = ctx->score;
+
+    if (config.runtime.gameMode == GAME_MODE_CHALLENGE) {
+        gameConditions.success = challengeSuccess;
+        config.runtime.challengeResult = challengeSuccess ? CHALLENGE_RESULT_SUCCESS : CHALLENGE_RESULT_FAIL;
+        currentState = STATE_CHALLENGE;
+        return;
+    }
+
+    check_and_update_highscore(config.currentScore);
+    currentState = STATE_GAMEOVER;
+}
+
+static void update_challenge_goal_progress(void)
+{
+    if (config.runtime.gameMode != GAME_MODE_CHALLENGE) return;
+
+    if ((gameConditions.goalFlags & GC_GOAL_SCORE) &&
+        !gameConditions.success &&
+        (ctx->score >= gameConditions.goalScore)) {
+        gameConditions.success = TRUE;
+        SOUND_play(SND_TETRIS);
+    }
+}
+
 // Hier das PIECES Array einfügen (wie gehabt)
 const s8 PIECES[7][4][4][2] = {
     // ... deine 7 Pieces ...
@@ -189,15 +216,16 @@ static void trigger_multiclear() {
 }
 
 static void handle_item_spawn_logic() {
-    if (config.itemMode == 0) {
+    u16 itemMode = gc_item_mode();
+    if (itemMode == 0) {
         ctx->itemSlot = -1;
         ctx->itemType = ITEM_ID_NONE;
         return;
     }
     if (ctx->itemSpawnCounter <= 0) {
         ctx->itemSlot = random() % 4;
-        if (config.itemMode == 1) ctx->itemType = (random() % 100 < ITEM_RATIO_HEART) ? ITEM_ID_HEART : ITEM_ID_SKULL;
-        else ctx->itemType = (config.itemMode == 2) ? ITEM_ID_HEART : ITEM_ID_SKULL;
+        if (itemMode == 1) ctx->itemType = (random() % 100 < ITEM_RATIO_HEART) ? ITEM_ID_HEART : ITEM_ID_SKULL;
+        else ctx->itemType = (itemMode == 2) ? ITEM_ID_HEART : ITEM_ID_SKULL;
         ctx->itemSpawnCounter = (random() % 2) + 1;
     } else {
         ctx->itemSlot = -1;
@@ -240,6 +268,8 @@ static void apply_scoring(u16 lines) {
     } else {
         menu_bg_set_intensity((ctx->linesTotal % 10) + 1);
     }
+
+    update_challenge_goal_progress();
 }
 
 
@@ -489,7 +519,7 @@ bool tryRotate(u16 newRotation) {
             ctx->rotation = newRotation;
             
             // Wenn der Schatten aktiv ist, müssen wir ihn neu berechnen
-            if (GET_FLAG(config.flags, FLAG_SHADOW)) calculate_ghost_y();
+            if (gc_has_rule(GC_RULE_ALLOW_SHADOW)) calculate_ghost_y();
 
 
             return true; // Rotation erfolgreich
@@ -607,12 +637,7 @@ void play_game_over_animation() {
         SYS_doVBlankProcess();
     }
     
-    config.currentScore = ctx->score;
-    
-    // Highscore berechnen UND im SRAM sichern (Wichtig!)
-    check_and_update_highscore(config.currentScore);
-    
-    currentState = STATE_GAMEOVER;
+    route_session_end((gameConditions.goalFlags & GC_GOAL_SCORE) && (ctx->score >= gameConditions.goalScore));
 }
 
 
@@ -667,7 +692,7 @@ void spawnPiece()
     ctx->type = ctx->nextType;
     KLog_U1("SPAWN_PIECE: Current type set to:", ctx->type);
 
-    if (config.randMode == 0) {
+    if (!gc_has_rule(GC_RULE_RANDOM_CHAOS)) {
         ctx->nextType = ctx->bag[ctx->bagIndex++];
         KLog_U1("SPAWN_PIECE: Bag Randomizer. Next:", ctx->nextType);
         if (ctx->bagIndex >= 7) 
@@ -712,7 +737,7 @@ void spawnPiece()
     KLog("SPAWN_PIECE: Triggering Item Spawn Logic");
     handle_item_spawn_logic();
 
-    if (GET_FLAG(config.flags, FLAG_SHADOW)) calculate_ghost_y();
+    if (gc_has_rule(GC_RULE_ALLOW_SHADOW)) calculate_ghost_y();
     ctx->boardFlags |= GF_NEEDS_DRAW;
 
     if (checkCollision(ctx->pieceX, ctx->pieceY, ctx->rotation))
@@ -894,14 +919,14 @@ void handle_board_collapse() {
 void update_shadows(bool moved, bool collapse, bool garbage) {
     // 6. shadow_update
     if (moved || collapse || garbage) {
-        if (GET_FLAG(config.flags, FLAG_SHADOW)) calculate_ghost_y();
+        if (gc_has_rule(GC_RULE_ALLOW_SHADOW)) calculate_ghost_y();
     }
 }
 
 
 void performHold() {
     // Prüft das Verhaltens-Bit GF_CAN_HOLD in ctx->flags
-    if (!GET_FLAG(config.flags, FLAG_HOLD)) return;
+    if (!gc_has_rule(GC_RULE_ALLOW_HOLD)) return;
 
     // Check for skull FIRST - penalty happens even if hold already used
     if (ctx->itemSlot < 4 && ctx->itemType == ITEM_ID_SKULL) { 
@@ -938,8 +963,9 @@ void performHold() {
         ctx->rotation = 0;
         
         // Generate new item for swapped piece
-        if (config.itemMode == 1) ctx->itemType = (random() % 100 < ITEM_RATIO_HEART) ? ITEM_ID_HEART : ITEM_ID_SKULL;
-        else ctx->itemType = (config.itemMode == 2) ? ITEM_ID_HEART : ITEM_ID_SKULL;
+        u16 itemMode = gc_item_mode();
+        if (itemMode == 1) ctx->itemType = (random() % 100 < ITEM_RATIO_HEART) ? ITEM_ID_HEART : ITEM_ID_SKULL;
+        else ctx->itemType = (itemMode == 2) ? ITEM_ID_HEART : ITEM_ID_SKULL;
         ctx->itemSlot = (ctx->itemType == 0) ? 255 : (random() % 4);
     }
 
@@ -984,7 +1010,7 @@ void addGarbageLine() {
     ctx->boardFlags = (ctx->boardFlags & ~0xFFFFFC00) | lineFlags;
 
     // 5. Update & Sound
-    if (GET_FLAG(config.flags, FLAG_SHADOW)) calculate_ghost_y();
+    if (gc_has_rule(GC_RULE_ALLOW_SHADOW)) calculate_ghost_y();
     
     SOUND_play(SND_GARBAGE);
     ctx->boardFlags |= GF_NEEDS_DRAW;
@@ -1039,7 +1065,7 @@ void reset_game_logic() {
     ctx->moveTimer = 0;
     ctx->holdType = -1;
     
-    if (GET_FLAG(config.flags, FLAG_HOLD)) ctx->flags |= GF_CAN_HOLD; 
+    if (gc_has_rule(GC_RULE_ALLOW_HOLD)) ctx->flags |= GF_CAN_HOLD; 
     else ctx->flags &= ~GF_CAN_HOLD;
 
     ctx->flags &= ~(GF_HEART_TRIG | GF_SKULL_TRIG);
@@ -1048,11 +1074,11 @@ void reset_game_logic() {
     // 4. DAS Timer Initialisierung
     ctx->dasTimer = 0;
     ctx->dasDir = 0;
-    ctx->dasNextThreshold = config.thresholdLRInitial;
+    ctx->dasNextThreshold = gameConditions.thresholdLRInitial;
 
     // 5. Garbage Timer Initialisierung
     ctx->garbageTimer = 0;
-    u16 garbageSetting = (config.garbageFreq > GARBAGE_FREQ_MAX) ? GARBAGE_FREQ_MAX : config.garbageFreq;
+    u16 garbageSetting = (gameConditions.garbageFreq > GARBAGE_FREQ_MAX) ? GARBAGE_FREQ_MAX : gameConditions.garbageFreq;
     if (garbageSetting > 0) {
         u16 base = GARBAGE_INTERVALS[garbageSetting];
         ctx->garbageNextThreshold = GET_TICKS(base + (random() % 120) - 60);
@@ -1209,11 +1235,10 @@ void update_board_animations() {
 
 void handle_game_over() {
     SOUND_play(SND_GAME_OVER);
-    finalize_game_session();
     view_animate_grayscale();
     
     for (u16 i = 0; i < 30; i++) SYS_doVBlankProcess();
     
     view_fade_out_frame();
-    currentState = STATE_GAMEOVER;
+    route_session_end((gameConditions.goalFlags & GC_GOAL_SCORE) && (ctx->score >= gameConditions.goalScore));
 }

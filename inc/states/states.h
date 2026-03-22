@@ -159,6 +159,13 @@ typedef enum SramOp{
     SRAM_SAVE
 } SramOp;
 
+#define GAME_MODE_FREEGAME        0
+#define GAME_MODE_CHALLENGE       1
+
+#define CHALLENGE_RESULT_NONE     0
+#define CHALLENGE_RESULT_SUCCESS  1
+#define CHALLENGE_RESULT_FAIL     2
+
 typedef struct __attribute__((packed)) HighscoreEntry {
     u32 score;      // 4
     char name[4];   // 4
@@ -187,8 +194,9 @@ typedef struct __attribute__((packed)) Serializable {
 // Runtime-only globals/config that must never be persisted to SRAM.
 // Add any future global gameplay/session fields here, not in Serializable.
 typedef struct RuntimeConfig {
-    u16 reserved0;
-    u16 reserved1;
+    u16 gameMode;
+    u16 challengeLevelId;
+    u16 challengeResult;
 } RuntimeConfig;
 
 typedef struct GlobalConfig {

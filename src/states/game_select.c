@@ -2,6 +2,7 @@
 #include <string.h>
 #include "states/game_select.h"
 #include "states/states.h"
+#include "states/game/game_conditions.h"
 #include "sound_manager.h"
 #include "menu_bg.h"
 #include "fonts.h"
@@ -146,9 +147,10 @@ void select_update() {
         bool nameChanged = (strcmp(config.playerName, ctx->name) != 0);        // Vergleich Flags (PAL-Flag ignorieren)
         // Vergleich Rest
         bool settingsChanged = (config.randMode != ctx->randMode) || 
-                               (config.speedLevel != ctx->speedLevel) || 
-                               (config.garbageFreq != ctx->garbageFreq) || 
-                               (config.itemMode != ctx->itemMode);
+                       (config.speedLevel != ctx->speedLevel) || 
+                       (config.garbageFreq != ctx->garbageFreq) || 
+                       (config.itemMode != ctx->itemMode) ||
+                       (config.flags != ctx->flags);
 
         bool needsSave = (nameChanged || settingsChanged);
 
@@ -159,6 +161,14 @@ void select_update() {
         config.speedLevel  = ctx->speedLevel;
         config.garbageFreq = ctx->garbageFreq;
         config.itemMode    = ctx->itemMode;
+        config.flags       = ctx->flags;
+        config.runtime.gameMode = GAME_MODE_FREEGAME;
+        config.runtime.challengeLevelId = 255;
+        config.runtime.challengeResult = CHALLENGE_RESULT_NONE;
+
+        // Feed runtime gameplay conditions before switching state.
+        // This keeps STATE_GAME independent from config-copy logic.
+        game_conditions_set_from_select(ctx);
 
         if (needsSave) {
             KLog_U1("SELECT: Changes detected! Name:", nameChanged);

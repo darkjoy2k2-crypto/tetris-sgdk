@@ -88,11 +88,9 @@ int main(bool hardReset) {
 
     // Region Check
     if (IS_PAL_SYSTEM) {
-        SET_FLAG(config.flags, FLAG_IS_PAL);
         VDP_setScreenHeight240();
         KLog("Region: PAL System detected.");
     } else {
-        CLEAR_FLAG(config.flags, FLAG_IS_PAL);
         VDP_setScreenHeight224();
         KLog("Region: NTSC System detected.");
     }

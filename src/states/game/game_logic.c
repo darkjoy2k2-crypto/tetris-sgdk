@@ -707,44 +707,45 @@ bool handle_active_animations(GameContext* ctx) {
 }
 
 void finishLineClear() {
-    KLog("FINISH_LINE_CLEAR: Start");
+    GameContext *ctx = &sctx->game;
+
     for (s16 y = 19; y >= 0; y--) {
         if (GET_LINE_PENDING(y)) {
             KLog_U1("FINISH_LINE_CLEAR: Clearing line Y:", y);
             
+            // 1. Spielfeld-Daten schieben (Grafik/Logik)
             if (y > 0) {
                 for (s16 row = y; row > 0; row--) {
                     memcpy(&ctx->board[row * 10], &ctx->board[(row - 1) * 10], 10);
                 }
             }
+            // Oberste Zeile nullen
             memset(&ctx->board[0], 0, 10);
 
-            u32 currentBitPos = y + GF_PENDING_SHIFT;
-            u32 maskAbove = (1UL << currentBitPos) - 1;
-            
-            u32 pendingAbove = (ctx->boardFlags & maskAbove) & 0xFFFFFC00;
-            u32 pendingBelow = (ctx->boardFlags & ~((1UL << (currentBitPos + 1)) - 1)) & 0xFFFFFC00;
+            // 2. Flags synchronisieren (Der kritische Teil)
+            // Wir müssen alle Pending-Flags von 0 bis y-1 um eins nach unten schieben
+            for (s16 fY = y; fY > 0; fY--) {
+                if (GET_LINE_PENDING(fY - 1)) {
+                    SET_LINE_PENDING(fY);
+                } else {
+                    // WICHTIG: Flag löschen, wenn von oben nichts nachkommt
+                    ctx->boardFlags &= ~(1UL << (fY + GF_PENDING_SHIFT));
+                }
+            }
+            // Das Flag der obersten Zeile (0) nach dem Rutschen immer löschen
+            ctx->boardFlags &= ~(1UL << (0 + GF_PENDING_SHIFT));
 
-            ctx->boardFlags = (ctx->boardFlags & ~0xFFFFFC00) | pendingBelow | (pendingAbove << 1);
+            KLog_U2("FINISH_LINE_CLEAR: Row done. Y was:", y, "New Flags:", ctx->boardFlags);
 
-            KLog_U1("FINISH_LINE_CLEAR: BoardFlags synchronized. New status:", ctx->boardFlags);
-            
+            // 3. Re-Check an der gleichen Position
+            // Da jetzt die Zeile von oben auf Position y liegt, 
+            // erzwingen wir durch y++ (gefolgt vom y-- der Schleife) eine erneute Prüfung von y.
             y++; 
         }
     }
-
-    if (ctx->flags & GF_HEART_TRIG) {
-        KLog("FINISH_LINE_CLEAR: Heart Trigger detected.");
-        triggerGoodEffect();
-        ctx->flags &= ~GF_HEART_TRIG;
-    }
     
-    if (ctx->flags & GF_SKULL_TRIG) {
-        KLog("FINISH_LINE_CLEAR: Skull Trigger detected.");
-        triggerBadEffect();
-        ctx->flags &= ~GF_SKULL_TRIG;
-    }
-    KLog("FINISH_LINE_CLEAR: Finished");
+    // Optional: Sicherstellen, dass nach der Schleife alles sauber ist
+    // CLEAR_ALL_PENDING(); // Nur wenn du sicher bist, dass alle Animationen durch sind
 }
 
 

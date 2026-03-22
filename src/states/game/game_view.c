@@ -241,7 +241,7 @@ void drawBoard() {
     for (u16 y = 0; y < 20; y++) {
         u16 rowOffset = (y << 3) + (y << 1);
         bool isClearingRow = (ctx->clearTimer > 0 && GET_LINE_PENDING(y)); 
-        bool showFlash = isClearingRow && ((ctx->clearTimer >> (GET_FLAG(config.flags, FLAG_IS_PAL) ? 1 : 2)) & 1);
+        bool showFlash = isClearingRow && ((ctx->clearTimer >> (IS_PAL_SYSTEM ? 1 : 2)) & 1);
         bool rowDirty = false;
 
         for (u16 x = 0; x < 10; x++) {

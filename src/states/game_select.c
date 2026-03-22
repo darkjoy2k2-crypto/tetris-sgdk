@@ -143,14 +143,13 @@ void select_update() {
 
         // Vergleich Name
         bool nameChanged = (strcmp(config.playerName, ctx->name) != 0);        // Vergleich Flags (PAL-Flag ignorieren)
-        bool flagsChanged = ((config.flags & ~FLAG_IS_PAL) != (ctx->flags & ~FLAG_IS_PAL));
         // Vergleich Rest
         bool settingsChanged = (config.randMode != ctx->randMode) || 
                                (config.speedLevel != ctx->speedLevel) || 
                                (config.garbageFreq != ctx->garbageFreq) || 
                                (config.itemMode != ctx->itemMode);
 
-        bool needsSave = (nameChanged || flagsChanged || settingsChanged);
+        bool needsSave = (nameChanged || settingsChanged);
 
         // Werte übertragen
         strncpy(config.playerName, ctx->name, 3);
@@ -159,11 +158,9 @@ void select_update() {
         config.speedLevel  = ctx->speedLevel;
         config.garbageFreq = ctx->garbageFreq;
         config.itemMode    = ctx->itemMode;
-        config.flags = (ctx->flags & ~FLAG_IS_PAL) | (config.flags & FLAG_IS_PAL);
 
         if (needsSave) {
             KLog_U1("SELECT: Changes detected! Name:", nameChanged);
-            KLog_U1("SELECT: Flags:", flagsChanged);
             KLog_U1("SELECT: Logic:", settingsChanged);
             
             config.sramop = SRAM_SAVE;

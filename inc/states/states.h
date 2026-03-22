@@ -187,19 +187,17 @@ typedef struct GlobalConfig {
 #define FLAG_SHADOW      (1 << 0)
 #define FLAG_HOLD        (1 << 1)
 #define FLAG_NEXT        (1 << 2)
-#define FLAG_IS_PAL      (1 << 3)
-#define FLAG_SOUND       (1 << 4)
-#define FLAG_MUSIC       (1 << 5)
-#define FLAG_BG          (1 << 6)
-#define FLAG_DEBUG       (1 << 7)
+#define FLAG_SOUND       (1 << 3)
+#define FLAG_MUSIC       (1 << 4)
+#define FLAG_BG          (1 << 5)
+#define FLAG_DEBUG       (1 << 6)
 
 #define SET_FLAG(v, f)    ((v) |= (f))
 #define CLEAR_FLAG(v, f)  ((v) &= ~(f))
 #define TOGGLE_FLAG(v, f) ((v) ^= (f))
 #define GET_FLAG(v, f)    ((v) & (f))
 #define SCALE_TO_PAL(v)   (((v) * 5) / 6)
-#define GET_TICKS(v)      (GET_FLAG(config.flags, FLAG_IS_PAL) ? SCALE_TO_PAL(v) : (v))
-
+#define GET_TICKS(v)      (IS_PAL_SYSTEM ? SCALE_TO_PAL(v) : (v))
 // --- 6. EXTERNE VARIABLEN & PROTOTYPEN ---
 
 typedef struct StateHandler {

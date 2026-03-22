@@ -4,7 +4,7 @@
 #include <genesis.h>
 
 #define SAVE_MAGIC    0x54455452  // "TETR"
-#define SAVE_VERSION  0x00000003
+#define SAVE_VERSION  0x00000008
 
 #define ADDR_MAGIC       0x00
 #define ADDR_VERSION     0x04

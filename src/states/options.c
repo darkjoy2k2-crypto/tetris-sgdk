@@ -101,7 +101,6 @@ void options_update() {
                         ctx->thresholdLR = 10; 
                         ctx->thresholdSD = 2;
                         ctx->flags = (FLAG_SHADOW | FLAG_HOLD | FLAG_NEXT | FLAG_SOUND | FLAG_MUSIC | FLAG_BG);
-                        if (config.flags & FLAG_IS_PAL) ctx->flags |= FLAG_IS_PAL;
                         SOUND_play(SND_RESET);
                     }
                 } else { SOUND_play(SND_MOVE); }
@@ -126,7 +125,6 @@ void options_update() {
         KLog_U1("DEBUG_OPTIONS: ctx->thresholdSD = ", ctx->thresholdSD);
 
         // Übergabe an globale Config
-        config.flags = (ctx->flags & ~FLAG_IS_PAL) | (config.flags & FLAG_IS_PAL);
         config.thresholdLR = ctx->thresholdLR;
         config.thresholdSD = ctx->thresholdSD;
 
@@ -174,9 +172,8 @@ void options_draw() {
 
     VDP_setTextPalette(PAL3);
     VDP_drawText("SYSTEM:", 9, 21);
-    VDP_drawText(GET_FLAG(config.flags, FLAG_IS_PAL) ? "PAL " : "NTSC", 23, 21);
-
-    bool isResetRow = (ctx->cursor == 5);
+VDP_drawText(IS_PAL_SYSTEM ? "PAL" : "NTSC", 23, 21);
+bool isResetRow = (ctx->cursor == 5);
     VDP_setTextPalette(isResetRow ? PAL1 : PAL3);
     VDP_drawText(isResetRow ? ">" : " ", 7, 23);
     VDP_setTextPalette((isResetRow && ctx->subCursor == 0) ? PAL2 : PAL3);

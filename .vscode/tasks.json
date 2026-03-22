@@ -6,6 +6,7 @@
             "type": "shell",
             "dependsOrder": "sequence",
             "dependsOn": [
+                "bump save version",
                 "make debug",
                 "run gens debug"
             ],
@@ -36,6 +37,15 @@
                 "showReuseMessage": false,
                 "clear": true
             }
+        },
+        {
+            "label": "bump save version",
+            "type": "shell",
+            "command": "py",
+            "args": [
+                "${workspaceFolder}\\py\\bump_save_version.py"
+            ],
+            "group": "none"
         },
         {
             "label": "make debug",
@@ -96,28 +106,28 @@
         {
             "label": "Tile Check",
             "type": "shell",
-            "command": "python",
+            "command": "py",
             "args": ["${workspaceFolder}\\py\\tilecheck.py"],
             "group": "none"
         },
         {
             "label": "Transform_csv",
             "type": "shell",
-            "command": "python",
+            "command": "py",
             "args": ["${workspaceFolder}\\py\\transform\\transform.py"],
             "group": "none"
         },
         {
             "label": "smartfix",
             "type": "shell",
-            "command": "python",
+            "command": "py",
             "args": ["${workspaceFolder}\\py\\smartfix.py"],
             "group": "none"
         },
         {
-            "label": "python_Convert Colors",
+            "label": "py Colors",
             "type": "shell",
-            "command": "python",
+            "command": "py",
             "args": [
                 "${workspaceFolder}\\py\\colorconvert.py",
                 "${workspaceFolder}\\res"

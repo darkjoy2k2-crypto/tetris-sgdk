@@ -108,6 +108,7 @@ typedef struct GameContext {
     u16 flags;                  
     u8 board[200];           
     u8 clearingLineBackup[200]; // Speichert Originalblöcke während Clear-Animation
+    u32 clearingLineMask;       // Bitmask für Zeilen in der Blink-Animation (vor PENDING)
     u8 bag[7];
     u8 bagIndex;
     char lastComment[20];

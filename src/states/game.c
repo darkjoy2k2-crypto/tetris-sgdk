@@ -205,6 +205,9 @@ void game_update()
 
     // 1. Blink-Phase (Timer)
     if (ctx->clearTimer > 0) {
+        // Update blinking animation (show/hide blocks pattern)
+        update_blinking_animation();
+        
         ctx->clearTimer--;
         if (ctx->clearTimer == 0) {
             finishLineClear();

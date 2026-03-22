@@ -29,6 +29,7 @@ void spawnPiece();
 void lockPiece();
 u16 clearLines();
 void finishLineClear();
+void update_blinking_animation(); // Blink-Animation vor PENDING
 void refillBag();
 void performHold();
 void addGarbageLine();

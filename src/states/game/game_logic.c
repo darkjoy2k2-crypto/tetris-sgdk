@@ -410,6 +410,7 @@ bool tryRotate(u16 newRotation) {
 u16 clearLines() {
     KLog("CLEAR_LINES: Start");
     u16 linesCleared = 0;
+    ctx->clearingLineMask = 0; // Reset blink mask
 
     for (u16 y = 0; y < 20; y++) {
         bool full = true;
@@ -437,43 +438,34 @@ u16 clearLines() {
                 ctx->clearingLineBackup[rowOffset + x] = ctx->board[rowOffset + x];
             }
 
-            // Bestimme Effekt basierend auf Items
-            u8 itemEffect;
+            // Markiere diese Zeile in der Blink-Maske (2 Sekunden Animation)
+            ctx->clearingLineMask |= (1U << y);
+
+            // Bestimme Effekt basierend auf Items (für später)
             if (h == 0 && s == 0) {
-                itemEffect = TILE_ID_FLASH;  // 11 - Normal
                 KLog("CLEAR_LINES: Regular line detected.");
             }
             else if (h > s) { 
-                itemEffect = ITEM_ID_HEART;  // 11 - Herz
                 ctx->flags |= GF_HEART_TRIG; 
                 KLog_U2("CLEAR_LINES: Heart dominance. Count:", h, "Flags:", ctx->flags);
             }   
             else if (s > h) { 
-                itemEffect = ITEM_ID_SKULL;  // 10 - Schädel
                 ctx->flags |= GF_SKULL_TRIG; 
                 KLog_U2("CLEAR_LINES: Skull dominance. Count:", s, "Flags:", ctx->flags);
             }   
             else {
-                itemEffect = TILE_ID_FLASH;  // 11 - Balanced
-                KLog("CLEAR_LINES: Balanced items. Flash effect.");
+                KLog("CLEAR_LINES: Balanced items.");
             }
 
-            // Speichere auch den Effekt-Typ für später
-            // (Verwende am Ende der clearingLineBackup einen speziellen Wert)
-            ctx->clearingLineBackup[rowOffset] |= (itemEffect << 4);
-
-            // Leere die Zeile im Board für die Rendering-Phase
-            for (u16 x = 0; x < 10; x++) {
-                ctx->board[rowOffset + x] = 0;
-            }
+            // WICHTIG: Board NICHT ändern während Blink-Animation!
+            // Blocks bleiben sichtbar damit sie zweimal blinken
         }
     }
 
     if (linesCleared > 0) {
         KLog_U2("CLEAR_LINES: Lines cleared:", linesCleared, "Combo:", ctx->comboCount + 1);
-        // Scoring verschoben nach finishLineClear
-        // Timer für genau 2 Blinker = ~12 Frames (3 on + 3 off + 3 on + 3 off)
-        ctx->clearTimer = GET_TICKS(12); 
+        // Timer für Blink-Animation: 2x blinken = ~20 Frames
+        ctx->clearTimer = GET_TICKS(20); 
         
         ctx->boardFlags |= GF_NEEDS_DRAW;
     } else {
@@ -635,6 +627,45 @@ void spawnPiece()
     KLog("SPAWN_PIECE: Finished");
 }
 
+// Verwaltet die Blink-Animation vor PENDING
+void update_blinking_animation() {
+    if (ctx->clearTimer == 0 || ctx->clearingLineMask == 0) return;
+
+    // Blink-pattern mit 20 Frames:
+    // Frames 20-15: Show blocks (normal)
+    // Frames 14-10: Hide blocks (empty)
+    // Frames 9-5: Show blocks (normal)
+    // Frames 4-1: Hide blocks (empty)
+    
+    bool shouldShowBlocks;
+    if (ctx->clearTimer > 10) {
+        // Frames 20-11: First blink cycle
+        shouldShowBlocks = (ctx->clearTimer > 15); // Show in 20-16, hide in 15-11
+    } else {
+        // Frames 10-1: Second blink cycle
+        shouldShowBlocks = (ctx->clearTimer > 5); // Show in 10-6, hide in 5-1
+    }
+
+    // Wende Show/Hide auf alle markierten Zeilen an
+    for (u16 y = 0; y < 20; y++) {
+        if (ctx->clearingLineMask & (1U << y)) {
+            u16 rowOffset = (y << 3) + (y << 1);
+            
+            if (shouldShowBlocks) {
+                // Zeige die Original-Blöcke aus clearingLineBackup
+                for (u16 x = 0; x < 10; x++) {
+                    ctx->board[rowOffset + x] = ctx->clearingLineBackup[rowOffset + x];
+                }
+            } else {
+                // Verstecke die Blöcke (setze auf 0)
+                for (u16 x = 0; x < 10; x++) {
+                    ctx->board[rowOffset + x] = 0;
+                }
+            }
+        }
+    }
+}
+
 
 // handle_active_animations entfernt, Logic nun direkt in game_update
 
@@ -642,17 +673,12 @@ void finishLineClear() {
     GameContext *ctx = &sctx->game;
     u16 linesFound = 0;
 
-    // 1. Scoring, Combo, B2B berechnen (Erneuter Scan notwendig)
+    // Verarbeite alle Zeilen die in der clearingLineMask markiert sind
     for (u16 y = 0; y < 20; y++) {
-        bool full = true;
-        u16 rowOffset = (y << 3) + (y << 1);
-        for (u16 x = 0; x < 10; x++) {
-            if (ctx->board[rowOffset + x] == 0) { 
-                full = false; break; 
-            }
-        }
-        if (full) {
+        if (ctx->clearingLineMask & (1U << y)) {
             linesFound++;
+            u16 rowOffset = (y << 3) + (y << 1);
+            
             // Setze PENDING_FLAGS für die betroffenen Zeilen
             SET_LINE_PENDING(y);
             
@@ -670,6 +696,9 @@ void finishLineClear() {
     } else {
         ctx->comboCount = 0;
     }
+
+    // Reset die Blink-Maske
+    ctx->clearingLineMask = 0;
 
     KLog_U1("FINISH_LINE_CLEAR: Processed lines:", linesFound);
 }
@@ -852,6 +881,7 @@ void reset_game_logic() {
     ctx->badEffectTimer = 0;
     ctx->sortingRow = -1;
     ctx->clearTimer = 0;
+    ctx->clearingLineMask = 0;  // Reset blink animation mask
     ctx->moveTimer = 0;
     ctx->holdType = -1;
     

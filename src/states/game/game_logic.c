@@ -117,6 +117,77 @@ void refillBag() {
     ctx->bagIndex = 0;
 }
 
+static void trigger_multiclear() {
+    // CLEARLINE+: Randomly clear 1-4 non-full lines with animation
+    KLog("TRIGGER_MULTICLEAR: Start");
+    
+    u16 nonFullLines[20];
+    u16 nonFullCount = 0;
+    
+    // Find all non-full lines
+    for (u16 y = 0; y < 20; y++) {
+        bool full = false;
+        u16 rowOffset = (y << 3) + (y << 1);
+        
+        for (u16 x = 0; x < 10; x++) {
+            if (ctx->board[rowOffset + x] == 0) {
+                full = false;
+                break;
+            }
+            full = true;
+        }
+        
+        if (!full) {
+            nonFullLines[nonFullCount++] = y;
+        }
+    }
+    
+    if (nonFullCount == 0) {
+        KLog("TRIGGER_MULTICLEAR: No non-full lines available");
+        // One-shot effect fallback: release slot immediately on no-op.
+        if (ctx->activeBadEffect == EFFECT_MULTIPLIER) {
+            ctx->activeBadEffect = EFFECT_NONE;
+            ctx->badEffectTimer = 0;
+            ctx->lastActiveBadEffect = 99;
+        }
+        return;
+    }
+    
+    // Randomly select 1-4 lines
+    u16 linesToClear = (random() % 4) + 1;  // 1 to 4
+    if (linesToClear > nonFullCount) linesToClear = nonFullCount;
+    
+    KLog_U1("TRIGGER_MULTICLEAR: Selected lines:", linesToClear);
+    
+    // Backup and mark selected lines for clearing
+    ctx->clearingLineMask = 0;
+    for (u16 i = 0; i < linesToClear; i++) {
+        u16 randomIdx = random() % nonFullCount;
+        u16 y = nonFullLines[randomIdx];
+        u16 rowOffset = (y << 3) + (y << 1);
+        
+        // Backup blocks
+        for (u16 x = 0; x < 10; x++) {
+            ctx->clearingLineBackup[rowOffset + x] = ctx->board[rowOffset + x];
+        }
+        
+        // Mark for clearing
+        ctx->clearingLineMask |= (1U << y);
+        KLog_U1("TRIGGER_MULTICLEAR: Line marked:", y);
+        
+        // Remove this line from pool
+        nonFullLines[randomIdx] = nonFullLines[nonFullCount - 1];
+        nonFullCount--;
+    }
+    
+    // Start blink animation
+    ctx->clearTimer = GET_TICKS(20);
+    SOUND_play(52);
+    ctx->boardFlags |= GF_NEEDS_DRAW;
+    
+    KLog("TRIGGER_MULTICLEAR: Animation started");
+}
+
 static void handle_item_spawn_logic() {
     if (config.itemMode == 0) {
         ctx->itemSlot = -1;
@@ -127,7 +198,7 @@ static void handle_item_spawn_logic() {
         ctx->itemSlot = random() % 4;
         if (config.itemMode == 1) ctx->itemType = (random() % 100 < ITEM_RATIO_HEART) ? ITEM_ID_HEART : ITEM_ID_SKULL;
         else ctx->itemType = (config.itemMode == 2) ? ITEM_ID_HEART : ITEM_ID_SKULL;
-        ctx->itemSpawnCounter = (random() % 3) + 2;
+        ctx->itemSpawnCounter = (random() % 2) + 1;
     } else {
         ctx->itemSlot = -1;
         ctx->itemType = ITEM_ID_NONE;
@@ -186,57 +257,53 @@ void triggerGoodEffect() {
         return;
     }
 
-    KLog_U1("TRIGGER_GOOD_EFFECT: Clearing previous effects. Last was:", ctx->activeBadEffect);
-    ctx->activeBadEffect = EFFECT_NONE;
-    ctx->badEffectTimer = 0;
-    ctx->lastActiveBadEffect = 99;
+    // Single-slot effect system: do not overwrite an already active effect.
+    if (ctx->activeBadEffect != EFFECT_NONE) {
+        KLog_U1("TRIGGER_GOOD_EFFECT: Skipped, effect already active:", ctx->activeBadEffect);
+        return;
+    }
 
-    u16 chance = random() % 6;
-    KLog_U1("TRIGGER_GOOD_EFFECT: Roll for effect:", chance);
+    u16 roll = random() % 5;  // 5 good effects
+    KLog_U1("TRIGGER_GOOD_EFFECT: Roll for effect (0-4):", roll);
     
-    if (chance == 0) {
-        KLog("TRIGGER_GOOD_EFFECT: Outcome - HEAL & CLEAR (Shift Down)");
-        for (s16 row = 19; row > 0; row--) {
-            memcpy(&ctx->board[row * 10], &ctx->board[(row - 1) * 10], 10);
-        }
-        memset(&ctx->board[0], 0, 10);
-        set_game_comment("HEAL & CLEAR!", 90);
-    } 
-    else if (chance == 1) { 
-        KLog("TRIGGER_GOOD_EFFECT: Outcome - HEAL & SORT triggered");
-        ctx->sortingRow = 0; 
-        set_game_comment("HEAL & SORT!", 90); 
-    }
-    else if (chance == 2) {
-        KLog("TRIGGER_GOOD_EFFECT: Outcome - SKULLS RECLAIMED");
-        for (u16 i = 0; i < 200; i++) {
-            if (ctx->board[i] == ITEM_ID_SKULL) {
-                ctx->board[i] = 1 + (random() % 7);
-            }
-        }
-        set_game_comment("SKULLS RECLAIMED!", 90);
-    }
-    else if (chance == 3) { 
-        KLog_U1("TRIGGER_GOOD_EFFECT: Outcome - I-BEAM RAIN. Spawns:", DUR_I_RAIN_SPAWNS);
+    if (roll == 0) {
+        // I-RAIN: Spawn 5 I-pieces from top
+        KLog("TRIGGER_GOOD_EFFECT: I-RAIN - 5 pieces");
         ctx->activeBadEffect = EFFECT_I_RAIN; 
         ctx->badEffectTimer = DUR_I_RAIN_SPAWNS; 
-        set_game_comment("I-BEAM RAIN!", 90); 
+        set_game_comment("I-RAIN!", 90); 
     }
-    else if (chance == 4) { 
-        KLog_U1("TRIGGER_GOOD_EFFECT: Outcome - TIME FREEZE. Ticks:", DUR_FREEZE_TICKS);
-        ctx->activeBadEffect = EFFECT_FREEZE; 
-        ctx->badEffectTimer = DUR_FREEZE_TICKS; 
-        set_game_comment("TIME FREEZE!", 90); 
+    else if (roll == 1) { 
+        // SORT BOARD: Sort lines by hole density
+        KLog("TRIGGER_GOOD_EFFECT: SORT BOARD - Reorganizing lines");
+        triggerManualSort();
+        set_game_comment("SORTED!", 90); 
     }
-    else { 
-        KLog("TRIGGER_GOOD_EFFECT: Outcome - RAINBOW POWER");
+    else if (roll == 2) {
+        // RAINBOW: Colorize all board blocks with rainbow colors
+        KLog("TRIGGER_GOOD_EFFECT: RAINBOW - Board colors rainbow");
         ctx->activeBadEffect = EFFECT_RAINBOW; 
         ctx->badEffectTimer = 0; 
-        ctx->sortingRow = 0; 
-        set_game_comment("RAINBOW POWER!", 90); 
+        ctx->sortingRow = 0;
+        set_game_comment("RAINBOW!", 90); 
+    }
+    else if (roll == 3) { 
+        // FREEZE: No gravity for 5 seconds
+        KLog_U1("TRIGGER_GOOD_EFFECT: FREEZE - Ticks:", DUR_FREEZE_TICKS);
+        ctx->activeBadEffect = EFFECT_FREEZE; 
+        ctx->badEffectTimer = DUR_FREEZE_TICKS; 
+        set_game_comment("FROZEN!", 90); 
+    }
+    else { 
+        // CLEARLINE+: Clear 1-4 random lines with animation
+        KLog("TRIGGER_GOOD_EFFECT: CLEARLINE+ - Clear up to 4 random lines");
+        ctx->activeBadEffect = EFFECT_MULTIPLIER;  // Use multiplier effect code
+        ctx->badEffectTimer = 1;  // Trigger immediate clear
+        set_game_comment("CLEARED!", 90);
+        trigger_multiclear();  // Execute the clear
     }
 
-    KLog("TRIGGER_GOOD_EFFECT: Cleaning up Heart-Items from board");
+    // Clean up Heart-Items from board
     for (u16 i = 0; i < 200; i++) {
         if (ctx->board[i] == ITEM_ID_HEART) {
             ctx->board[i] = 1 + (random() % 7);
@@ -257,66 +324,87 @@ void triggerBadEffect() {
         return;
     }
 
-    u16 roll = (random() % 7) + 1; 
-    ctx->activeBadEffect = (roll <= 6) ? roll : EFFECT_SHADOW_BOARD;
-    
-    KLog_U1("TRIGGER_BAD_EFFECT: Roll result:", roll);
-    KLog_U1("TRIGGER_BAD_EFFECT: Effect assigned:", ctx->activeBadEffect);
+    // Single-slot debuff system: do not overwrite an already active bad effect.
+    if (ctx->activeBadEffect != EFFECT_NONE) {
+        KLog_U1("TRIGGER_BAD_EFFECT: Skipped, effect already active:", ctx->activeBadEffect);
+        return;
+    }
 
-    switch(ctx->activeBadEffect) {
-        case EFFECT_FULLSPEED:
-            KLog("TRIGGER_BAD_EFFECT: Case EFFECT_FULLSPEED - Alert time started");
-            ctx->badEffectTimer = 120; 
-            ctx->activeBadEffect = EFFECT_FULLSPEED;
-            break;
+    u16 roll = random() % 7;  // 7 bad effects
+    bool playGenericBadSound = true;
+    KLog_U1("TRIGGER_BAD_EFFECT: Roll for effect (0-6):", roll);
 
-        case EFFECT_SAME_TILES: 
-            ctx->badEffectTimer = DUR_SAME_TILES_SPAWNS;
-            ctx->forcedPieceType = random() % 7; 
-            KLog_U2("TRIGGER_BAD_EFFECT: Case EFFECT_SAME_TILES - Type:", ctx->forcedPieceType, "Spawns:", ctx->badEffectTimer);
-            set_game_comment("SPEED / SAME!", 90); 
-            break;
-
-        case EFFECT_NO_ROTATE:  
+    switch(roll) {
+        case 0:
+            // NOROTATION: Can't rotate for 5 seconds
+            ctx->activeBadEffect = EFFECT_NO_ROTATE;
             ctx->badEffectTimer = DUR_NO_ROTATE_TICKS;
-            KLog_U1("TRIGGER_BAD_EFFECT: Case EFFECT_NO_ROTATE - Ticks:", ctx->badEffectTimer);
+            KLog_U1("TRIGGER_BAD_EFFECT: NOROTATION - Ticks:", ctx->badEffectTimer);
             set_game_comment("NO ROTATE!", 90); 
             break;
 
-        case EFFECT_REVERSED:   
+        case 1:
+            // CONFUSION: Reversed controls for 5 seconds
+            ctx->activeBadEffect = EFFECT_REVERSED;
             ctx->badEffectTimer = DUR_REVERSED_TICKS;
-            KLog_U1("TRIGGER_BAD_EFFECT: Case EFFECT_REVERSED - Ticks:", ctx->badEffectTimer);
-            set_game_comment("REVERSED!", 90); 
+            KLog_U1("TRIGGER_BAD_EFFECT: CONFUSION - Ticks:", ctx->badEffectTimer);
+            set_game_comment("CONFUSED!", 90); 
             break;
 
-        case EFFECT_HOLD_LOCK:
+        case 2:
+            // HIGHSPEED: Pieces fall fast for 5 spawns
+            ctx->activeBadEffect = EFFECT_FULLSPEED;
+            ctx->badEffectTimer = GET_TICKS(120) + DUR_FULLSPEED_SPAWNS;
+            playGenericBadSound = false;
+            KLog_U1("TRIGGER_BAD_EFFECT: HIGHSPEED - Warning+Spawns:", ctx->badEffectTimer);
+            set_game_comment("FAST!", 90); 
+            break;
+
+        case 3:
+            // SAMETILE: Forced same piece type for 5 spawns
+            ctx->activeBadEffect = EFFECT_SAME_TILES; 
+            ctx->badEffectTimer = DUR_SAME_TILES_SPAWNS;
+            ctx->forcedPieceType = random() % 7; 
+            KLog_U2("TRIGGER_BAD_EFFECT: SAMETILE - Type:", ctx->forcedPieceType, "Spawns:", ctx->badEffectTimer);
+            set_game_comment("SAME!", 90); 
+            break;
+
+        case 4:
+            // NOHOLD: Hold disabled for 5 seconds
+            ctx->activeBadEffect = EFFECT_HOLD_LOCK;
             ctx->badEffectTimer = DUR_HOLD_LOCK_TICKS;
             ctx->lastHoldType = ctx->holdType; 
             ctx->holdType = -1;                
             ctx->flags &= ~GF_CAN_HOLD;        
-            KLog_U2("TRIGGER_BAD_EFFECT: Case EFFECT_HOLD_LOCK - BackupType:", ctx->lastHoldType, "Ticks:", ctx->badEffectTimer);
-            set_game_comment("HOLD LOCKED!", 90);
+            KLog_U1("TRIGGER_BAD_EFFECT: NOHOLD - Ticks:", ctx->badEffectTimer);
+            set_game_comment("HOLD LOCK!", 90);
             break;
 
-        case EFFECT_HIDE_NEXT:  
+        case 5:
+            // NONEXT: Next piece hidden for 5 seconds
+            ctx->activeBadEffect = EFFECT_HIDE_NEXT;
             ctx->badEffectTimer = DUR_HIDE_NEXT_TICKS;
-            KLog_U1("TRIGGER_BAD_EFFECT: Case EFFECT_HIDE_NEXT - Ticks:", ctx->badEffectTimer);
-            set_game_comment("NEXT HIDDEN!", 90); 
+            KLog_U1("TRIGGER_BAD_EFFECT: NONEXT - Ticks:", ctx->badEffectTimer);
+            set_game_comment("NO NEXT!", 90); 
             break;
 
-        case EFFECT_SHADOW_BOARD: 
+        case 6:
+            // LIGHTSOUT: All blocks black for 5 seconds, then rainbow
+            ctx->activeBadEffect = EFFECT_SHADOW_BOARD;
             ctx->badEffectTimer = DUR_SHADOW_TICKS;
-            ctx->sortingRow = 0; 
-            KLog_U1("TRIGGER_BAD_EFFECT: Case EFFECT_SHADOW_BOARD - Ticks:", ctx->badEffectTimer);
-            set_game_comment("DARK CURSE!", 90); 
+            ctx->sortingRow = 0;
+            KLog_U1("TRIGGER_BAD_EFFECT: LIGHTSOUT - Ticks:", ctx->badEffectTimer);
+            set_game_comment("FADE!", 90); 
             break;
             
         default:
-            KLog_U1("TRIGGER_BAD_EFFECT: Warning - Unhandled Effect ID:", ctx->activeBadEffect);
+            KLog_U1("TRIGGER_BAD_EFFECT: Warning - Unhandled Effect ID:", roll);
             break;
     }
 
-    SOUND_play(SND_BAD_ITEM);
+    if (playGenericBadSound) {
+        SOUND_play(SND_BAD_ITEM);
+    }
     ctx->commentTimer = 60;
     ctx->lastActiveBadEffect = 99; 
     
@@ -541,11 +629,12 @@ void spawnPiece()
     {
         if (ctx->activeBadEffect == EFFECT_FULLSPEED)
         {
-            if (ctx->badEffectTimer == 1) ctx->badEffectTimer = 0;
-            if (ctx->badEffectTimer <= 0)
+            if (ctx->badEffectTimer > 0 && ctx->badEffectTimer <= DUR_FULLSPEED_SPAWNS)
             {
-                ctx->badEffectTimer--; 
-                if (ctx->badEffectTimer <= -DUR_FULLSPEED_SPAWNS)
+                ctx->badEffectTimer--;
+                KLog_U1("SPAWN_PIECE: EFFECT_FULLSPEED remaining fast pieces:", ctx->badEffectTimer);
+
+                if (ctx->badEffectTimer <= 0)
                 {
                     KLog("SPAWN_PIECE: EFFECT_FULLSPEED expired.");
                     ctx->activeBadEffect = EFFECT_NONE;
@@ -681,8 +770,32 @@ void update_blinking_animation() {
 void finishLineClear() {
     GameContext *ctx = &sctx->game;
     u16 linesFound = 0;
+    u16 totalHearts = 0;
+    u16 totalSkulls = 0;
 
-    // Verarbeite alle Zeilen die in der clearingLineMask markiert sind
+    // 0. Restore items from backup before counting (animation may have hidden them)
+    for (u16 y = 0; y < 20; y++) {
+        if (ctx->clearingLineMask & (1U << y)) {
+            u16 rowOffset = (y << 3) + (y << 1);
+            for (u16 x = 0; x < 10; x++) {
+                ctx->board[rowOffset + x] = ctx->clearingLineBackup[rowOffset + x];
+            }
+        }
+    }
+
+    // 1. First pass: count items across all cleared lines
+    for (u16 y = 0; y < 20; y++) {
+        if (ctx->clearingLineMask & (1U << y)) {
+            u16 rowOffset = (y << 3) + (y << 1);
+            for (u16 x = 0; x < 10; x++) {
+                u8 tile = ctx->board[rowOffset + x];
+                if (tile == ITEM_ID_HEART) totalHearts++;
+                else if (tile == ITEM_ID_SKULL) totalSkulls++;
+            }
+        }
+    }
+
+    // 2. Second pass: process cleared lines
     for (u16 y = 0; y < 20; y++) {
         if (ctx->clearingLineMask & (1U << y)) {
             linesFound++;
@@ -698,16 +811,39 @@ void finishLineClear() {
         }
     }
 
+    // 3. Determine effect based on item weight
     if (linesFound > 0) {
         ctx->comboCount++;
         apply_scoring(linesFound);
-        // Sound schon bei clearLines gespielt, hier keine zusätzliche Soundcall.
+        
+        // Trigger effect based on heart vs skull count
+        if (totalHearts > totalSkulls) {
+            // Good effect: trigger heart effect
+            ctx->flags |= GF_HEART_TRIG;
+            triggerGoodEffect();
+            KLog_U2("FINISH_LINE_CLEAR: Hearts dominate. Hearts:", totalHearts, "Skulls:", totalSkulls);
+        } else if (totalSkulls > totalHearts) {
+            // Bad effect: trigger skull/bad effect
+            triggerBadEffect();
+            KLog_U2("FINISH_LINE_CLEAR: Skulls dominate. Skulls:", totalSkulls, "Hearts:", totalHearts);
+        } else if (totalHearts > 0 || totalSkulls > 0) {
+            // Equal items: no effect
+            KLog_U2("FINISH_LINE_CLEAR: Equal items. Hearts:", totalHearts, "Skulls:", totalSkulls);
+        }
     } else {
         ctx->comboCount = 0;
     }
 
     // Reset die Blink-Maske
     ctx->clearingLineMask = 0;
+
+    // One-shot CLEARLINE+ must always release the single effect slot.
+    if (ctx->activeBadEffect == EFFECT_MULTIPLIER) {
+        ctx->activeBadEffect = EFFECT_NONE;
+        ctx->badEffectTimer = 0;
+        ctx->lastActiveBadEffect = 99;
+        KLog("FINISH_LINE_CLEAR: CLEARLINE+ one-shot effect released.");
+    }
 
     KLog_U1("FINISH_LINE_CLEAR: Processed lines:", linesFound);
 }
@@ -765,12 +901,17 @@ void update_shadows(bool moved, bool collapse, bool garbage) {
 
 void performHold() {
     // Prüft das Verhaltens-Bit GF_CAN_HOLD in ctx->flags
-    if (!GET_FLAG(config.flags, FLAG_HOLD) || !(ctx->flags & GF_CAN_HOLD)) return;
+    if (!GET_FLAG(config.flags, FLAG_HOLD)) return;
 
+    // Check for skull FIRST - penalty happens even if hold already used
     if (ctx->itemSlot < 4 && ctx->itemType == ITEM_ID_SKULL) { 
         triggerBadEffect();
         ctx->itemSlot = 255; 
+        return;
     }
+    
+    // Check hold availability AFTER skull check
+    if (!(ctx->flags & GF_CAN_HOLD)) return;
 
     if (ctx->activeBadEffect == EFFECT_SAME_TILES) {
         if (ctx->holdType != -1) { 
@@ -795,6 +936,11 @@ void performHold() {
         ctx->pieceX = 3; 
         ctx->pieceY = 0; 
         ctx->rotation = 0;
+        
+        // Generate new item for swapped piece
+        if (config.itemMode == 1) ctx->itemType = (random() % 100 < ITEM_RATIO_HEART) ? ITEM_ID_HEART : ITEM_ID_SKULL;
+        else ctx->itemType = (config.itemMode == 2) ? ITEM_ID_HEART : ITEM_ID_SKULL;
+        ctx->itemSlot = (ctx->itemType == 0) ? 255 : (random() % 4);
     }
 
     ctx->itemSlot = 255; 
@@ -899,7 +1045,12 @@ void reset_game_logic() {
     ctx->flags &= ~(GF_HEART_TRIG | GF_SKULL_TRIG);
     ctx->boardFlags = GF_NEEDS_DRAW;
 
-    // 4. Garbage Timer Initialisierung
+    // 4. DAS Timer Initialisierung
+    ctx->dasTimer = 0;
+    ctx->dasDir = 0;
+    ctx->dasNextThreshold = config.thresholdLRInitial;
+
+    // 5. Garbage Timer Initialisierung
     ctx->garbageTimer = 0;
     if (config.garbageFreq > 0) {
         u16 base = GARBAGE_INTERVALS[config.garbageFreq];
@@ -927,8 +1078,7 @@ void reset_game_logic() {
 }
 
 static void handle_rainbow_row(u16 y) {
-    KLog_U1("RAINBOW_ROW: Start processing Row:", y);
-    u8 rowColor = (y % 7) + 1;
+    u8 rowColor = (random() % 7) + 1;
     
     u16 rowOffset = (y << 3) + (y << 1);
 
@@ -936,31 +1086,27 @@ static void handle_rainbow_row(u16 y) {
         u16 index = rowOffset + x;
         u8 tile = ctx->board[index];
 
-        if (tile != 0 && tile <= 10) {
+        if (tile != 0) {
             ctx->board[index] = rowColor;
         }
     }
-    KLog_U1("RAINBOW_ROW: Finished. Applied Color ID:", rowColor);
 }
 
 static void handle_shadow_row(u16 y) {
-    KLog_U1("SHADOW_ROW: Start processing Row:", y);
     u16 rowOffset = (y << 3) + (y << 1);
 
     for (u16 x = 0; x < 10; x++) {
         u16 index = rowOffset + x;
         u8 tile = ctx->board[index];
 
-        if (tile != 0 && tile < 10) {
+        if (tile != 0) {
             ctx->board[index] = 8;
         }
     }
-    KLog("SHADOW_ROW: Finished. Row converted to shadow tiles.");
 }
 
 
 static void handle_sort_row(u16 y) {
-    KLog_U1("SORT_ROW: Processing Row:", y);
     u8 tempRow[10];
     u16 x, filled = 0;
     
@@ -973,8 +1119,6 @@ static void handle_sort_row(u16 y) {
         }
     }
 
-    KLog_U2("SORT_ROW: Row condensed. Original tiles:", 10, "Filled:", filled);
-
     for (x = 0; x < filled; x++) {
         ctx->board[rowOffset + x] = tempRow[x];
     }
@@ -982,8 +1126,6 @@ static void handle_sort_row(u16 y) {
     if (filled < 10) {
         memset(&ctx->board[rowOffset + filled], 0, 10 - filled);
     }
-    
-    KLog("SORT_ROW: Finished");
 }
 
 void trigger_line_items(u16 y) {
@@ -993,10 +1135,10 @@ void trigger_line_items(u16 y) {
     for (u16 x = 0; x < 10; x++) {
         u8 tile = ctx->board[rowOffset + x];
 
-        // Item-Checks
+        // Item-Checks: only mark flags, do not trigger effects directly here.
         if (tile == ITEM_ID_SKULL) {
-            triggerBadEffect();
-        } 
+            ctx->flags |= GF_SKULL_TRIG;
+        }
         else if (tile == ITEM_ID_HEART) {
             ctx->flags |= GF_HEART_TRIG;
         }
@@ -1004,38 +1146,61 @@ void trigger_line_items(u16 y) {
 }
 
 void update_board_animations() {
-    // Sicherheitscheck für gültige Indizes
-    if (ctx->sortingRow == -1 || ctx->sortingRow > 19) return;
+    // Handle RAINBOW animation line-by-line
+    if (ctx->activeBadEffect == EFFECT_RAINBOW) {
+        if (ctx->sortingRow >= 0 && ctx->sortingRow <= 19) {
+            handle_rainbow_row((u16)ctx->sortingRow);
+            ctx->boardFlags |= GF_NEEDS_DRAW;
+            ctx->sortingRow++;
 
-    u16 y = (u16)ctx->sortingRow;
-    
-    // Einmalige Berechnung des Zeilen-Offsets: (y << 3) + (y << 1)
-    u16 rowOffset = (y << 3) + (y << 1);
-
-    // Zeile vom flachen Puffer ins flache Board schreiben
-    for (u16 x = 0; x < 10; x++) {
-        u16 index = rowOffset + x;
-        ctx->board[index] = sortBuffer[index];
-    }
-
-    // Optional: Logik zur horizontalen Sortierung/Bereinigung
-    handle_sort_row(y);
-
-    // Index für den nächsten Frame erhöhen
-    ctx->sortingRow++;
-
-    // Abschlussprüfung nach der letzten Reihe (19)
-    if (ctx->sortingRow >= 20) {
-        ctx->sortingRow = -1; // Animation beenden
-        
-        // Prüfung auf neu entstandene Linien oder neuen Stein spawnen
-        if (clearLines() == 0) {
-            spawnPiece();
+            if (ctx->sortingRow >= 20) {
+                ctx->sortingRow = -1;
+                ctx->activeBadEffect = EFFECT_NONE;
+                ctx->badEffectTimer = 0;
+            }
         }
+        return;
     }
 
-    // Grafik-Update für diesen Frame markieren
+    // Handle LIGHTSOUT application line-by-line (once), effect timer remains active
+    if (ctx->activeBadEffect == EFFECT_SHADOW_BOARD) {
+        if (ctx->sortingRow >= 0 && ctx->sortingRow <= 19) {
+            handle_shadow_row((u16)ctx->sortingRow);
+            ctx->boardFlags |= GF_NEEDS_DRAW;
+            ctx->sortingRow++;
+
+            if (ctx->sortingRow >= 20) {
+                ctx->sortingRow = -1;
+            }
+        }
+        return;
+    }
+
+    // Handle SORT BOARD animation
+    if (ctx->sortingRow >= 0 && ctx->sortingRow <= 19) {
+        u16 y = (u16)ctx->sortingRow;
+        u16 rowOffset = (y << 3) + (y << 1);
+
+        for (u16 x = 0; x < 10; x++) {
+            u16 index = rowOffset + x;
+            ctx->board[index] = sortBuffer[index];
+        }
+
+        handle_sort_row(y);
     ctx->boardFlags |= GF_NEEDS_DRAW;
+        ctx->sortingRow++;
+
+        if (ctx->sortingRow >= 20) {
+            ctx->sortingRow = -1; // Animation complete
+            ctx->boardFlags |= GF_NEEDS_DRAW;
+            
+            // Check for newly formed lines or spawn new piece
+            if (clearLines() == 0) {
+                spawnPiece();
+            }
+        }
+        return;
+    }
 }
 
 void handle_game_over() {

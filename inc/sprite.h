@@ -9,12 +9,14 @@
 #define NOROT_NETXANIM        60
 #define SKULL_NEXTFRAME       2
 #define SPIRAL_NEXTFRAME      20
+#define SPEED_NEXTFRAME       5
 #define EFFECT_DURATION_NOROT GET_TICKS(180)
 
 // Sprite-Verhaltens-Typen
 #define SPRITE_TYPE_NOROTATE  0
 #define SPRITE_TYPE_SKULL     1
 #define SPRITE_TYPE_SPIRAL    2
+#define SPRITE_TYPE_SPEED     3
 
 // System Attr Flags
 #define SPRITE_ATTR_VISIBLE   (1 << 0)

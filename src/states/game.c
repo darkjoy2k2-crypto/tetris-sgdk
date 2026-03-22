@@ -34,20 +34,25 @@ static bool handle_gravity(GameContext *gctx)
 
     if (ctx->activeBadEffect == EFFECT_FULLSPEED)
     {
-        if (ctx->badEffectTimer > 1) 
+        // Warning phase: 2 seconds with 1 alert per second before fast gravity starts in second 3.
+        if (ctx->badEffectTimer > DUR_FULLSPEED_SPAWNS)
         {
-            if (ctx->badEffectTimer % 60 == 0) SOUND_play(SND_ALERT);
-        } 
-        else if (ctx->badEffectTimer <= 1) 
+            u16 warningTicks = ctx->badEffectTimer - DUR_FULLSPEED_SPAWNS;
+            if (warningTicks == GET_TICKS(120) || warningTicks == GET_TICKS(60)) {
+                SOUND_play(SND_ALERT);
+            }
+        }
+        // Fast phase: the next 5 tetrominoes fall very fast, but not maximum speed.
+        else if (ctx->badEffectTimer > 0)
         {
-            threshold = 2; 
+            threshold = 4;
         }
     }
 
     u16 finalThreshold = threshold;
     
     if (joyState & vBtnSoftDrop) {
-        finalThreshold = config.thresholdSD; 
+        finalThreshold = config.thresholdSD;
     } else if (ctx->activeBadEffect == EFFECT_FREEZE) {
         finalThreshold = 9999;
     }
@@ -119,11 +124,12 @@ static bool handle_environment(GameContext *gctx)
         // Stückbasierte Effekte ausschließen
         if (gctx->activeBadEffect != EFFECT_RAINBOW &&
             gctx->activeBadEffect != EFFECT_SAME_TILES &&
-            gctx->activeBadEffect != EFFECT_I_RAIN)
+            gctx->activeBadEffect != EFFECT_I_RAIN &&
+            gctx->activeBadEffect != EFFECT_MULTIPLIER)
         {
             if (gctx->activeBadEffect == EFFECT_FULLSPEED)
             {
-                if (gctx->badEffectTimer > 1) gctx->badEffectTimer--;
+                if (gctx->badEffectTimer > DUR_FULLSPEED_SPAWNS) gctx->badEffectTimer--;
             }
             else 
             {
@@ -131,15 +137,40 @@ static bool handle_environment(GameContext *gctx)
                 if (gctx->badEffectTimer <= 0)
                 {
                     KLog_U1("ENVIRONMENT: Bad Effect Expired. ID:", gctx->activeBadEffect);
+                    bool preserveEffect = false;
                     
-                    if (gctx->activeBadEffect == EFFECT_HOLD_LOCK)
-                    {
-                        if (GET_FLAG(config.flags, FLAG_HOLD)) gctx->flags |= GF_CAN_HOLD;
-                        gctx->holdType = gctx->lastHoldType;
-                        KLog("ENVIRONMENT: HOLD_LOCK released.");
+                    // Clean up effect-specific state
+                    switch(gctx->activeBadEffect) {
+                        case EFFECT_HOLD_LOCK:
+                            if (GET_FLAG(config.flags, FLAG_HOLD)) gctx->flags |= GF_CAN_HOLD;
+                            gctx->holdType = gctx->lastHoldType;
+                            KLog("ENVIRONMENT: HOLD_LOCK released.");
+                            break;
+                        case EFFECT_REVERSED:
+                            KLog("ENVIRONMENT: CONFUSION ended.");
+                            break;
+                        case EFFECT_HIDE_NEXT:
+                            KLog("ENVIRONMENT: NONEXT ended.");
+                            break;
+                        case EFFECT_NO_ROTATE:
+                            gctx->flags &= ~GF_ROT_LOCKED;
+                            KLog("ENVIRONMENT: NOROTATION ended.");
+                            break;
+                        case EFFECT_SHADOW_BOARD:
+                            // LIGHTSOUT ends, apply rainbow effect
+                            ctx->activeBadEffect = EFFECT_RAINBOW;
+                            ctx->sortingRow = 0;
+                            preserveEffect = true;
+                            KLog("ENVIRONMENT: LIGHTSOUT ended - RAINBOW effect triggered");
+                            break;
+                        default:
+                            break;
                     }
-                    gctx->activeBadEffect = EFFECT_NONE;
-                    gctx->lastActiveBadEffect = 99;
+
+                    if (!preserveEffect) {
+                        gctx->activeBadEffect = EFFECT_NONE;
+                        gctx->lastActiveBadEffect = 99;
+                    }
                     SOUND_play(SND_GOOD_ITEM);
                 }
             }
@@ -222,6 +253,10 @@ void game_update()
         ctx->boardFlags |= GF_NEEDS_DRAW;
         collapseActive = true;
     }
+
+    // 2.5 Board Animations (Sorting, Rainbow)
+    update_board_animations();
+
 
     // 3. controls_update() [Immer aktiv]
     bool moved = controls_update(ctx);

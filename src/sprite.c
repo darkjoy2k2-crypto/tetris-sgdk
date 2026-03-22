@@ -45,11 +45,21 @@ static void _update_sprite_resource(GameSprite* gs, u8 targetType) {
     if (gs->type == targetType) return;
     
     gs->type = targetType;
+    gs->frame = 0;
+    gs->animation = 0;
+    gs->animTimer = 0;
+    gs->stateTimer = 0;
+    gs->animDir = 1;
+    gs->attr &= ~SPRITE_ATTR_FLIPX;
+
     if (targetType == SPRITE_TYPE_SKULL) {
         SPR_setDefinition(gs->vdpSprite, &anim_skull);
     } else if (targetType == SPRITE_TYPE_SPIRAL) {
         // Spirale laden
         SPR_setDefinition(gs->vdpSprite, &anim_spiral);
+    } else if (targetType == SPRITE_TYPE_SPEED) {
+        // Geschwindigkeit laden
+        SPR_setDefinition(gs->vdpSprite, &anim_speed);
     } else {
         SPR_setDefinition(gs->vdpSprite, &anim_norotate);
     }
@@ -142,7 +152,7 @@ void sprites_sync_game(Vect2D_s16 piecePos, Vect2D_s16 shadowPos, u8 activeEffec
             _setup_sprite(INDEX_HOLD, 0, 0, 0, FALSE);
             break;
         case EFFECT_FULLSPEED:
-            _setup_sprite(INDEX_PIECE, SPRITE_TYPE_SKULL, 0, 10, TRUE);
+            _setup_sprite(INDEX_PIECE, SPRITE_TYPE_SPEED, PRIO_LOW, DEPTH_BACKGROUND, TRUE);
             _setup_sprite(INDEX_SHADOW, 0, 0, 0, FALSE);
             _setup_sprite(INDEX_NEXT, 0, 0, 0, FALSE);
             _setup_sprite(INDEX_HOLD, 0, 0, 0, FALSE);
@@ -187,6 +197,12 @@ void sprites_update() {
             // Spirale mit 4 Bildern
             if (gs->animTimer >= GET_TICKS(SPIRAL_NEXTFRAME)) {
                 gs->frame = (gs->frame + 1) & 3; // Loop durch 0, 1, 2, 3
+                gs->animTimer = 0;
+            }
+        }
+        else if (gs->type == SPRITE_TYPE_SPEED) {
+            if (gs->animTimer >= GET_TICKS(SPEED_NEXTFRAME)) {
+                gs->frame = (gs->frame + 1) & 3;
                 gs->animTimer = 0;
             }
         }

@@ -47,8 +47,9 @@ typedef struct OptionsContext {
     u16 cursor;
     u16 subCursor;
     u16 flags;
-    u16 thresholdLR;
-    u16 thresholdSD;
+    u16 thresholdLRInitial; // Zeit bis erste Auto-Bewegung
+    u16 thresholdLRRepeat;  // Zeit zwischen Folge-Bewegungen
+    u16 thresholdSD;        // Softdrop-Geschwindigkeit
     bool needsRedraw;
 } OptionsContext;
 
@@ -92,6 +93,7 @@ typedef struct GameContext {
     u16 moveTimer;
     u16 dasTimer;
     u16 dasDir;
+    u16 dasNextThreshold;
     u16 clearTimer;             
     u16 garbageTimer;          
     u16 garbageNextThreshold;  
@@ -157,10 +159,18 @@ typedef struct __attribute__((packed)) Serializable {
     u16 garbageFreq;
     u16 itemMode;
     u16 flags;
-    u16 thresholdLR;
+    u16 thresholdLRInitial;
+    u16 thresholdLRRepeat;
     u16 thresholdSD;
     HighscoreEntry highscores[10];
 } Serializable;
+
+// Runtime-only globals/config that must never be persisted to SRAM.
+// Add any future global gameplay/session fields here, not in Serializable.
+typedef struct RuntimeConfig {
+    u16 reserved0;
+    u16 reserved1;
+} RuntimeConfig;
 
 typedef struct GlobalConfig {
     union {
@@ -173,13 +183,15 @@ typedef struct GlobalConfig {
             u16 garbageFreq;
             u16 itemMode;
             u16 flags;
-            u16 thresholdLR;
+            u16 thresholdLRInitial;
+            u16 thresholdLRRepeat;
             u16 thresholdSD;
             HighscoreEntry highscores[10];
         };
     };
 
     // --- NOT SERIALIZABLE ---
+    RuntimeConfig runtime;
     GameState preferredState;
     SramOp sramop;
 } GlobalConfig;

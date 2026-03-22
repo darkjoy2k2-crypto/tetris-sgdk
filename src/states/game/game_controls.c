@@ -28,7 +28,7 @@ bool controls_update(GameContext *gctx) {
         vBtnHardDrop = BUTTON_RIGHT;
     }
 
-    // --- 2. BEWEGUNG (DAS - Nutzt config.thresholdLR) ---
+    // --- 2. BEWEGUNG (DAS - Nutzt config.thresholdLRInitial + config.thresholdLRRepeat) ---
     u16 currentDir = (joyState & vBtnLeft) ? vBtnLeft : ((joyState & vBtnRight) ? vBtnRight : 0);
     
     if (currentDir != 0) {
@@ -41,23 +41,24 @@ bool controls_update(GameContext *gctx) {
             }
             ctx->dasTimer = 0;
             ctx->dasDir = currentDir;
+            ctx->dasNextThreshold = config.thresholdLRInitial;
         } else if (ctx->dasDir == currentDir) {
             ctx->dasTimer++;
-            // Nutzt den Threshold aus den Optionen für die initiale Verzögerung
-            if (ctx->dasTimer >= config.thresholdLR) {
+            if (ctx->dasTimer >= ctx->dasNextThreshold) {
                 s16 step = (currentDir == vBtnLeft) ? -1 : 1;
                 if (!checkCollision(ctx->pieceX + step, ctx->pieceY, ctx->rotation)) {
                     ctx->pieceX += step;
                     moved = true;
                     SOUND_play(SND_MOVE);
                 }
-                // Nach dem Threshold: Wiederholung alle 2 Frames für flüssiges Gleiten
-                ctx->dasTimer = config.thresholdLR - 2; 
+                ctx->dasTimer = 0;
+                ctx->dasNextThreshold = config.thresholdLRRepeat;
             }
         }
     } else {
         ctx->dasTimer = 0;
         ctx->dasDir = 0;
+        ctx->dasNextThreshold = config.thresholdLRInitial;
     }
 
     // --- 3. ROTATION (Wall-Kicks) ---
@@ -102,29 +103,6 @@ bool controls_update(GameContext *gctx) {
         ctx->ghostY = ctx->pieceY;
         lockPiece();
         moved = true;
-    }
-
-    // --- 6. DEBUG / EFFECT TRIGGER ---
-// --- 6. DEBUG / MANUAL TRIGGER (Confusion Test) ---
-    // Nutzt die physische START-Taste, um EFFECT_REVERSED zu testen
-    if (changed & BUTTON_START) {
-        if (ctx->activeBadEffect != EFFECT_NONE) {
-            // Effekt sofort beenden
-            ctx->activeBadEffect = EFFECT_NONE;
-            ctx->badEffectTimer = 0;
-            ctx->lastActiveBadEffect = 99; 
-            SOUND_play(SND_GOOD_ITEM);
-            set_game_comment("CLEARED", 60);
-        } else {
-            // Confusion (REVERSED) manuell aktivieren
-            ctx->activeBadEffect = EFFECT_REVERSED;
-            ctx->badEffectTimer = DUR_REVERSED_TICKS; 
-            ctx->lastActiveBadEffect = 99; // WICHTIG: Triggert sprites_sync_game
-            
-            set_game_comment("CONFUSION!", 90);
-            SOUND_play(SND_BAD_ITEM);
-        }
-        moved = true; 
     }
 
     return moved;

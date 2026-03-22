@@ -26,9 +26,10 @@ static void draw_option_line(u16 row, char* label, u16 currentVal, char* options
 void options_init() {
     ctx = &sctx->options;
     ctx->cursor = 0;
-    ctx->subCursor = 0; 
+    ctx->subCursor = 0;
     ctx->flags = config.flags;
-    ctx->thresholdLR = config.thresholdLR;
+    ctx->thresholdLRInitial = config.thresholdLRInitial;
+    ctx->thresholdLRRepeat = config.thresholdLRRepeat;
     ctx->thresholdSD = config.thresholdSD;
     ctx->needsRedraw = true;
     menu_bg_set_mode(BG_MODE_MENU);
@@ -71,20 +72,23 @@ void options_update() {
         ctx->needsRedraw = true;
         
         if (ctx->cursor == 2) { // SENSIBILITY
-            if (pressedA) { 
-                ctx->subCursor = (ctx->subCursor + 1) % 2; 
-                SOUND_play(SND_MOVE); 
+            if (pressedA) {
+                ctx->subCursor = (ctx->subCursor + 1) % 3;
+                SOUND_play(SND_MOVE);
             } else {
                 SOUND_play(SND_ROTATE);
                 if (ctx->subCursor == 0) {
-                    if (goRight && ctx->thresholdLR > 2) ctx->thresholdLR--;
-                    else if (goLeft && ctx->thresholdLR < 20) ctx->thresholdLR++;
+                    if (goRight && ctx->thresholdLRInitial > 1) ctx->thresholdLRInitial--;
+                    else if (goLeft && ctx->thresholdLRInitial < 10) ctx->thresholdLRInitial++;
+                } else if (ctx->subCursor == 1) {
+                    if (goRight && ctx->thresholdLRRepeat > 1) ctx->thresholdLRRepeat--;
+                    else if (goLeft && ctx->thresholdLRRepeat < 10) ctx->thresholdLRRepeat++;
                 } else {
                     if (goRight && ctx->thresholdSD > 1) ctx->thresholdSD--;
                     else if (goLeft && ctx->thresholdSD < 10) ctx->thresholdSD++;
                 }
             }
-        } 
+        }
         else if (ctx->cursor == 5) { // SYSTEM (RELOAD / RESET)
             if (pressedA || goLeft || goRight) {
                 if (goLeft) ctx->subCursor = 0;
@@ -98,8 +102,9 @@ void options_update() {
                         SOUND_play(SND_RESET);
                         return;
                     } else { // RESET DEFAULTS (Nur RAM)
-                        ctx->thresholdLR = 10; 
-                        ctx->thresholdSD = 2;
+                        ctx->thresholdLRInitial = 6;
+                        ctx->thresholdLRRepeat = 2;
+                        ctx->thresholdSD = 3;
                         ctx->flags = (FLAG_SHADOW | FLAG_HOLD | FLAG_NEXT | FLAG_SOUND | FLAG_MUSIC | FLAG_BG);
                         SOUND_play(SND_RESET);
                     }
@@ -121,15 +126,18 @@ void options_update() {
 // 3. ZIEL 2: START = SPEICHERN & TITEL
     if ((joyState & (BUTTON_START)) && !(lastJoyState & (BUTTON_START))) {
         // Debug vor der Übergabe
-        KLog_U1("DEBUG_OPTIONS: ctx->thresholdLR = ", ctx->thresholdLR);
+        KLog_U1("DEBUG_OPTIONS: ctx->thresholdLRInitial = ", ctx->thresholdLRInitial);
+        KLog_U1("DEBUG_OPTIONS: ctx->thresholdLRRepeat = ", ctx->thresholdLRRepeat);
         KLog_U1("DEBUG_OPTIONS: ctx->thresholdSD = ", ctx->thresholdSD);
 
         // Übergabe an globale Config
-        config.thresholdLR = ctx->thresholdLR;
+        config.thresholdLRInitial = ctx->thresholdLRInitial;
+        config.thresholdLRRepeat = ctx->thresholdLRRepeat;
         config.thresholdSD = ctx->thresholdSD;
 
         // Debug nach der Übergabe
-        KLog_U1("DEBUG_OPTIONS: config.thresholdLR = ", config.thresholdLR);
+        KLog_U1("DEBUG_OPTIONS: config.thresholdLRInitial = ", config.thresholdLRInitial);
+        KLog_U1("DEBUG_OPTIONS: config.thresholdLRRepeat = ", config.thresholdLRRepeat);
         KLog_U1("DEBUG_OPTIONS: config.thresholdSD = ", config.thresholdSD);
 
         config.sramop = SRAM_SAVE;
@@ -150,8 +158,9 @@ void options_update() {
 void options_draw() {
     if (ctx == NULL || !ctx->needsRedraw) return;
     char* optsOnOff[] = {"OFF", "ON "};
-    char valLR[4], valSD[4];
-    uintToStr(ctx->thresholdLR, valLR, 2);
+    char valLRi[4], valLRr[4], valSD[4];
+    uintToStr(ctx->thresholdLRInitial, valLRi, 2);
+    uintToStr(ctx->thresholdLRRepeat, valLRr, 2);
     uintToStr(ctx->thresholdSD, valSD, 2);
 
     draw_option_line(0, "MUSIC:", GET_FLAG(ctx->flags, FLAG_MUSIC) ? 1 : 0, optsOnOff, 2, (ctx->cursor == 0));
@@ -163,9 +172,11 @@ void options_draw() {
     VDP_drawText(isSensSelected ? ">" : " ", xSens - 2, ySens);
     VDP_drawText("SENSIBILITY:", xSens, ySens);
     VDP_setTextPalette((isSensSelected && ctx->subCursor == 0) ? PAL2 : PAL3);
-    VDP_drawText("<->", xSens + 14, ySens); VDP_drawText(valLR, xSens + 18, ySens);
+    VDP_drawText("I", xSens + 14, ySens); VDP_drawText(valLRi, xSens + 16, ySens);
     VDP_setTextPalette((isSensSelected && ctx->subCursor == 1) ? PAL2 : PAL3);
-    VDP_drawText("v", xSens + 22, ySens); VDP_drawText(valSD, xSens + 24, ySens);
+    VDP_drawText("R", xSens + 20, ySens); VDP_drawText(valLRr, xSens + 22, ySens);
+    VDP_setTextPalette((isSensSelected && ctx->subCursor == 2) ? PAL2 : PAL3);
+    VDP_drawText("SD", xSens + 26, ySens); VDP_drawText(valSD, xSens + 28, ySens);
 
     draw_option_line(3, "BACKGRD:", GET_FLAG(ctx->flags, FLAG_BG) ? 1 : 0, optsOnOff, 2, (ctx->cursor == 3));
     draw_option_line(4, "DEBUG   :", GET_FLAG(ctx->flags, FLAG_DEBUG) ? 1 : 0, optsOnOff, 2, (ctx->cursor == 4));

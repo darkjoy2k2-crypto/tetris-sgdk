@@ -199,9 +199,15 @@ if (GET_FLAG(config.flags, FLAG_HOLD) && ctx->holdType != ctx->lastHoldType) {
                 case EFFECT_HIDE_NEXT:  strncpy(statusMsg, "NONEXT", 12); break;
                 case EFFECT_I_RAIN:     strncpy(statusMsg, "I-RAIN", 12); break;
                 case EFFECT_FREEZE:     strncpy(statusMsg, "FREEZE", 12); break;
+                case EFFECT_RAINBOW:    strncpy(statusMsg, "RAINBW", 12); break;
+                case EFFECT_SHADOW_BOARD: strncpy(statusMsg, " FADE!", 12); break;
+                case EFFECT_MULTIPLIER: strncpy(statusMsg, " CLEAR", 12); break;
                 default:                strncpy(statusMsg, "ACTIVE", 12); break;
             }
-            if (ctx->activeBadEffect <= 2 || ctx->activeBadEffect == EFFECT_I_RAIN) {
+            if (ctx->activeBadEffect == EFFECT_FULLSPEED && ctx->badEffectTimer > DUR_FULLSPEED_SPAWNS) {
+                u16 sec = ((ctx->badEffectTimer - DUR_FULLSPEED_SPAWNS) + (GET_TICKS(60) - 1)) / GET_TICKS(60);
+                sprintf(timerBuf, "%d S", sec);
+            } else if (ctx->activeBadEffect <= 2 || ctx->activeBadEffect == EFFECT_I_RAIN) {
                 sprintf(timerBuf, "%d P", ctx->badEffectTimer);
             } else {
 u16 sec = (ctx->badEffectTimer + (GET_TICKS(60) - 1)) / GET_TICKS(60);  

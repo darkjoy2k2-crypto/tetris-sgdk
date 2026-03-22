@@ -1,24 +1,24 @@
 #include "gfx.h"
 
 const u32 tile_skull[8] = {
-    0x00666600, //   XXXX  
-    0x06666660, //  XXXXXX 
-    0x66066066, // XX XX XX (Augenhöhlen)
-    0x66066066, // XX XX XX
-    0x06666660, //  XXXXXX
-    0x00666600, //   XXXX
-    0x00600600, //   X  X  (Zähne/Kiefer)
-    0x00666600  //   XXXX
+    0x07666670, //  XXXX  (border)
+    0x76666667, // XXXXXX (border + fill)
+    0x76066067, // XX XX XX (eyes + border)
+    0x76066067, // XX XX XX (eyes + border)
+    0x76666667, // XXXXXX (border + fill)
+    0x07666670, //  XXXX  (border)
+    0x07600607, //  X  X  (teeth + border)
+    0x07777770  //  border
 };
 
 const u32 tile_heart[8] = {
-    0x0CC00CC0, //  RR  RR 
-    0xCCCCCCCC, // RRRRRRRR
-    0xCCCCCCCC, // RRRRRRRR
-    0xCCCCCCCC, // RRRRRRRR
-    0x0CCCCCC0, //  RRRRRR 
-    0x00CCCC00, //   RRRR  
-    0x000CC000, //    RR   
+    0x0CC00CC0, //  RR  RR (no border needed - symmetric top)
+    0x7CCCCCC7, // RRRRRRRR (border + fill)
+    0x7CCCCCC7, // RRRRRRRR (border + fill)
+    0x7CCCCCC7, // RRRRRRRR (border + fill)
+    0x7CCCCCC7, //  RRRRRR (border + fill)
+    0x07CCCC70, //   RRRR  (border)
+    0x0007CC00, //    RR   (border)
     0x00000000  //          
 };
 

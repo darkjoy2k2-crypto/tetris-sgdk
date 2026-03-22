@@ -8,7 +8,8 @@
 
 void save_execute() {
     KLog("SRAM_EXECUTE: Start...");
-    KLog_U2("RAM_CHECK: LR=", config.thresholdLR, " SD=", config.thresholdSD);
+    KLog_U2("RAM_CHECK: LRinit=", config.thresholdLRInitial, " LRepeat=", config.thresholdLRRepeat);
+    KLog_U1("RAM_CHECK: SD=", config.thresholdSD);
     KLog_U1("RAM_CHECK: flags=", config.flags);
 
     SRAM_enable();
@@ -75,7 +76,8 @@ void save_load() {
     
     SRAM_disable();
     KLog("SRAM_LOAD: Finished.");
-    KLog_U2("SRAM_LOAD_RESULT: LR=", config.thresholdLR, " SD=", config.thresholdSD);
+    KLog_U2("SRAM_LOAD_RESULT: LRinit=", config.thresholdLRInitial, " LRepeat=", config.thresholdLRRepeat);
+    KLog_U1("SRAM_LOAD_RESULT: SD=", config.thresholdSD);
 }
 
 void save_clear() {
@@ -92,7 +94,8 @@ void save_clear() {
     config.serializable.flags = FLAG_SHADOW | FLAG_HOLD | FLAG_NEXT | FLAG_MUSIC | FLAG_SOUND | FLAG_BG;
     
     // Werkseinstellungen Sensibilität
-    config.serializable.thresholdLR = 6;
+    config.serializable.thresholdLRInitial = 6;
+    config.serializable.thresholdLRRepeat = 2;
     config.serializable.thresholdSD = 3;
 
     char* names[] = {"PET", "SGK", "CPU", "VDP", "ACE", "SKY", "DAN", "EVA", "MAX", "JOE"};

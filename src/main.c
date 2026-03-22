@@ -32,7 +32,8 @@ GlobalConfig config = {
         .garbageFreq = 1,
         .itemMode = 1,
         .flags = FLAG_SHADOW | FLAG_HOLD | FLAG_NEXT | FLAG_MUSIC | FLAG_SOUND | FLAG_BG,
-        .thresholdLR = 6,
+        .thresholdLRInitial = 6,
+        .thresholdLRRepeat = 2,
         .thresholdSD = 3,
         .highscores = {
             {10000, "PET", 0}, {9000, "SGK", 0}, {8000, "CPU", 0},

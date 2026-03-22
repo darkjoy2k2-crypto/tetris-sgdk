@@ -5,8 +5,8 @@
 // Vorwärtsdeklaration: Sagt dem Compiler, dass es diesen Typ gibt
 typedef struct GameContext GameContext; 
 
-#define ITEM_ID_SKULL 10
-#define ITEM_ID_HEART 11
+#define ITEM_ID_HEART 10
+#define ITEM_ID_SKULL 11
 #define EFFECT_RAINBOW 10
 #define EFFECT_SHADOW_BOARD 11
 #define TILE_ID_GARBAGE 8   // Grauer Block
@@ -15,7 +15,7 @@ typedef struct GameContext GameContext;
 
 #define ITEM_SPAWN_RATE_MIN 2
 #define ITEM_SPAWN_RATE_MAX 4
-#define ITEM_RATIO_HEART 50 
+#define ITEM_RATIO_HEART 30 
 
 extern const s8 PIECES[7][4][4][2];
 extern const u16 GARBAGE_INTERVALS[];

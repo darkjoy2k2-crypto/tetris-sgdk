@@ -16,8 +16,7 @@
 
 GameContext* ctx = NULL;
 
-const u16 GRAVITY_SPEEDS[] = {9999, 60, 30, 15};
-const u16 GARBAGE_INTERVALS[] = {0, 1200, 600, 300};
+const u16 GARBAGE_INTERVALS[] = {0, 1200, 1000, 850, 700, 580, 460, 340, 240, 120};
 
 // Ganz am Ende von game_logic.c einfügen:
 
@@ -28,9 +27,16 @@ static bool handle_gravity(GameContext *gctx)
     bool moved = false;
     ctx->moveTimer++;
 
+    u16 speedSetting = (config.speedLevel > SPEED_LEVEL_MAX) ? SPEED_LEVEL_MAX : config.speedLevel;
     u16 levelOffset = ((ctx->level - 1) << 1) + (ctx->level - 1);
     s16 threshold = GET_TICKS(60 - levelOffset);
-    if (threshold < 3) threshold = 3;
+
+    // 0 = no extra speed, 9 = max possible speed for normal gravity path.
+    if (speedSetting > 0) {
+        threshold -= (s16)(speedSetting * 8);
+    }
+
+    if (threshold < 1) threshold = 1;
 
     if (ctx->activeBadEffect == EFFECT_FULLSPEED)
     {
@@ -56,6 +62,8 @@ static bool handle_gravity(GameContext *gctx)
     } else if (ctx->activeBadEffect == EFFECT_FREEZE) {
         finalThreshold = 9999;
     }
+
+    if (finalThreshold < 1) finalThreshold = 1;
 
     if (ctx->moveTimer >= finalThreshold)
     {
@@ -98,7 +106,9 @@ static bool handle_environment(GameContext *gctx)
     bool blinkActive = (gctx->clearTimer > 0);
 
     // Garbage-Check: WENN (keine Marker) UND (kein Blink-Timer)
-    if (config.garbageFreq > 0 && gctx->activeBadEffect != EFFECT_FREEZE && 
+    u16 garbageSetting = (config.garbageFreq > GARBAGE_FREQ_MAX) ? GARBAGE_FREQ_MAX : config.garbageFreq;
+
+    if (garbageSetting > 0 && gctx->activeBadEffect != EFFECT_FREEZE && 
         !markersPresent && !blinkActive)
     {
         gctx->garbageTimer++;
@@ -110,8 +120,11 @@ static bool handle_environment(GameContext *gctx)
             garbageTriggered = true;
 
             gctx->garbageTimer = 0;
-            u16 base = GARBAGE_INTERVALS[config.garbageFreq];
+            u16 base = GARBAGE_INTERVALS[garbageSetting];
             gctx->garbageNextThreshold = GET_TICKS(base + (random() % 120) - 60);
+            if (gctx->garbageNextThreshold < GET_TICKS(30)) {
+                gctx->garbageNextThreshold = GET_TICKS(30);
+            }
             gctx->boardFlags |= GF_NEEDS_DRAW;
             
             KLog_U1("ENVIRONMENT: New Garbage Threshold set to:", gctx->garbageNextThreshold);

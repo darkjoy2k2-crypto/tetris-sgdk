@@ -5,6 +5,8 @@
 // --- KONSTANTEN ---
 #define BOARD_WIDTH      10
 #define BOARD_HEIGHT     20
+#define SPEED_LEVEL_MAX  9
+#define GARBAGE_FREQ_MAX 9
 
 // --- 1. ENUMS ---
 
@@ -17,7 +19,8 @@ typedef enum GameState {
     STATE_GAMEOVER,
     STATE_HIGHSCORE,
     STATE_OPTIONS,
-    STATE_SAVE
+    STATE_SAVE,
+    STATE_CHALLENGE
 } GameState;
 
 typedef enum TitlePhase {
@@ -120,8 +123,19 @@ typedef struct SaveContext {
     u16 timer;
     bool textVisible;
     bool isLoading;
-u16 errorOccurred; // 0 = OK, 1 = Fehler
+    u16 errorOccurred; // 0 = OK, 1 = Fehler
 } SaveContext;
+
+typedef struct ChallengeContext {
+    u8 cursor_x;        // 0..15
+    u8 cursor_y;        // 0..7
+    u8 current_level_id; // y*16 + x
+    bool needsRedraw;
+    s8 holdDir;         // -2 up, -1 left, 0 none, 1 right, 2 down
+    u16 holdTimer;
+    u16 holdNextThreshold;
+    u32 frontier_open[4]; // 128-bit: expanded neighbors of cleared, excluding cleared
+} ChallengeContext;
 
 // --- 3. DIE ZENTRALE UNION ---
 
@@ -133,6 +147,7 @@ typedef union StateUnion {
     OptionsContext   options;
     SoundTestContext soundtest;
     SaveContext      save;
+    ChallengeContext challenge;
 } StateUnion;
 
 // --- 4. GLOBALER APP-KONTEXT & CONFIG ---
@@ -163,6 +178,10 @@ typedef struct __attribute__((packed)) Serializable {
     u16 thresholdLRRepeat;
     u16 thresholdSD;
     HighscoreEntry highscores[10];
+    
+    /* Challenge Mode Progress (128-bit each: 4x u32) */
+    u32 challenge_unlocked[4];  // unlocked levels
+    u32 challenge_cleared[4];   // cleared levels
 } Serializable;
 
 // Runtime-only globals/config that must never be persisted to SRAM.
@@ -187,6 +206,8 @@ typedef struct GlobalConfig {
             u16 thresholdLRRepeat;
             u16 thresholdSD;
             HighscoreEntry highscores[10];
+            u32 challenge_unlocked[4];
+            u32 challenge_cleared[4];
         };
     };
 

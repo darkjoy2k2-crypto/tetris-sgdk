@@ -8,6 +8,7 @@
 #include "gfx.h"
 
 static SelectContext* ctx = NULL;
+static char* optsDigits[] = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"};
 
 // --- Private Zeichen-Helfer ---
 
@@ -66,8 +67,8 @@ void select_init() {
     ctx->nameCharIdx = 0;
     
     ctx->randMode = config.randMode;
-    ctx->speedLevel = config.speedLevel;
-    ctx->garbageFreq = config.garbageFreq;
+    ctx->speedLevel = (config.speedLevel > SPEED_LEVEL_MAX) ? SPEED_LEVEL_MAX : config.speedLevel;
+    ctx->garbageFreq = (config.garbageFreq > GARBAGE_FREQ_MAX) ? GARBAGE_FREQ_MAX : config.garbageFreq;
     ctx->itemMode = config.itemMode;
     ctx->flags = config.flags;
 
@@ -128,8 +129,8 @@ void select_update() {
             s16 dir = goLeft ? -1 : 1;
             switch(ctx->cursor) {
                 case 1: ctx->randMode    = (ctx->randMode + dir + 2) % 2; break;
-                case 2: ctx->speedLevel  = (ctx->speedLevel + dir + 4) % 4; break;
-                case 3: ctx->garbageFreq = (ctx->garbageFreq + dir + 4) % 4; break;
+                case 2: ctx->speedLevel  = (ctx->speedLevel + dir + (SPEED_LEVEL_MAX + 1)) % (SPEED_LEVEL_MAX + 1); break;
+                case 3: ctx->garbageFreq = (ctx->garbageFreq + dir + (GARBAGE_FREQ_MAX + 1)) % (GARBAGE_FREQ_MAX + 1); break;
                 case 4: TOGGLE_FLAG(ctx->flags, FLAG_SHADOW); break; 
                 case 5: TOGGLE_FLAG(ctx->flags, FLAG_HOLD);   break;
                 case 6: TOGGLE_FLAG(ctx->flags, FLAG_NEXT);   break;
@@ -179,13 +180,12 @@ void select_draw() {
     draw_name_entry(ctx->cursor == 0);
 
     char* optsRand[]   = {"Fair", "Chaos"};
-    char* optsLevels[] = {"None", "Slow", "Med", "Fast"};
     char* optsOnOff[]  = {"Off", "On"};
     char* optsItems[]  = {"None", "All", "Good", "Bad"};
 
     draw_menu_line(1, "Random:",   ctx->randMode,   optsRand,   2, (ctx->cursor == 1));
-    draw_menu_line(2, "Speed:",    ctx->speedLevel,  optsLevels, 4, (ctx->cursor == 2));
-    draw_menu_line(3, "Garbage:",  ctx->garbageFreq, optsLevels, 4, (ctx->cursor == 3));
+    draw_menu_line(2, "Speed:",    ctx->speedLevel,  optsDigits, 10, (ctx->cursor == 2));
+    draw_menu_line(3, "Garbage:",  ctx->garbageFreq, optsDigits, 10, (ctx->cursor == 3));
     draw_menu_line(4, "Shadow:",   GET_FLAG(ctx->flags, FLAG_SHADOW) ? 1 : 0, optsOnOff, 2, (ctx->cursor == 4));
     draw_menu_line(5, "Hold:",     GET_FLAG(ctx->flags, FLAG_HOLD)   ? 1 : 0, optsOnOff, 2, (ctx->cursor == 5));
     draw_menu_line(6, "Next:",     GET_FLAG(ctx->flags, FLAG_NEXT)   ? 1 : 0, optsOnOff, 2, (ctx->cursor == 6));

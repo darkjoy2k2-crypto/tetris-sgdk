@@ -86,12 +86,12 @@ void title_update() {
 
     } else {
         if ((joyState & BUTTON_DOWN) && !(lastJoyState & BUTTON_DOWN)) {
-            ctx->cursor = (ctx->cursor + 1) % 3;
+            ctx->cursor = (ctx->cursor + 1) % 4;
             SOUND_play(SND_MOVE);
             ctx->needsRedraw = true;
         }
         if ((joyState & BUTTON_UP) && !(lastJoyState & BUTTON_UP)) {
-            ctx->cursor = (ctx->cursor == 0) ? 2 : ctx->cursor - 1;
+            ctx->cursor = (ctx->cursor == 0) ? 3 : ctx->cursor - 1;
             SOUND_play(SND_MOVE);
             ctx->needsRedraw = true;
         }
@@ -99,9 +99,10 @@ void title_update() {
         if ((joyState & BUTTON_START) && !(lastJoyState & BUTTON_START)) {
             SOUND_play(SND_MENU_SELECT);
             switch(ctx->cursor) {
-                case 0: currentState = STATE_SELECT; break;
-                case 1: currentState = STATE_OPTIONS; break;
-                case 2: currentState = STATE_SOUNDTEST; break;
+                case 0: currentState = STATE_CHALLENGE; break;
+                case 1: currentState = STATE_SELECT; break;
+                case 2: currentState = STATE_OPTIONS; break;
+                case 3: currentState = STATE_SOUNDTEST; break;
             }
         }
         
@@ -128,9 +129,10 @@ void title_draw() {
             ctx->lastTextVisible = ctx->textVisible;
         }
     } else if (ctx->needsRedraw) {
-        draw_title_menu_line(0, "GAME START", (ctx->cursor == 0));
-        draw_title_menu_line(1, "OPTIONS",    (ctx->cursor == 1));
-        draw_title_menu_line(2, "SOUND TEST", (ctx->cursor == 2));
+        draw_title_menu_line(0, "CHALLENGE",  (ctx->cursor == 0));
+        draw_title_menu_line(1, "FREE GAME",  (ctx->cursor == 1));
+        draw_title_menu_line(2, "OPTIONS",    (ctx->cursor == 2));
+        draw_title_menu_line(3, "SOUND TEST", (ctx->cursor == 3));
         ctx->needsRedraw = false;
     }
 }

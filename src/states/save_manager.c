@@ -4,6 +4,11 @@
 #include <string.h>
 #include "bg.h"
 
+/* 0x00200000..0x002001FF => 512 bytes total SRAM window in ROM header. */
+typedef char serializable_fits_sram_window[
+    (ADDR_OPTIONS + sizeof(Serializable) <= 0x200) ? 1 : -1
+];
+
 // --- TEIL 1: SRAM HARDWARE-ZUGRIFF ---
 
 void save_execute() {
@@ -88,8 +93,8 @@ void save_clear() {
     config.serializable.playerName[3] = '\0';
     
     config.serializable.randMode = 0;
-    config.serializable.speedLevel = 1;
-    config.serializable.garbageFreq = 1;
+    config.serializable.speedLevel = 3;
+    config.serializable.garbageFreq = 3;
     config.serializable.itemMode = 1;
     config.serializable.flags = FLAG_SHADOW | FLAG_HOLD | FLAG_NEXT | FLAG_MUSIC | FLAG_SOUND | FLAG_BG;
     
@@ -97,6 +102,10 @@ void save_clear() {
     config.serializable.thresholdLRInitial = 6;
     config.serializable.thresholdLRRepeat = 2;
     config.serializable.thresholdSD = 3;
+    
+    /* Initialize Challenge Mode (column 0 unlocked, all else locked) */
+    memset(config.serializable.challenge_unlocked, 0, sizeof(config.serializable.challenge_unlocked));
+    memset(config.serializable.challenge_cleared, 0, sizeof(config.serializable.challenge_cleared));
 
     char* names[] = {"PET", "SGK", "CPU", "VDP", "ACE", "SKY", "DAN", "EVA", "MAX", "JOE"};
     for(u16 i = 0; i < 10; i++) {

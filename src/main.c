@@ -6,6 +6,7 @@
 #include "states/title.h"
 #include "states/game_select.h"
 #include "states/game.h"
+#include "states/challenge.h"
 #include "sound_manager.h"
 #include "states/sound_test.h"
 #include "states/gameover.h"
@@ -28,8 +29,8 @@ GlobalConfig config = {
         .currentScore = 0,
         .playerName = "ABC",
         .randMode = 0,
-        .speedLevel = 1,
-        .garbageFreq = 1,
+        .speedLevel = 3,
+        .garbageFreq = 3,
         .itemMode = 1,
         .flags = FLAG_SHADOW | FLAG_HOLD | FLAG_NEXT | FLAG_MUSIC | FLAG_SOUND | FLAG_BG,
         .thresholdLRInitial = 6,
@@ -46,7 +47,7 @@ GlobalConfig config = {
     .sramop = SRAM_NONE
 };
 
-StateHandler states[9]; 
+StateHandler states[10]; 
 
 void initStateMachine() {
     states[STATE_TITLE]     = (StateHandler){ title_init,      title_init_draw,      title_update,      title_draw,      title_cleanup };
@@ -57,6 +58,7 @@ void initStateMachine() {
     states[STATE_HIGHSCORE] = (StateHandler){ highscore_init,  highscore_init_draw,  highscore_update,  highscore_draw,  highscore_cleanup };
     states[STATE_OPTIONS]   = (StateHandler){ options_init,    options_init_draw,    options_update,    options_draw,    options_cleanup };
     states[STATE_SAVE]      = (StateHandler){ saving_init,     saving_init_draw,     saving_update,     saving_draw,     saving_cleanup };
+    states[STATE_CHALLENGE] = (StateHandler){ challenge_init,  challenge_init_draw,  challenge_update,  challenge_draw,  challenge_cleanup };
 }
 
 void initHighscores() {

@@ -1025,8 +1025,8 @@ void reset_game_logic() {
     ctx->pieceX = 3; 
 
     // 2. Level-Berechnung
-    ctx->startLevel = (config.speedLevel == 2) ? 5 : 
-                      (config.speedLevel == 3) ? 10 : 1;
+    // Start-Level is fixed; speed setting now directly affects gravity.
+    ctx->startLevel = 1;
     ctx->level = ctx->startLevel;
 
     // 3. Status & Effekte
@@ -1052,9 +1052,13 @@ void reset_game_logic() {
 
     // 5. Garbage Timer Initialisierung
     ctx->garbageTimer = 0;
-    if (config.garbageFreq > 0) {
-        u16 base = GARBAGE_INTERVALS[config.garbageFreq];
+    u16 garbageSetting = (config.garbageFreq > GARBAGE_FREQ_MAX) ? GARBAGE_FREQ_MAX : config.garbageFreq;
+    if (garbageSetting > 0) {
+        u16 base = GARBAGE_INTERVALS[garbageSetting];
         ctx->garbageNextThreshold = GET_TICKS(base + (random() % 120) - 60);
+        if (ctx->garbageNextThreshold < GET_TICKS(30)) {
+            ctx->garbageNextThreshold = GET_TICKS(30);
+        }
     } else {
         ctx->garbageNextThreshold = 0; // Explizit nullen
     }

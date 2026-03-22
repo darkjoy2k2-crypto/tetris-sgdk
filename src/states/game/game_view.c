@@ -241,18 +241,32 @@ void drawBoard() {
     for (u16 y = 0; y < 20; y++) {
         u16 rowOffset = (y << 3) + (y << 1);
         bool isClearingRow = (ctx->clearTimer > 0 && GET_LINE_PENDING(y)); 
-        bool showFlash = isClearingRow && ((ctx->clearTimer >> (IS_PAL_SYSTEM ? 1 : 2)) & 1);
+        // Blink-Pattern: 2x blinken mit GET_TICKS(12)
+        // clearTimer 12-10: visible, 9-7: hidden, 6-4: visible, 3-1: hidden
+        u8 blinkPhase = (ctx->clearTimer >> 1) & 3;
+        bool showClearingBlock = (blinkPhase >= 2); // Phases 2,3 = visible
         bool rowDirty = false;
 
         for (u16 x = 0; x < 10; x++) {
             u16 tile = GAME_TILE_START; // Default: Leer
             u8 priority = 0;
 
-            // Logische Hierarchie: Flash > Active Piece > Shadow > Board
-            if (showFlash) {
-                tile = GAME_TILE_START + 8;
-                priority = 1;
-            } else {
+            // Logische Hierarchie: Clearing Animation > Active Piece > Shadow > Board
+            if (isClearingRow && showClearingBlock) {
+                // Zeige die Original-Blöcke aus der clearingLineBackup während Blink-Animation
+                u8 originalCell = ctx->clearingLineBackup[rowOffset + x];
+                if (originalCell != 0) {
+                    priority = 1;
+                    if (originalCell == ITEM_ID_SKULL) {
+                        tile = SKULL_TILE_IDX;
+                    } else if (originalCell == ITEM_ID_HEART) {
+                        tile = HEART_TILE_IDX;
+                    } else {
+                        tile = GAME_TILE_START + 1 + (originalCell - 1);
+                    }
+                }
+            } else if (!isClearingRow) {
+                // Normales Rendering wenn nicht im Clearing-Timer
                 // Ist hier ein Teil des aktiven Steins?
                 bool isPiece = false;
                 if (ctx->clearTimer == 0) {

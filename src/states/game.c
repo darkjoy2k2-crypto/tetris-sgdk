@@ -23,6 +23,7 @@ const u16 GARBAGE_INTERVALS[] = {0, 1200, 600, 300};
 
 static bool handle_gravity(GameContext *gctx)
 {
+    // Phase 4: handle_gravity
     u16 vBtnSoftDrop = (ctx->activeBadEffect == EFFECT_REVERSED) ? BUTTON_LEFT : BUTTON_DOWN;
     bool moved = false;
     ctx->moveTimer++;
@@ -68,6 +69,7 @@ static bool handle_gravity(GameContext *gctx)
         {
             KLog_U2("GRAVITY: Collision below at X:", ctx->pieceX, "Y:", ctx->pieceY + 1);
             lockPiece();
+            // lockPiece spawnt nun direkt neu
             moved = true;
         }
         ctx->moveTimer = 0;
@@ -77,16 +79,22 @@ static bool handle_gravity(GameContext *gctx)
 }
 
 
-static void handle_environment(GameContext *gctx, bool moved)
+static bool handle_environment(GameContext *gctx)
 {
+    // Phase 5: handle_environment
+    bool garbageTriggered = false;
     if (gctx == NULL)
     {
         KLog("ENVIRONMENT: Error - gctx is NULL");
-        return;
+        return false;
     }
 
-    // 1. Garbage Logik
-    if (config.garbageFreq > 0 && gctx->activeBadEffect != EFFECT_FREEZE)
+    bool markersPresent = (gctx->boardFlags & GF_PENDING_MASK) != 0;
+    bool blinkActive = (gctx->clearTimer > 0);
+
+    // Garbage-Check: WENN (keine Marker) UND (kein Blink-Timer)
+    if (config.garbageFreq > 0 && gctx->activeBadEffect != EFFECT_FREEZE && 
+        !markersPresent && !blinkActive)
     {
         gctx->garbageTimer++;
         if (gctx->garbageTimer >= gctx->garbageNextThreshold)
@@ -94,10 +102,7 @@ static void handle_environment(GameContext *gctx, bool moved)
             KLog_U2("ENVIRONMENT: Garbage Triggered. Timer:", gctx->garbageTimer, "Threshold:", gctx->garbageNextThreshold);
             
             addGarbageLine();
-            
-            // WICHTIG: Nach Garbage hat sich das Board verändert. 
-            // Der Schatten muss zwingend neu berechnet werden.
-            calculate_ghost_y();
+            garbageTriggered = true;
 
             gctx->garbageTimer = 0;
             u16 base = GARBAGE_INTERVALS[config.garbageFreq];
@@ -108,14 +113,7 @@ static void handle_environment(GameContext *gctx, bool moved)
         }
     }
 
-    // 2. Shadow Logik
-    // Wir rufen die zentrale Funktion, wenn eine Bewegung stattfand.
-    if (moved && GET_FLAG(config.flags, FLAG_SHADOW))
-    {
-        calculate_ghost_y();
-    }
-
-    // 3. Bad Effect Timer Management
+    // Effekt-Timer: [Reduziere aktive Buffs/Debuffs]
     if (gctx->badEffectTimer > 0)
     {
         // Stückbasierte Effekte ausschließen
@@ -147,6 +145,8 @@ static void handle_environment(GameContext *gctx, bool moved)
             }
         }
     }
+    
+    return garbageTriggered;
 }
 
 // --- REINE LOGIK INITIALISIERUNG ---
@@ -203,34 +203,46 @@ void game_update()
         return;
     }
 
-    if (handle_active_animations(ctx))
-    {
-        lastJoyState = joyState;
-        sprites_update();
-        return;
+    // 1. Blink-Phase (Timer)
+    if (ctx->clearTimer > 0) {
+        ctx->clearTimer--;
+        if (ctx->clearTimer == 0) {
+            finishLineClear();
+        }
+        ctx->boardFlags |= GF_NEEDS_DRAW;
     }
 
+    // 2. Collapse-Phase (Marker)
+    bool collapseActive = false;
+    if (ctx->boardFlags & GF_PENDING_MASK) {
+        handle_board_collapse();
+        ctx->boardFlags |= GF_NEEDS_DRAW;
+        collapseActive = true;
+    }
+
+    // 3. controls_update() [Immer aktiv]
     bool moved = controls_update(ctx);
     if (moved) 
     {
         KLog("GAME_UPDATE: Player movement detected.");
     }
 
+    // 4. handle_gravity() [Immer aktiv]
     if (handle_gravity(ctx))
     {
         moved = true;
-        KLog("GAME_UPDATE: Gravity move occurred.");
     }
 
-    handle_environment(ctx, moved);
+    // 5. handle_environment()
+    bool garbage = handle_environment(ctx);
 
+    // 6. shadow_update()
+    update_shadows(moved, collapseActive, garbage);
+
+    // 7. sprites_update()
     sprites_update();
 
-    if (moved)
-    {
-        ctx->boardFlags |= GF_NEEDS_DRAW;
-    }
-
+    if (moved) ctx->boardFlags |= GF_NEEDS_DRAW;
     lastJoyState = joyState;
 }
 

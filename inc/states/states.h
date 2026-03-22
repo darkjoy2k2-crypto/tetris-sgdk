@@ -107,6 +107,7 @@ typedef struct GameContext {
     s16 sortingRow; 
     u16 flags;                  
     u8 board[200];           
+    u8 clearingLineBackup[200]; // Speichert Originalblöcke während Clear-Animation
     u8 bag[7];
     u8 bagIndex;
     char lastComment[20];

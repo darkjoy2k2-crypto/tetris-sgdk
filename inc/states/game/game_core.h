@@ -82,3 +82,6 @@ static inline u8 get_board_tile(s16 x, s16 y) {
 static inline bool is_within_board(s16 x, s16 y) {
     return (x >= 0 && x < 10 && y >= 0 && y < 20);
 }
+
+void handle_board_collapse();
+void update_shadows(bool moved, bool collapse, bool garbage);

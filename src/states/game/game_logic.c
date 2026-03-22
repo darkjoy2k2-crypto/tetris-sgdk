@@ -350,12 +350,11 @@ void lockPiece() {
         play_game_over_animation();
     } else {
         KLog("LOCK_PIECE: Piece secured. Checking for full lines...");
-        if (clearLines() == 0) {
-            KLog("LOCK_PIECE: No lines cleared. Spawning next piece.");
-            spawnPiece();
-        } else {
-            KLog("LOCK_PIECE: Lines detected. spawnPiece deferred to animation end.");
-        }
+        clearLines(); // Scannt & setzt clearTimer (Phase 4)
+        
+        // Spawn sofortiger neuer Stein oben (Phase 4)
+        KLog("LOCK_PIECE: Spawning next piece immediately.");
+        spawnPiece();
     }
     KLog("LOCK_PIECE: Finished");
 }
@@ -431,43 +430,50 @@ u16 clearLines() {
 
         if (full) {
             linesCleared++;
-            SET_LINE_PENDING(y);
             KLog_U1("CLEAR_LINES: Row is full. Y:", y);
 
-            u8 f;
+            // Speichere die Original-Blöcke für die Blink-Animation
+            for (u16 x = 0; x < 10; x++) {
+                ctx->clearingLineBackup[rowOffset + x] = ctx->board[rowOffset + x];
+            }
+
+            // Bestimme Effekt basierend auf Items
+            u8 itemEffect;
             if (h == 0 && s == 0) {
-                f = 0;
+                itemEffect = TILE_ID_FLASH;  // 11 - Normal
                 KLog("CLEAR_LINES: Regular line detected.");
             }
             else if (h > s) { 
-                f = ITEM_ID_HEART; 
+                itemEffect = ITEM_ID_HEART;  // 11 - Herz
                 ctx->flags |= GF_HEART_TRIG; 
                 KLog_U2("CLEAR_LINES: Heart dominance. Count:", h, "Flags:", ctx->flags);
             }   
             else if (s > h) { 
-                f = ITEM_ID_SKULL; 
+                itemEffect = ITEM_ID_SKULL;  // 10 - Schädel
                 ctx->flags |= GF_SKULL_TRIG; 
                 KLog_U2("CLEAR_LINES: Skull dominance. Count:", s, "Flags:", ctx->flags);
             }   
             else {
-                f = TILE_ID_FLASH;
+                itemEffect = TILE_ID_FLASH;  // 11 - Balanced
                 KLog("CLEAR_LINES: Balanced items. Flash effect.");
             }
 
+            // Speichere auch den Effekt-Typ für später
+            // (Verwende am Ende der clearingLineBackup einen speziellen Wert)
+            ctx->clearingLineBackup[rowOffset] |= (itemEffect << 4);
+
+            // Leere die Zeile im Board für die Rendering-Phase
             for (u16 x = 0; x < 10; x++) {
-                ctx->board[rowOffset + x] = f;
+                ctx->board[rowOffset + x] = 0;
             }
         }
     }
 
     if (linesCleared > 0) {
         KLog_U2("CLEAR_LINES: Lines cleared:", linesCleared, "Combo:", ctx->comboCount + 1);
-        apply_scoring(linesCleared);
-        ctx->comboCount++;
-        
-        ctx->clearTimer = GET_TICKS(20); 
-        
-        SOUND_play(52 + ctx->comboCount);
+        // Scoring verschoben nach finishLineClear
+        // Timer für genau 2 Blinker = ~12 Frames (3 on + 3 off + 3 on + 3 off)
+        ctx->clearTimer = GET_TICKS(12); 
         
         ctx->boardFlags |= GF_NEEDS_DRAW;
     } else {
@@ -630,122 +636,92 @@ void spawnPiece()
 }
 
 
-bool handle_active_animations(GameContext* ctx) {
-    if (ctx == NULL) {
-        KLog("ANIMATION: Error - Context is NULL");
-        return false;
-    }
-
-    // 1. Line-Clear Blinken
-    if (ctx->clearTimer > 0) {
-        ctx->clearTimer--;
-        if (ctx->clearTimer == 0) {
-            KLog("ANIMATION: ClearTimer reached zero. Finalizing line clear.");
-            finishLineClear();
-            
-            bool isVisual = (ctx->activeBadEffect == EFFECT_RAINBOW || ctx->activeBadEffect == EFFECT_SHADOW_BOARD);
-            if (ctx->sortingRow == -1 || isVisual) {
-                KLog("ANIMATION: Post-Clear spawning piece.");
-                spawnPiece();
-            }
-        }
-        ctx->boardFlags |= GF_NEEDS_DRAW;
-        return true; 
-    }
-
-    // 2. Board-Animationen (Rainbow, Shadow, Sort)
-    if (ctx->sortingRow != -1) {
-        u16 y = ctx->sortingRow;
-        bool isVisual = (ctx->activeBadEffect == EFFECT_RAINBOW || ctx->activeBadEffect == EFFECT_SHADOW_BOARD);
-
-        if (ctx->activeBadEffect == EFFECT_RAINBOW) {
-            handle_rainbow_row(y);
-        }
-        else if (ctx->activeBadEffect == EFFECT_SHADOW_BOARD) {
-            handle_shadow_row(y);
-        }
-        else {
-            handle_sort_row(y);
-        }
-
-        KLog_U2("ANIMATION: Processing row:", y, "Effect:", ctx->activeBadEffect);
-
-        ctx->sortingRow++;
-        ctx->boardFlags |= GF_NEEDS_DRAW;
-
-        if (ctx->sortingRow >= 20) {
-            KLog("ANIMATION: Sorting/Visual row animation finished.");
-            ctx->sortingRow = -1;
-            
-            if (isVisual) {
-                KLog_U1("ANIMATION: Visual effect ended:", ctx->activeBadEffect);
-                ctx->activeBadEffect = EFFECT_NONE;
-                ctx->lastActiveBadEffect = 99; 
-                SOUND_play(SND_GOOD_ITEM);
-            } else {
-                KLog("ANIMATION: Sorting finished. Spawning piece.");
-                spawnPiece();
-            }
-        }
-        if (!isVisual) return true; 
-    }
-
-    // 3. Transition: Shadow zu Rainbow
-    if (ctx->activeBadEffect == EFFECT_SHADOW_BOARD && ctx->badEffectTimer > 0) {
-        ctx->badEffectTimer--;
-        if (ctx->badEffectTimer == 0) {
-            KLog("ANIMATION: Shadow timer expired. Transitioning to RAINBOW REBIRTH.");
-            ctx->activeBadEffect = EFFECT_RAINBOW;
-            ctx->sortingRow = 0; 
-            
-            set_game_comment("RAINBOW REBIRTH!", 90);
-            SOUND_play(SND_GOOD_ITEM);
-        }
-    }
-
-    return false; 
-}
+// handle_active_animations entfernt, Logic nun direkt in game_update
 
 void finishLineClear() {
     GameContext *ctx = &sctx->game;
+    u16 linesFound = 0;
 
+    // 1. Scoring, Combo, B2B berechnen (Erneuter Scan notwendig)
+    for (u16 y = 0; y < 20; y++) {
+        bool full = true;
+        u16 rowOffset = (y << 3) + (y << 1);
+        for (u16 x = 0; x < 10; x++) {
+            if (ctx->board[rowOffset + x] == 0) { 
+                full = false; break; 
+            }
+        }
+        if (full) {
+            linesFound++;
+            // Setze PENDING_FLAGS für die betroffenen Zeilen
+            SET_LINE_PENDING(y);
+            
+            // Leere die Zeilen im Board-Array (0 setzen)
+            for (u16 x = 0; x < 10; x++) {
+                ctx->board[rowOffset + x] = 0;
+            }
+        }
+    }
+
+    if (linesFound > 0) {
+        ctx->comboCount++;
+        apply_scoring(linesFound);
+        SOUND_play(52 + ctx->comboCount);
+    } else {
+        ctx->comboCount = 0;
+    }
+
+    KLog_U1("FINISH_LINE_CLEAR: Processed lines:", linesFound);
+}
+
+void handle_board_collapse() {
+    // Phase 2: Collapse logic
+    // Find lowest PENDING marker Y
     for (s16 y = 19; y >= 0; y--) {
         if (GET_LINE_PENDING(y)) {
-            KLog_U1("FINISH_LINE_CLEAR: Clearing line Y:", y);
+            KLog_U1("COLLAPSE: Processing Row Y:", y);
             
-            // 1. Spielfeld-Daten schieben (Grafik/Logik)
+            // Verschiebe ALLES darüber (Y-1 bis 0) nach unten
             if (y > 0) {
                 for (s16 row = y; row > 0; row--) {
                     memcpy(&ctx->board[row * 10], &ctx->board[(row - 1) * 10], 10);
                 }
             }
-            // Oberste Zeile nullen
             memset(&ctx->board[0], 0, 10);
 
-            // 2. Flags synchronisieren (Der kritische Teil)
-            // Wir müssen alle Pending-Flags von 0 bis y-1 um eins nach unten schieben
-            for (s16 fY = y; fY > 0; fY--) {
-                if (GET_LINE_PENDING(fY - 1)) {
-                    SET_LINE_PENDING(fY);
-                } else {
-                    // WICHTIG: Flag löschen, wenn von oben nichts nachkommt
-                    ctx->boardFlags &= ~(1UL << (fY + GF_PENDING_SHIFT));
-                }
-            }
-            // Das Flag der obersten Zeile (0) nach dem Rutschen immer löschen
-            ctx->boardFlags &= ~(1UL << (0 + GF_PENDING_SHIFT));
+            // Aktualisiere verbleibende Marker (Shift +1 für Marker OBERHALB von y)
+            // Bits für Rows 0 bis y-1 müssen um 1 nach links (höherer Index = höheres Y) geschoben werden.
+            u32 currentFlags = ctx->boardFlags;
+            
+            // Maske für pending flags unterhalb (höheres Y als aktuelles y), bleiben unverändert
+            // (Sollten eigentlich keine sein, da wir von unten iterieren, aber sicher ist sicher)
+            u32 maskBelow = ~( (1UL << (y + GF_PENDING_SHIFT + 1)) - 1 );
+            
+            // Maske für pending flags oberhalb (kleineres Y als aktuelles y)
+            u32 maskAbove = (1UL << (y + GF_PENDING_SHIFT)) - 1;
+            
+            // Bit für aktuelles y wird gelöscht durch Shift-Logik oder explizit
+            
+            u32 flagsAbove = (currentFlags & maskAbove) & GF_PENDING_MASK;
+            u32 flagsBelow = currentFlags & maskBelow;
+            u32 otherFlags = currentFlags & ~GF_PENDING_MASK;
 
-            KLog_U2("FINISH_LINE_CLEAR: Row done. Y was:", y, "New Flags:", ctx->boardFlags);
-
-            // 3. Re-Check an der gleichen Position
-            // Da jetzt die Zeile von oben auf Position y liegt, 
-            // erzwingen wir durch y++ (gefolgt vom y-- der Schleife) eine erneute Prüfung von y.
-            y++; 
+            // Shift flagsAbove "down" (Bit index + 1)
+            flagsAbove <<= 1;
+            
+            ctx->boardFlags = otherFlags | flagsBelow | flagsAbove;
+            
+            // Nur einen Schritt pro Frame verarbeiten
+            return;
         }
     }
-    
-    // Optional: Sicherstellen, dass nach der Schleife alles sauber ist
-    // CLEAR_ALL_PENDING(); // Nur wenn du sicher bist, dass alle Animationen durch sind
+}
+
+void update_shadows(bool moved, bool collapse, bool garbage) {
+    // 6. shadow_update
+    if (moved || collapse || garbage) {
+        if (GET_FLAG(config.flags, FLAG_SHADOW)) calculate_ghost_y();
+    }
 }
 
 
@@ -754,7 +730,7 @@ void performHold() {
     if (!GET_FLAG(config.flags, FLAG_HOLD) || !(ctx->flags & GF_CAN_HOLD)) return;
 
     if (ctx->itemSlot < 4 && ctx->itemType == ITEM_ID_SKULL) { 
-        triggerBadEffect(); 
+        triggerBadEffect();
         ctx->itemSlot = 255; 
     }
 
@@ -858,6 +834,7 @@ void reset_game_logic() {
 
     // 1. Board & Basis-Daten
     memset(ctx->board, 0, 200); // board[200]
+    memset(ctx->clearingLineBackup, 0, 200); // clearingLineBackup[200]
     ctx->score = 0;
     ctx->linesTotal = 0;
     ctx->comboCount = 0;

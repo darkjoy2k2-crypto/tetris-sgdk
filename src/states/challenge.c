@@ -1,6 +1,7 @@
 #include "states/challenge.h"
 #include "states/states.h"
 #include "states/game/game_conditions.h"
+#include "states/game/conditions.h"
 #include "gfx.h"
 #include <genesis.h>
 #include "sound_manager.h"
@@ -11,8 +12,8 @@ static u8 grid_to_challenge_level[CHALLENGE_LEVEL_COUNT];
 static bool challenge_translation_ready = FALSE;
 
 static const char* const challenge_level_names[CHALLENGE_LEVEL_COUNT] = {
-    "Start",
-    "Erste Linie",
+    "Tutorial",
+    "First lines",
     "Doppelbau",
     "Vierer-Challenge",
     "Punktesammler",
@@ -225,8 +226,14 @@ static void challenge_rebuild_unlocked_from_cleared(void) {
 static bool challenge_try_move(s8 dx, s8 dy) {
     s16 nx = (s16)ctx->cursor_x + dx;
     s16 ny = (s16)ctx->cursor_y + dy;
+    u8 next_level_id;
 
     if (nx < 0 || nx > 15 || ny < 0 || ny > 7) {
+        return FALSE;
+    }
+
+    next_level_id = (u8)((ny * 16) + nx);
+    if (!challenge_is_open(next_level_id)) {
         return FALSE;
     }
 
@@ -236,6 +243,29 @@ static bool challenge_try_move(s8 dx, s8 dy) {
     ctx->needsRedraw = TRUE;
     SOUND_play(SND_MOVE);
     return TRUE;
+}
+
+static void challenge_place_cursor_on_open_slot(void) {
+    u8 preferred = (u8)(ctx->cursor_y * 16 + ctx->cursor_x);
+
+    if (challenge_is_open(preferred)) {
+        ctx->current_level_id = preferred;
+        return;
+    }
+
+    for (u8 i = 0; i < CHALLENGE_LEVEL_COUNT; i++) {
+        if (challenge_is_open(i)) {
+            ctx->cursor_x = (u8)(i & 15);
+            ctx->cursor_y = (u8)(i >> 4);
+            ctx->current_level_id = i;
+            return;
+        }
+    }
+
+    /* Fallback: deterministic entry if no open node exists (should not happen). */
+    ctx->cursor_x = 0;
+    ctx->cursor_y = 2;
+    ctx->current_level_id = (u8)(2 * CHALLENGE_GRID_WIDTH);
 }
 
 static void challenge_apply_dpad_repeat(bool holdLeft, bool holdRight, bool holdUp, bool holdDown,
@@ -403,7 +433,7 @@ void challenge_init(void) {
         ctx->cursor_x = 0;
         ctx->cursor_y = 2;
     }
-    ctx->current_level_id = (ctx->cursor_y * 16) + ctx->cursor_x;
+    challenge_place_cursor_on_open_slot();
     ctx->needsRedraw = TRUE;
     ctx->holdDir = 0;
     ctx->holdTimer = 0;
@@ -566,7 +596,7 @@ void challenge_update(void) {
             config.runtime.gameMode = GAME_MODE_CHALLENGE;
             config.runtime.challengeLevelId = level_id;
             config.runtime.challengeResult = CHALLENGE_RESULT_NONE;
-            game_conditions_set_challenge_training();
+            game_conditions_set_for_challenge_level(level_id);
             SOUND_play(SND_MENU_SELECT);
             currentState = STATE_GAME;
         }

@@ -26,7 +26,7 @@ extern const u16 GARBAGE_INTERVALS[];
 // Funktionen
 bool checkCollision(s16 nx, s16 ny, u16 nr);
 void spawnPiece();
-void lockPiece();
+void lockPiece(bool wasDropLock);
 u16 clearLines();
 void finishLineClear();
 void update_blinking_animation(); // Blink-Animation vor PENDING

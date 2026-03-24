@@ -2,6 +2,7 @@
 #include "states/game/game_view.h"
 #include "states/game/game_core.h"
 #include "states/game/game_logic.h"
+#include "states/game/quests.h"
 #include "states/states.h"
 #include "gfx.h"
 #include "fonts.h"
@@ -16,6 +17,188 @@ u16 GAME_TILE_START;
 static u16 SKULL_TILE_IDX;
 static u16 HEART_TILE_IDX;
 static u16 stageClearBlinkTick;
+static bool nextPreviewStateInit = FALSE;
+static bool nextPreviewWasHidden = FALSE;
+static s16 questPanelLastProgress = -1;
+static bool questPanelLastActive = FALSE;
+static bool questPanelLastSuccess = FALSE;
+static u16 goalPanelLastClearCount = 0xFFFF;
+static u16 goalPanelLastDoubleCount = 0xFFFF;
+static u16 goalPanelLastTetrisCount = 0xFFFF;
+static u32 goalPanelLastScore = 0xFFFFFFFF;
+static u32 goalPanelLastFlags = 0xFFFFFFFF;
+static u16 goalPanelLastMode = 0;
+
+#define QUEST_PANEL_X 1
+#define QUEST_PANEL_W 13
+
+static void draw_panel_line(u16 y, const char *text, u16 palette)
+{
+    char line[QUEST_PANEL_W + 1];
+    u16 i;
+
+    for (i = 0; i < QUEST_PANEL_W; i++) line[i] = ' ';
+    line[QUEST_PANEL_W] = '\0';
+
+    if (text != NULL) {
+        for (i = 0; i < QUEST_PANEL_W && text[i] != '\0'; i++) {
+            line[i] = text[i];
+        }
+    }
+
+    VDP_setTextPalette(palette);
+    VDP_drawTextBG(VDP_BG_A, line, QUEST_PANEL_X, y);
+}
+
+static void view_draw_tutorial_quest_panel(void)
+{
+    bool activeQuest = (config.runtime.gameMode == GAME_MODE_CHALLENGE) &&
+                       ((gameConditions.goalFlags & GC_GOAL_TUTORIAL_QUEST) != 0);
+    bool activeGoalPanel = (config.runtime.gameMode == GAME_MODE_CHALLENGE) &&
+                           ((gameConditions.goalFlags & (GC_GOAL_SCORE | GC_GOAL_DOUBLES | GC_GOAL_CLEARS | GC_GOAL_TETRISES)) != 0) &&
+                           !activeQuest;
+    u16 panelMode = activeQuest ? 1 : (activeGoalPanel ? 2 : 0);
+
+    if (!activeQuest && !activeGoalPanel) {
+        if (questPanelLastActive) {
+            VDP_clearTextArea(0, 6, 14, 13);
+        }
+        questPanelLastActive = FALSE;
+        questPanelLastProgress = -1;
+        questPanelLastSuccess = FALSE;
+        goalPanelLastClearCount = 0xFFFF;
+        goalPanelLastDoubleCount = 0xFFFF;
+        goalPanelLastTetrisCount = 0xFFFF;
+        goalPanelLastScore = 0xFFFFFFFF;
+        goalPanelLastFlags = 0xFFFFFFFF;
+        goalPanelLastMode = 0;
+        return;
+    }
+
+    if (activeQuest) {
+        if (questPanelLastActive &&
+            questPanelLastProgress == (s16)gameConditions.goalProgress &&
+            questPanelLastSuccess == gameConditions.success &&
+            goalPanelLastFlags == gameConditions.goalFlags) {
+            return;
+        }
+    } else {
+        if (questPanelLastActive &&
+            goalPanelLastFlags == gameConditions.goalFlags &&
+            goalPanelLastClearCount == gameConditions.currentClearCount &&
+            goalPanelLastDoubleCount == gameConditions.currentDoubleCount &&
+            goalPanelLastTetrisCount == gameConditions.currentTetrisCount &&
+            goalPanelLastScore == ctx->score &&
+            questPanelLastSuccess == gameConditions.success) {
+            return;
+        }
+    }
+
+    if (panelMode != goalPanelLastMode) {
+        VDP_clearTextArea(0, 6, 14, 13);
+    }
+
+    if (activeQuest) {
+        draw_panel_line(6, "TUTORIAL", PAL1);
+        draw_panel_line(7, "QUEST", PAL3);
+    } else {
+        draw_panel_line(6, "LEVEL", PAL1);
+        draw_panel_line(7, "GOALS", PAL3);
+    }
+
+    if (activeGoalPanel) {
+        char line[32];
+        u16 y = 11;
+        bool drawsAnyGoal = FALSE;
+        bool clearsDone = (gameConditions.currentClearCount >= gameConditions.goalClearCount);
+        bool doublesDone = (gameConditions.currentDoubleCount >= gameConditions.goalDoubleCount);
+        bool tetrisDone = (gameConditions.currentTetrisCount >= gameConditions.goalTetrisCount);
+        bool scoreDone = (ctx->score >= gameConditions.goalScore);
+
+        draw_panel_line(9, "", PAL3);
+        draw_panel_line(10, "", PAL3);
+
+        if (gameConditions.goalFlags & GC_GOAL_CLEARS) {
+            drawsAnyGoal = TRUE;
+            sprintf(line, "CLEARS %u/%u", gameConditions.currentClearCount, gameConditions.goalClearCount);
+            draw_panel_line(y, line, clearsDone ? PAL1 : PAL3);
+            y += 2;
+        }
+
+        if (gameConditions.goalFlags & GC_GOAL_DOUBLES) {
+            drawsAnyGoal = TRUE;
+            sprintf(line, "2-LINE+ %u/%u", gameConditions.currentDoubleCount, gameConditions.goalDoubleCount);
+            draw_panel_line(y, line, doublesDone ? PAL1 : PAL3);
+            y += 2;
+        }
+
+        if (gameConditions.goalFlags & GC_GOAL_TETRISES) {
+            drawsAnyGoal = TRUE;
+            sprintf(line, "TETRIS %u/%u", gameConditions.currentTetrisCount, gameConditions.goalTetrisCount);
+            draw_panel_line(y, line, tetrisDone ? PAL1 : PAL3);
+            y += 2;
+        }
+
+        if (gameConditions.goalFlags & GC_GOAL_SCORE) {
+            drawsAnyGoal = TRUE;
+            sprintf(line, "SCORE %lu/%lu", ctx->score, gameConditions.goalScore);
+            draw_panel_line(y, line, scoreDone ? PAL1 : PAL3);
+            y += 2;
+        }
+
+        if (!drawsAnyGoal) {
+            draw_panel_line(y, "NO GOALS", PAL3);
+            y += 2;
+        }
+
+        while (y <= 15) {
+            draw_panel_line(y, "", PAL3);
+            y += 1;
+        }
+
+        if (gameConditions.success) {
+            draw_panel_line(16, "START TO EXIT", PAL1);
+        } else {
+            draw_panel_line(16, "", PAL3);
+        }
+    } else {
+        if (gameConditions.success) {
+            draw_panel_line(9, "", PAL3);
+            draw_panel_line(10, "STAGE CLEAR", PAL1);
+            draw_panel_line(11, "", PAL3);
+            draw_panel_line(12, "Quest done", PAL3);
+            draw_panel_line(13, "", PAL3);
+            draw_panel_line(14, "", PAL3);
+            draw_panel_line(15, "", PAL3);
+            draw_panel_line(16, "START EXIT", PAL3);
+        } else {
+            u16 stage = (gameConditions.goalProgress >= QUEST_TUTORIAL_STAGE_COUNT)
+                ? (QUEST_TUTORIAL_STAGE_COUNT - 1)
+                : gameConditions.goalProgress;
+            char head[16];
+
+            sprintf(head, "STEP %u/%u", stage + 1, QUEST_TUTORIAL_STAGE_COUNT);
+            draw_panel_line(9, head, PAL1);
+            draw_panel_line(10, "", PAL3);
+            draw_panel_line(11, quest_get_stage_line(stage, 0), PAL3);
+            draw_panel_line(12, quest_get_stage_line(stage, 1), PAL3);
+            draw_panel_line(13, quest_get_stage_line(stage, 2), PAL3);
+            draw_panel_line(14, quest_get_stage_line(stage, 3), PAL3);
+            draw_panel_line(15, "", PAL3);
+            draw_panel_line(16, "", PAL3);
+        }
+    }
+
+    questPanelLastActive = TRUE;
+    questPanelLastProgress = (s16)gameConditions.goalProgress;
+    questPanelLastSuccess = gameConditions.success;
+    goalPanelLastClearCount = gameConditions.currentClearCount;
+    goalPanelLastDoubleCount = gameConditions.currentDoubleCount;
+    goalPanelLastTetrisCount = gameConditions.currentTetrisCount;
+    goalPanelLastScore = ctx->score;
+    goalPanelLastFlags = gameConditions.goalFlags;
+    goalPanelLastMode = panelMode;
+}
 
 
 
@@ -83,6 +266,8 @@ void view_init_cache() {
     for (u16 i = 0; i < 200; i++) {
         tileCache[i] = 0xFFFF;
     }
+    nextPreviewStateInit = FALSE;
+    nextPreviewWasHidden = FALSE;
 }
 // --- Hilfsfunktionen ---
 
@@ -145,6 +330,8 @@ void view_update_ui(GameContext* ctx) {
     if (ctx == NULL) return;
     VDP_setTextPalette(PAL3);
 
+    view_draw_tutorial_quest_panel();
+
     if (ctx->score != ctx->lastScore) {
         char buf[12];
         uintToStr(ctx->score, buf, 6); 
@@ -168,14 +355,18 @@ void view_update_ui(GameContext* ctx) {
     }
 
     bool hideNext = (ctx->activeBadEffect == EFFECT_HIDE_NEXT);
-if (gc_has_rule(GC_RULE_SHOW_NEXT)) {
-    if (hideNext) drawPreview(-1, UI_X, NEXT_Y);
-    else drawPreview(ctx->nextType, UI_X, NEXT_Y);
+    if (gc_has_rule(GC_RULE_SHOW_NEXT)) {
+        if (!nextPreviewStateInit || (ctx->nextType != ctx->lastNextType) || (hideNext != nextPreviewWasHidden)) {
+            if (hideNext) drawPreview(-1, UI_X, NEXT_Y);
+            else drawPreview(ctx->nextType, UI_X, NEXT_Y);
 
-    ctx->lastNextType = ctx->nextType;
-}
+            ctx->lastNextType = ctx->nextType;
+            nextPreviewWasHidden = hideNext;
+            nextPreviewStateInit = TRUE;
+        }
+    }
 
-if (gc_has_rule(GC_RULE_ALLOW_HOLD) && ctx->holdType != ctx->lastHoldType) {
+    if (gc_has_rule(GC_RULE_ALLOW_HOLD) && ctx->holdType != ctx->lastHoldType) {
             drawPreview(ctx->holdType, UI_X, HOLD_Y);
         ctx->lastHoldType = ctx->holdType;
     }
@@ -227,13 +418,13 @@ u16 sec = (ctx->badEffectTimer + (GET_TICKS(60) - 1)) / GET_TICKS(60);
         stageClearBlinkTick++;
         if (((stageClearBlinkTick >> 4) & 1) != 0) {
             VDP_setTextPalette(PAL1);
-            VDP_drawTextBG(VDP_BG_A, "STAGE CLEAR", 29, 26);
+            VDP_drawTextBG(VDP_BG_A, "STAGE CLEAR", 28, 27);
         } else {
-            VDP_drawTextBG(VDP_BG_A, "           ", 29, 26);
+            VDP_drawTextBG(VDP_BG_A, "           ", 28, 27);
         }
     } else {
         stageClearBlinkTick = 0;
-        VDP_drawTextBG(VDP_BG_A, "           ", 29, 26);
+        VDP_drawTextBG(VDP_BG_A, "           ", 28, 27);
     }
 
 }

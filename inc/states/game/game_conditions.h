@@ -21,6 +21,10 @@
 #define GC_GOAL_SURVIVE_LINES     (1UL << 5)
 #define GC_GOAL_PIECE_LIMIT       (1UL << 6)
 #define GC_GOAL_CLEAN_BOARD       (1UL << 7)
+#define GC_GOAL_TUTORIAL_QUEST    (1UL << 8)
+#define GC_GOAL_DOUBLES           (1UL << 9)
+#define GC_GOAL_CLEARS            (1UL << 10)
+#define GC_GOAL_TETRISES          (1UL << 11)
 
 typedef struct GameConditions {
     u16 speedLevel;
@@ -39,13 +43,17 @@ typedef struct GameConditions {
     u16 goalTimeSec;
     u16 goalSurviveLines;
     u16 goalPieceLimit;
+    u16 goalClearCount;
+    u16 currentClearCount;
+    u16 goalDoubleCount;
+    u16 currentDoubleCount;
+    u16 goalTetrisCount;
+    u16 currentTetrisCount;
+    u16 goalProgress;
     bool success;
 } GameConditions;
 
 extern GameConditions gameConditions;
-
-void game_conditions_set_from_select(const SelectContext *selectCtx);
-void game_conditions_set_challenge_training(void);
 
 static inline bool gc_has_rule(u16 flag) {
     return (gameConditions.ruleFlags & flag) != 0;

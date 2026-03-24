@@ -2,7 +2,8 @@
 #define _SPRITE_H_
 
 #include <genesis.h>
-#include "states/states.h" 
+#include "states/states.h"
+#include "states/game/game_core.h" 
 
 // Animations-Geschwindigkeiten (Ticks)
 #define NOROT_NEXTFRAME       10
@@ -17,6 +18,25 @@
 #define SPRITE_TYPE_SKULL     1
 #define SPRITE_TYPE_SPIRAL    2
 #define SPRITE_TYPE_SPEED     3
+#define SPRITE_TYPE_DUST      4
+
+// Dust-Partikel Konstanten
+#define DUST_TOTAL_FRAMES     16   // Gesamtanzahl Animationsframes
+#define DUST_FRAME_TICKS      2    // Ticks bis zum nächsten Dust-Frame
+#define DUST_RISE_DROP        8    // Pixel Aufstieg pro Frame bei Soft-/Harddrop
+#define DUST_OFFSET           8    // X/Y Zentrierung des Dust-Sprites
+#define DUST_BASE_SLOTS       8    // Ursprüngliche Dust-Slots (verdoppelt)
+#define EXPLOSION_EXTRA_SLOTS 12   // Zusätzliche Slots für Explosionen (verdoppelt, geteilt mit Dust)
+#define DUST_SLOT_COUNT       (DUST_BASE_SLOTS + EXPLOSION_EXTRA_SLOTS)
+#define EXPLOSIONS_PER_CLEAR  5    // Anzahl Explosionen pro Line-Clear
+#define EXPLOSION_FRAME_TICKS 4    // Explosion läuft mit 1 Frame pro Tick
+#define EXPLOSION_DELAY_MAX   5    // Startverzögerung 0..5 Frames nach Line-Clear
+#define EXPLOSION_JITTER      2    // Minimaler Zufallsversatz in Pixeln (+/-2)
+#define EXPLOSION_TOTAL_FRAMES 12  // Explosion-Frames (anim_explosion)
+// Board-Grenzen für Dust-Clipping (in Pixeln)
+#define DUST_BOARD_MIN_X      ((RENDER_X << 3) + DUST_OFFSET)
+#define DUST_BOARD_MAX_X      (((RENDER_X + BOARD_WIDTH) << 3) - DUST_OFFSET)
+#define DUST_BOARD_MIN_Y      ((RENDER_Y << 3) - DUST_OFFSET)
 
 // System Attr Flags
 #define SPRITE_ATTR_VISIBLE   (1 << 0)
@@ -56,10 +76,29 @@ typedef struct {
 // Muss exakt mit der Definition in sprite.c (4) übereinstimmen
 extern GameSprite gameSprites[4];
 
+// --- Dust-Partikel ---
+typedef struct {
+    Sprite* vdpSprite;
+    bool    active;
+    u8      frame;
+    u8      frameTick;
+    u8      frameTickLimit;
+    u8      startDelay;
+    u8      kind;
+    u8      risePerFrame;
+    s16     startX;
+    s16     startY;
+} DustParticle;
+
+extern DustParticle dustParticles[DUST_SLOT_COUNT];
+
 void sprites_init();
 void sprites_update();
 void sprites_sync_game(Vect2D_s16 piecePos, Vect2D_s16 shadowPos, u8 activeEffect);
 void sprites_set_visible(u8 index, bool visible);
+void sprites_trigger_dust(s16 x, s16 y, bool riseUp);
+void sprites_trigger_line_clear_explosions(u32 clearingLineMask);
+void sprites_trigger_explosion_at_board_cell(u16 boardX, u16 boardY, u8 delayMax);
 void sprites_cleanup();
 
 #endif

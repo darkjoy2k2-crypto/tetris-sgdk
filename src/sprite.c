@@ -5,7 +5,36 @@
 #include "states/states.h"
 
 // Definition des Arrays (Größe muss mit Header übereinstimmen)
-GameSprite gameSprites[4]; 
+GameSprite gameSprites[4];
+
+// Dust-Partikel Slots
+DustParticle dustParticles[DUST_SLOT_COUNT];
+
+#define PARTICLE_KIND_DUST      0
+#define PARTICLE_KIND_EXPLOSION 1
+
+static s16 _rand_jitter(s16 radius) {
+    return (s16)(random() % (u16)((radius << 1) + 1)) - radius;
+}
+
+static DustParticle* _acquire_free_particle_slot() {
+    for (u8 di = 0; di < DUST_SLOT_COUNT; di++) {
+        if (!dustParticles[di].active && dustParticles[di].vdpSprite != NULL) {
+            return &dustParticles[di];
+        }
+    }
+    return NULL;
+}
+
+static u8 _count_free_particle_slots() {
+    u8 freeCount = 0;
+    for (u8 di = 0; di < DUST_SLOT_COUNT; di++) {
+        if (!dustParticles[di].active && dustParticles[di].vdpSprite != NULL) {
+            freeCount++;
+        }
+    }
+    return freeCount;
+}
 
 
 /**
@@ -36,6 +65,19 @@ void sprites_init() {
     gameSprites[INDEX_SHADOW].offsetX = -8;  gameSprites[INDEX_SHADOW].offsetY = 0;
     gameSprites[INDEX_NEXT].offsetX   = 0; gameSprites[INDEX_NEXT].offsetY   = 8;
     gameSprites[INDEX_HOLD].offsetX   = 0; gameSprites[INDEX_HOLD].offsetY   = -8;
+
+    // Dust-Partikel-Sprites initialisieren (4 reservierte Slots)
+    for (u8 di = 0; di < DUST_SLOT_COUNT; di++) {
+        memset(&dustParticles[di], 0, sizeof(DustParticle));
+        dustParticles[di].vdpSprite = SPR_addSprite(&anim_dust, -128, -128, TILE_ATTR(PAL2, 0, 0, 0));
+        dustParticles[di].active = FALSE;
+        dustParticles[di].frameTickLimit = DUST_FRAME_TICKS;
+        dustParticles[di].kind = PARTICLE_KIND_DUST;
+        if (dustParticles[di].vdpSprite != NULL) {
+            SPR_setPriority(dustParticles[di].vdpSprite, PRIO_LOW);
+            SPR_setDepth(dustParticles[di].vdpSprite, DEPTH_DEFAULT);
+        }
+    }
 }
 
 /**
@@ -97,6 +139,99 @@ static Vect2D_s16 _get_center_offset(u8 type, u8 rotation) {
     }
 
     return offset;
+}
+
+/**
+ * Startet eine Dust-Animation an der angegebenen Pixelposition.
+ * Findet den ersten freien Slot; sind alle 4 belegt, wird der Effekt ignoriert.
+ */
+void sprites_trigger_dust(s16 x, s16 y, bool riseUp) {
+    DustParticle* dp = _acquire_free_particle_slot();
+    if (dp == NULL) return;
+
+    dp->active = TRUE;
+    dp->frame  = 0;
+    dp->frameTick = 0;
+    dp->frameTickLimit = DUST_FRAME_TICKS;
+    dp->startDelay = 0;
+    dp->kind = PARTICLE_KIND_DUST;
+    dp->risePerFrame = riseUp ? DUST_RISE_DROP : 0;
+    dp->startX = x;
+    dp->startY = y - DUST_OFFSET;
+
+    if (dp->vdpSprite != NULL) {
+        SPR_setDefinition(dp->vdpSprite, &anim_dust);
+    }
+}
+
+void sprites_trigger_line_clear_explosions(u32 clearingLineMask) {
+    u8 clearedLines[BOARD_HEIGHT];
+    u8 clearedCount = 0;
+    u8 freeSlots;
+    u8 explosionTarget;
+    const s16 boardLeftPx = (RENDER_X << 3);
+    const s16 boardWidthPx = (BOARD_WIDTH << 3);
+
+    for (u8 y = 0; y < BOARD_HEIGHT; y++) {
+        if (clearingLineMask & (1UL << y)) {
+            clearedLines[clearedCount++] = y;
+        }
+    }
+
+    if (clearedCount == 0) return;
+
+    freeSlots = _count_free_particle_slots();
+    if (freeSlots == 0) return;
+
+    explosionTarget = (u8)(clearedCount * EXPLOSIONS_PER_CLEAR);
+    if (explosionTarget > freeSlots) explosionTarget = freeSlots;
+
+    for (u8 i = 0; i < explosionTarget; i++) {
+        DustParticle* dp = _acquire_free_particle_slot();
+        if (dp == NULL) return;
+
+        u8 lineIndex = (u8)(random() % clearedCount);
+        u8 lineY = clearedLines[lineIndex];
+        s16 baseX = boardLeftPx + (s16)(((i + 1) * boardWidthPx) / (explosionTarget + 1));
+        s16 baseY = ((RENDER_Y + lineY) << 3) + 4;
+
+        dp->active = TRUE;
+        dp->kind = PARTICLE_KIND_EXPLOSION;
+        dp->frame = 0;
+        dp->frameTick = 0;
+        dp->frameTickLimit = EXPLOSION_FRAME_TICKS;
+        dp->startDelay = (u8)(random() % (EXPLOSION_DELAY_MAX + 1));
+        dp->risePerFrame = 0;
+        dp->startX = baseX + _rand_jitter(EXPLOSION_JITTER);
+        dp->startY = baseY + _rand_jitter(EXPLOSION_JITTER);
+
+        if (dp->vdpSprite != NULL) {
+            SPR_setDefinition(dp->vdpSprite, &anim_explosion);
+            SPR_setPriority(dp->vdpSprite, PRIO_HIGH);
+            SPR_setDepth(dp->vdpSprite, DEPTH_DEFAULT);
+        }
+    }
+}
+
+void sprites_trigger_explosion_at_board_cell(u16 boardX, u16 boardY, u8 delayMax) {
+    DustParticle* dp = _acquire_free_particle_slot();
+    if (dp == NULL) return;
+
+    dp->active = TRUE;
+    dp->kind = PARTICLE_KIND_EXPLOSION;
+    dp->frame = 0;
+    dp->frameTick = 0;
+    dp->frameTickLimit = EXPLOSION_FRAME_TICKS;
+    dp->startDelay = (delayMax > 0) ? (u8)(random() % (delayMax + 1)) : 0;
+    dp->risePerFrame = 0;
+    dp->startX = (s16)(((RENDER_X + boardX) << 3) + 4 + _rand_jitter(EXPLOSION_JITTER));
+    dp->startY = (s16)(((RENDER_Y + boardY) << 3) + 4 + _rand_jitter(EXPLOSION_JITTER));
+
+    if (dp->vdpSprite != NULL) {
+        SPR_setDefinition(dp->vdpSprite, &anim_explosion);
+        SPR_setPriority(dp->vdpSprite, PRIO_HIGH);
+        SPR_setDepth(dp->vdpSprite, DEPTH_DEFAULT);
+    }
 }
 
 void sprites_sync_game(Vect2D_s16 piecePos, Vect2D_s16 shadowPos, u8 activeEffect) {
@@ -226,6 +361,60 @@ void sprites_update() {
         // Finaler Positions-Aufruf inkl. dynamischem Offset
         SPR_setPosition(gs->vdpSprite, gs->x + gs->offsetX, gs->y + gs->offsetY);
     }
+
+    // Dust-/Explosion-Partikel (geteilte Slots)
+    for (u8 di = 0; di < DUST_SLOT_COUNT; di++) {
+        DustParticle* dp = &dustParticles[di];
+        if (dp->vdpSprite == NULL) continue;
+
+        if (!dp->active) {
+            SPR_setPosition(dp->vdpSprite, -128, -128);
+            continue;
+        }
+
+        if (dp->startDelay > 0) {
+            dp->startDelay--;
+            SPR_setPosition(dp->vdpSprite, -128, -128);
+            continue;
+        }
+
+        SPR_setFrame(dp->vdpSprite, dp->frame);
+
+        if (dp->kind == PARTICLE_KIND_DUST) {
+            s16 dustX = dp->startX - DUST_OFFSET;
+            s16 dustY = dp->startY - (s16)(dp->frame * dp->risePerFrame);
+
+            if (dustX < DUST_BOARD_MIN_X) dustX = DUST_BOARD_MIN_X;
+            if (dustX > DUST_BOARD_MAX_X) dustX = DUST_BOARD_MAX_X;
+
+            if (dustY < DUST_BOARD_MIN_Y) {
+                dp->active = FALSE;
+                SPR_setPosition(dp->vdpSprite, -128, -128);
+                continue;
+            }
+
+            SPR_setPosition(dp->vdpSprite, dustX, dustY);
+        } else {
+            SPR_setPosition(dp->vdpSprite, dp->startX - DUST_OFFSET, dp->startY - DUST_OFFSET);
+        }
+
+        dp->frameTick++;
+        if (dp->frameTick >= dp->frameTickLimit) {
+            dp->frameTick = 0;
+            dp->frame++;
+            if (dp->kind == PARTICLE_KIND_DUST) {
+                if (dp->frame >= DUST_TOTAL_FRAMES) dp->active = FALSE;
+            } else {
+                if (dp->frame >= EXPLOSION_TOTAL_FRAMES) dp->active = FALSE;
+            }
+
+            if (!dp->active) {
+                SPR_setPosition(dp->vdpSprite, -128, -128);
+                dp->active = FALSE;
+            }
+        }
+    }
+
     SPR_update();
 }
 

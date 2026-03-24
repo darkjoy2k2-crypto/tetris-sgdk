@@ -3,6 +3,7 @@
 #include "states/game_select.h"
 #include "states/states.h"
 #include "states/game/game_conditions.h"
+#include "states/game/conditions.h"
 #include "sound_manager.h"
 #include "menu_bg.h"
 #include "fonts.h"

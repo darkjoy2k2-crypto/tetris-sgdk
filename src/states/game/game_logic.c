@@ -3,6 +3,7 @@
 #include "states/game/game_logic.h"
 #include "states/game/game_core.h"
 #include "states/game/game_view.h"
+#include "states/game/conditions.h"
 #include "menu_bg.h"
 #include "states/states.h"
 #include "sound_manager.h"
@@ -31,18 +32,6 @@ static void route_session_end(bool challengeSuccess)
 
     check_and_update_highscore(config.currentScore);
     currentState = STATE_GAMEOVER;
-}
-
-static void update_challenge_goal_progress(void)
-{
-    if (config.runtime.gameMode != GAME_MODE_CHALLENGE) return;
-
-    if ((gameConditions.goalFlags & GC_GOAL_SCORE) &&
-        !gameConditions.success &&
-        (ctx->score >= gameConditions.goalScore)) {
-        gameConditions.success = TRUE;
-        SOUND_play(SND_TETRIS);
-    }
 }
 
 // Hier das PIECES Array einfügen (wie gehabt)
@@ -252,6 +241,25 @@ void transfer_piece_to_board() {
     ctx->boardFlags |= GF_NEEDS_DRAW;
 }
 
+static bool check_spawn_game_over_collision(s16 nx, s16 ny, u16 nr) {
+    for (u16 i = 0; i < 4; i++) {
+        s16 gx = nx + PIECES[ctx->type][nr][i][0];
+        s16 gy = ny + PIECES[ctx->type][nr][i][1];
+
+        if (gx < 0 || gx >= 10 || gy >= 20) return true;
+
+        if (gy >= 0 && get_board_tile(gx, gy) != 0) {
+            // Kollision mit einer Zeile, die gerade blinkt und gleich gecleart wird, zählt nicht als Top-Out.
+            if ((ctx->clearTimer > 0) && (ctx->clearingLineMask & (1UL << gy))) {
+                continue;
+            }
+            return true;
+        }
+    }
+
+    return false;
+}
+
 static void apply_scoring(u16 lines) {
     const u16 basePoints[] = { 0, 100, 300, 500, 800 };
     u16 gain = basePoints[lines] * ctx->level;
@@ -269,7 +277,11 @@ static void apply_scoring(u16 lines) {
         menu_bg_set_intensity((ctx->linesTotal % 10) + 1);
     }
 
-    update_challenge_goal_progress();
+    if (lines > 0) {
+        game_conditions_on_lines_cleared(lines, ctx->score);
+    }
+
+    game_conditions_update_progress_from_score(ctx->score);
 }
 
 
@@ -443,13 +455,20 @@ void triggerBadEffect() {
 
 
 
-void lockPiece() {
+void lockPiece(bool wasDropLock) {
     KLog("LOCK_PIECE: Start");
     bool lockedAbove = false;
     u16 i;
 
     KLog("LOCK_PIECE: Calling transfer_piece_to_board...");
-    transfer_piece_to_board(); 
+    transfer_piece_to_board();
+
+    // Dust-Effekt an der Landeposition des Tetrominos
+    sprites_trigger_dust(
+        (RENDER_X + ctx->pieceX) << 3,
+        (RENDER_Y + ctx->ghostY) << 3,
+        wasDropLock
+    );
 
     for (i = 0; i < 4; i++) {
         s16 gy = ctx->pieceY + PIECES[ctx->type][ctx->rotation][i][1];
@@ -591,6 +610,9 @@ u16 clearLines() {
         // Timer für Blink-Animation: 2x blinken = ~20 Frames
         ctx->clearTimer = GET_TICKS(20); 
 
+        // Spawn 5 Explosionen auf den geclearten Zeilen (mit Delay/Jitter in sprite.c)
+        sprites_trigger_line_clear_explosions(ctx->clearingLineMask);
+
         // Sound direkt beim Start der Einfärb-/Blinkanimation
         SOUND_play(52 + ctx->comboCount + 1);
 
@@ -608,25 +630,46 @@ void play_game_over_animation() {
 
     for (y = 0; y < 20; y++) {
         bool rowChanged = false;
+        u16 filledX[10];
+        u16 filledCount = 0;
         // Zeilen-Offset berechnen: (y * 10)
         u16 rowOffset = (y << 3) + (y << 1);
 
         for (x = 0; x < 10; x++) {
             // Zugriff auf das flache Board-Array
             if (ctx->board[rowOffset + x] != 0) {
+                filledX[filledCount++] = x;
                 ctx->board[rowOffset + x] = TILE_ID_GARBAGE; // ID 8 (Shadow)
                 rowChanged = true;
             }
         }
 
         if (rowChanged) {
+            u16 explodeDiv = (u16)((random() % 3) + 2); // 2..4
+            bool spawnedExplosion = FALSE;
+
             ctx->boardFlags |= GF_NEEDS_DRAW;
             // Da wir uns in einer blockierenden Animation befinden, 
             // erzwingen wir das Zeichnen sofort
             drawBoard(); 
+
+            // Nicht jeder Block explodiert: zufällig etwa jeder 2. bis 4. Block.
+            for (u16 e = 0; e < filledCount; e++) {
+                if ((random() % explodeDiv) == 0) {
+                    sprites_trigger_explosion_at_board_cell(filledX[e], y, 2);
+                    spawnedExplosion = TRUE;
+                }
+            }
+
+            // Optionales Fallback, damit eine Zeile nicht komplett ohne Effekt bleibt.
+            if (!spawnedExplosion && filledCount > 0 && ((random() & 1) == 0)) {
+                u16 idx = (u16)(random() % filledCount);
+                sprites_trigger_explosion_at_board_cell(filledX[idx], y, 2);
+            }
             
             // Kurze Pause für den visuellen Effekt (von oben nach unten)
             for (i = 0; i < 3; i++) {
+                sprites_update();
                 SYS_doVBlankProcess();
             }
         }
@@ -634,12 +677,19 @@ void play_game_over_animation() {
 
     // Längere Pause am Ende der Animation (ca. 0.6s bei 60Hz)
     for (i = 0; i < 40; i++) {
+        sprites_update();
+        SYS_doVBlankProcess();
+    }
+
+    // Beim Game-Over auf Schwarz ausblenden (BG_B), bevor der nächste State übernimmt.
+    menu_bg_set_active(FALSE);
+    for (i = 0; i < 24; i++) {
+        menu_bg_update();
         SYS_doVBlankProcess();
     }
     
-    route_session_end((gameConditions.goalFlags & GC_GOAL_SCORE) && (ctx->score >= gameConditions.goalScore));
+    route_session_end(game_conditions_is_success(ctx->score));
 }
-
 
 void spawnPiece()
 {
@@ -740,7 +790,7 @@ void spawnPiece()
     if (gc_has_rule(GC_RULE_ALLOW_SHADOW)) calculate_ghost_y();
     ctx->boardFlags |= GF_NEEDS_DRAW;
 
-    if (checkCollision(ctx->pieceX, ctx->pieceY, ctx->rotation))
+    if (check_spawn_game_over_collision(ctx->pieceX, ctx->pieceY, ctx->rotation))
     {
         KLog("SPAWN_PIECE: Collision detected at spawn! GAME OVER.");
         SOUND_play(SND_GAME_OVER);
@@ -1240,5 +1290,5 @@ void handle_game_over() {
     for (u16 i = 0; i < 30; i++) SYS_doVBlankProcess();
     
     view_fade_out_frame();
-    route_session_end((gameConditions.goalFlags & GC_GOAL_SCORE) && (ctx->score >= gameConditions.goalScore));
+    route_session_end(game_conditions_is_success(ctx->score));
 }

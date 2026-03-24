@@ -11,66 +11,27 @@
 #include "states/states.h"
 #include "states/game/game_core.h"
 #include "states/game/game_conditions.h"
+#include "states/game/conditions.h"
 #include "states/game/game_logic.h"
 #include "states/game/game_view.h"
 #include "states/game/game_controls.h"
 
 GameContext* ctx = NULL;
-GameConditions gameConditions;
+static bool stageClearEffectTriggered = FALSE;
 
 const u16 GARBAGE_INTERVALS[] = {0, 1200, 1000, 850, 700, 580, 460, 340, 240, 120};
 
-static void game_conditions_reset_goals(void)
+static s16 get_board_top_row(void)
 {
-    gameConditions.goalFlags = 0;
-    gameConditions.goalScore = 0;
-    gameConditions.goalLines = 0;
-    gameConditions.goalHearts = 0;
-    gameConditions.goalSkulls = 0;
-    gameConditions.goalTimeSec = 0;
-    gameConditions.goalSurviveLines = 0;
-    gameConditions.goalPieceLimit = 0;
-    gameConditions.success = FALSE;
-}
-
-void game_conditions_set_from_select(const SelectContext *selectCtx)
-{
-    if (selectCtx == NULL) return;
-
-    gameConditions.speedLevel = selectCtx->speedLevel;
-    gameConditions.garbageFreq = selectCtx->garbageFreq;
-    gameConditions.thresholdLRInitial = config.thresholdLRInitial;
-    gameConditions.thresholdLRRepeat = config.thresholdLRRepeat;
-    gameConditions.thresholdSD = config.thresholdSD;
-    gameConditions.ruleFlags = 0;
-
-    if (GET_FLAG(selectCtx->flags, FLAG_SHADOW)) gameConditions.ruleFlags |= GC_RULE_ALLOW_SHADOW;
-    if (GET_FLAG(selectCtx->flags, FLAG_HOLD)) gameConditions.ruleFlags |= GC_RULE_ALLOW_HOLD;
-    if (GET_FLAG(selectCtx->flags, FLAG_NEXT)) gameConditions.ruleFlags |= GC_RULE_SHOW_NEXT;
-    if (GET_FLAG(selectCtx->flags, FLAG_DEBUG)) gameConditions.ruleFlags |= GC_RULE_DEBUG_UI;
-    if (selectCtx->randMode != 0) gameConditions.ruleFlags |= GC_RULE_RANDOM_CHAOS;
-
-    if (selectCtx->itemMode != 0) {
-        gameConditions.ruleFlags |= GC_RULE_ITEMS_ENABLED;
-        if (selectCtx->itemMode == 2) gameConditions.ruleFlags |= GC_RULE_ITEMS_GOOD_ONLY;
-        if (selectCtx->itemMode == 3) gameConditions.ruleFlags |= GC_RULE_ITEMS_BAD_ONLY;
+    for (s16 y = 0; y < BOARD_HEIGHT; y++) {
+        u16 rowOffset = (u16)((y << 3) + (y << 1));
+        for (u16 x = 0; x < BOARD_WIDTH; x++) {
+            if (ctx->board[rowOffset + x] != 0) {
+                return y;
+            }
+        }
     }
-
-    game_conditions_reset_goals();
-}
-
-void game_conditions_set_challenge_training(void)
-{
-    gameConditions.speedLevel = 1;
-    gameConditions.garbageFreq = 0;
-    gameConditions.thresholdLRInitial = config.thresholdLRInitial;
-    gameConditions.thresholdLRRepeat = config.thresholdLRRepeat;
-    gameConditions.thresholdSD = config.thresholdSD;
-    gameConditions.ruleFlags = GC_RULE_ALLOW_SHADOW | GC_RULE_ALLOW_HOLD | GC_RULE_SHOW_NEXT;
-
-    game_conditions_reset_goals();
-    gameConditions.goalFlags = GC_GOAL_SCORE;
-    gameConditions.goalScore = 1000;
+    return -1;
 }
 
 // Ganz am Ende von game_logic.c einfügen:
@@ -136,7 +97,9 @@ static bool handle_gravity(GameContext *gctx)
         else
         {
             KLog_U2("GRAVITY: Collision below at X:", ctx->pieceX, "Y:", ctx->pieceY + 1);
-            lockPiece();
+            bool softDropLock = (joyState & vBtnSoftDrop) != 0;
+            menu_bg_riistar_pulse(softDropLock ? 2 : 1);
+            lockPiece(softDropLock);
             // lockPiece spawnt nun direkt neu
             moved = true;
         }
@@ -255,6 +218,8 @@ void game_init()
     if (ctx == NULL)
         return;
 
+    stageClearEffectTriggered = FALSE;
+
     // 2. Logik-Reset aufrufen
     reset_game_logic();
 
@@ -263,8 +228,8 @@ void game_init()
     UI_init_fonts_and_palettes();
     SOUND_init();
 
-    // Hintergrund für das Spiel konfigurieren
-    menu_bg_set_mode(BG_MODE_SPACE);
+    // Testpfad: Riistar fest aktivieren, damit BG-Geometrie/Scroll isoliert geprüft werden kann.
+    menu_bg_set_mode(BG_MODE_RIISTAR);
     menu_bg_set_active(GET_FLAG(config.flags, FLAG_BG));
 }
 
@@ -299,6 +264,27 @@ void game_update()
     if (ctx == NULL)
     {
         KLog("GAME_UPDATE: Error - Context is NULL");
+        return;
+    }
+
+    if ((config.runtime.gameMode == GAME_MODE_CHALLENGE) &&
+        gameConditions.success &&
+        !stageClearEffectTriggered) {
+        ctx->activeBadEffect = EFFECT_RAINBOW;
+        ctx->sortingRow = 0;
+        ctx->badEffectTimer = 0;
+        ctx->boardFlags |= GF_NEEDS_DRAW;
+        stageClearEffectTriggered = TRUE;
+    }
+
+    if ((config.runtime.gameMode == GAME_MODE_CHALLENGE) &&
+        gameConditions.success &&
+        (joyState & BUTTON_START) && !(lastJoyState & BUTTON_START)) {
+        config.currentScore = ctx->score;
+        config.runtime.challengeResult = CHALLENGE_RESULT_SUCCESS;
+        SOUND_play(SND_MENU_SELECT);
+        currentState = STATE_CHALLENGE;
+        lastJoyState = joyState;
         return;
     }
 
@@ -348,6 +334,9 @@ void game_update()
     // 7. sprites_update()
     sprites_update();
 
+    // Riistar-Drive: X-Parallax aus Boardhoehe.
+    menu_bg_riistar_set_stack_top(get_board_top_row());
+
     if (moved) ctx->boardFlags |= GF_NEEDS_DRAW;
     lastJoyState = joyState;
 }
@@ -370,12 +359,23 @@ void game_draw()
         ctx->boardFlags &= ~GF_NEEDS_DRAW;
     }
 
-    sprites_update();
     view_update_ui(ctx);
 }
 
 void game_cleanup()
 {
+    for (u16 i = 0; i < 4; i++) {
+        sprites_set_visible(i, FALSE);
+    }
+
+    for (u16 di = 0; di < DUST_SLOT_COUNT; di++) {
+        dustParticles[di].active = FALSE;
+        if (dustParticles[di].vdpSprite != NULL) {
+            SPR_setPosition(dustParticles[di].vdpSprite, -128, -128);
+        }
+    }
+    SPR_update();
+
     // Nur lokalen Pointer lösen, kein MEM_free
     VDP_clearPlane(BG_A, TRUE);
     sprites_cleanup(); // Falls vorhanden, um Hardware-Sprites zu entladen

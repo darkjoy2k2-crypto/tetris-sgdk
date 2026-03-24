@@ -569,5 +569,5 @@ PAL_fadeInPalette(PAL2, target_pal, GET_TICKS(30), FALSE);
 }
 
 void view_fade_out_frame() {
-PAL_fadeOutPalette(PAL2, GET_TICKS(30), FALSE);
+PAL_fadeOutPalette(PAL2, GET_TICKS(120), FALSE);
 }

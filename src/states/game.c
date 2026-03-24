@@ -230,7 +230,6 @@ void game_init()
 
     // Testpfad: Riistar fest aktivieren, damit BG-Geometrie/Scroll isoliert geprüft werden kann.
     menu_bg_set_mode(BG_MODE_RIISTAR);
-    menu_bg_set_active(GET_FLAG(config.flags, FLAG_BG));
 }
 
 
@@ -255,7 +254,7 @@ void game_init_draw()
     // VDP_setTextPalette(PAL3);
     UI_init_fonts_and_palettes(); // Setzt PAL1, PAL2, PAL3 und Font
 
-    // 5. Visueller Start-Effekt
+    // Einziger Fade-In beim Einstieg ins Spiel.
     view_fade_in_frame();
 }
 

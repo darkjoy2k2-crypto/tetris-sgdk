@@ -20,7 +20,8 @@ typedef enum GameState {
     STATE_HIGHSCORE,
     STATE_OPTIONS,
     STATE_SAVE,
-    STATE_CHALLENGE
+    STATE_CHALLENGE,
+    STATE_GFXTEST
 } GameState;
 
 typedef enum TitlePhase {
@@ -137,6 +138,12 @@ typedef struct ChallengeContext {
     u32 frontier_open[4]; // 128-bit: expanded neighbors of cleared, excluding cleared
 } ChallengeContext;
 
+typedef struct GfxTestContext {
+    u8 bag[7];
+    u8 bagIndex;
+    bool needsRedraw;
+} GfxTestContext;
+
 // --- 3. DIE ZENTRALE UNION ---
 
 typedef union StateUnion {
@@ -148,6 +155,7 @@ typedef union StateUnion {
     SoundTestContext soundtest;
     SaveContext      save;
     ChallengeContext challenge;
+    GfxTestContext   gfxtest;
 } StateUnion;
 
 // --- 4. GLOBALER APP-KONTEXT & CONFIG ---

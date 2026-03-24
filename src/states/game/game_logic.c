@@ -682,7 +682,7 @@ void play_game_over_animation() {
     }
 
     // Beim Game-Over auf Schwarz ausblenden (BG_B), bevor der nächste State übernimmt.
-    menu_bg_set_active(FALSE);
+    menu_bg_set_mode(BG_MODE_NONE);
     for (i = 0; i < 24; i++) {
         menu_bg_update();
         SYS_doVBlankProcess();

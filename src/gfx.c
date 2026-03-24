@@ -38,8 +38,14 @@ PAL_setColor(47, RGB24_TO_VDPCOLOR(0x444444)); // PAL2 COL15 DUNKELGRAU (Ghost-P
 
 
     const u32 empty_tile[8] = {
-        0x77777777, 0x00000007, 0x00000007, 0x00000007,
-        0x00000007, 0x00000007, 0x00000007, 0x00000007
+        0x01010101,
+        0x10101010,
+        0x01010101,
+        0x10101010,
+        0x01010101,
+        0x10101010,
+        0x01010101,
+        0x10101010
     };
 
     
@@ -62,12 +68,17 @@ PAL_setColor(47, RGB24_TO_VDPCOLOR(0x444444)); // PAL2 COL15 DUNKELGRAU (Ghost-P
         VDP_loadTileData(crystal_tile, offset + 1 + i, 1, CPU);
     }
 
-    u32 g = 15; 
-    u32 ghost_mid = (g << 28) | (0 << 24) | (0 << 20) | (0 << 16) | 
-                    (0 << 12) | (0 << 8)  | (0 << 4)  | g;
+    // Schachbrett-Muster: Transparent (0) und Rot (12) abwechselnd,
+    // jede Reihe gegenueber der vorherigen versetzt.
     u32 ghost_tile[8] = {
-        0xFFFFFFFF, ghost_mid, ghost_mid, ghost_mid, 
-        ghost_mid, ghost_mid, ghost_mid, 0xFFFFFFFF
+        0x0C0C0C0C,
+        0xC0C0C0C0,
+        0x0C0C0C0C,
+        0xC0C0C0C0,
+        0x0C0C0C0C,
+        0xC0C0C0C0,
+        0x0C0C0C0C,
+        0xC0C0C0C0
     };
     VDP_loadTileData(ghost_tile, offset + 8, 1, CPU);
 }
@@ -85,25 +96,18 @@ void UI_init_fonts_and_palettes() {
 
     // 3. PAL1: Highlight (Gold/Gelb)
     PAL_setPalette(PAL1, PAL_FONT_CLEAR.data, CPU);
-    PAL_setColor(16 + 5, RGB24_TO_VDPCOLOR(0x666600)); // Schatten/Dunkel
-    PAL_setColor(16 + 6, RGB24_TO_VDPCOLOR(0xFFFF00)); // Hauptfarbe Gelb
-    PAL_setColor(16 + 7, RGB24_TO_VDPCOLOR(0x666600));
+    PAL_setColor(16 + 1, RGB24_TO_VDPCOLOR(0x332200)); // sehr dunkel
+    PAL_setColor(16 + 5, RGB24_TO_VDPCOLOR(0x886600)); // mittel
+    PAL_setColor(16 + 6, RGB24_TO_VDPCOLOR(0xFFD533)); // hell
+    PAL_setColor(16 + 7, RGB24_TO_VDPCOLOR(0xFFF1A0)); // highlight
 
     // 4. PAL2: Warnung/Selektion (Rot)
     PAL_setPalette(PAL2, PAL_FONT_CLEAR.data, CPU);
-    PAL_setColor(32 + 1, RGB24_TO_VDPCOLOR(0x440000)); // Sehr Dunkel
-    PAL_setColor(32 + 5, RGB24_TO_VDPCOLOR(0x880000)); // Mittel
-    PAL_setColor(32 + 6, RGB24_TO_VDPCOLOR(0xFF0000)); // Hellrot
-    PAL_setColor(32 + 7, RGB24_TO_VDPCOLOR(0xFF8888)); // Rosa/Highlight
-// JETZT: Wir überschreiben Index 1 und 7 in PAL2 mit den Board-Farben
-    // Wir holen uns die Farben direkt aus PAL0, damit sie identisch sind!
-    u16 colorCyan = PAL_getColor(1); // Farbe von Cyan (I-Piece) aus PAL0
-    u16 colorRed  = PAL_getColor(7); // Farbe von Rot (Z-Piece) aus PAL0
-
-    PAL_setColor(32 + 1, colorCyan); // Setzt Cyan auf Index 1 von PAL2
-    PAL_setColor(32 + 7, colorRed);  // Setzt Rot auf Index 7 von PAL2
+    PAL_setColor(32 + 1, RGB24_TO_VDPCOLOR(0x330000)); // sehr dunkel
+    PAL_setColor(32 + 5, RGB24_TO_VDPCOLOR(0x880000)); // mittel
+    PAL_setColor(32 + 6, RGB24_TO_VDPCOLOR(0xFF2222)); // hellrot
+    PAL_setColor(32 + 7, RGB24_TO_VDPCOLOR(0xFF9A9A)); // highlight
 
 
-    
 VDP_setTextPalette(PAL1);
 }

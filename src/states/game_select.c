@@ -61,7 +61,6 @@ void select_init() {
     ctx = &sctx->select;
 
     menu_bg_set_mode(BG_MODE_MENU);
-    menu_bg_set_active(GET_FLAG(config.flags, FLAG_BG));
 
     ctx->cursor = 0;
     strncpy(ctx->name, config.playerName, 3);

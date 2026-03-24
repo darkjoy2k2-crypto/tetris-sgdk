@@ -5,6 +5,7 @@
 #include "gfx.h"
 #include <genesis.h>
 #include "sound_manager.h"
+#include "menu_bg.h"
 
 
 static ChallengeContext* ctx = NULL;
@@ -447,6 +448,8 @@ void challenge_init(void) {
     challenge_rebuild_unlocked_from_cleared();
 
     challenge_rebuild_frontier();
+
+    menu_bg_set_mode(BG_MODE_SPACE);
     
     /* Clear VDP and prepare screen */
     VDP_clearPlane(BG_A, TRUE);

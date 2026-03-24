@@ -30,13 +30,6 @@ void title_init() {
     // Menu Hintergrund explizit für diesen State konfigurieren
     menu_bg_init(); 
     menu_bg_set_mode(BG_MODE_MENU);
-    
-    // Aktivierung basierend auf dem (jetzt korrekt gesetzten) Flag
-    if (GET_FLAG(config.flags, FLAG_BG)) {
-        menu_bg_set_active(true);
-    } else {
-        menu_bg_set_active(false);
-    }
 
     ctx->phase = PHASE_BLINK;
     ctx->cursor = 0;
@@ -86,12 +79,12 @@ void title_update() {
 
     } else {
         if ((joyState & BUTTON_DOWN) && !(lastJoyState & BUTTON_DOWN)) {
-            ctx->cursor = (ctx->cursor + 1) % 4;
+            ctx->cursor = (ctx->cursor + 1) % 5;
             SOUND_play(SND_MOVE);
             ctx->needsRedraw = true;
         }
         if ((joyState & BUTTON_UP) && !(lastJoyState & BUTTON_UP)) {
-            ctx->cursor = (ctx->cursor == 0) ? 3 : ctx->cursor - 1;
+            ctx->cursor = (ctx->cursor == 0) ? 4 : ctx->cursor - 1;
             SOUND_play(SND_MOVE);
             ctx->needsRedraw = true;
         }
@@ -103,6 +96,7 @@ void title_update() {
                 case 1: currentState = STATE_SELECT; break;
                 case 2: currentState = STATE_OPTIONS; break;
                 case 3: currentState = STATE_SOUNDTEST; break;
+                case 4: currentState = STATE_GFXTEST; break;
             }
         }
         
@@ -110,7 +104,7 @@ void title_update() {
             ctx->phase = PHASE_BLINK;
             ctx->needsRedraw = true;
             ctx->cursor = 0;
-            VDP_clearTextArea(8, 18, 24, 8);
+            VDP_clearTextArea(8, 18, 24, 10);
         }
     }
 }
@@ -133,6 +127,7 @@ void title_draw() {
         draw_title_menu_line(1, "FREE GAME",  (ctx->cursor == 1));
         draw_title_menu_line(2, "OPTIONS",    (ctx->cursor == 2));
         draw_title_menu_line(3, "SOUND TEST", (ctx->cursor == 3));
+        draw_title_menu_line(4, "GFX TEST",   (ctx->cursor == 4));
         ctx->needsRedraw = false;
     }
 }

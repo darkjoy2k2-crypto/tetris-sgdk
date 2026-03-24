@@ -3,6 +3,7 @@
 #include "sound_manager.h"
 #include "states/states.h"
 #include "menu_bg.h"
+#include "gfx.h"
 
 static SoundTestContext* ctx = NULL;
 
@@ -12,7 +13,6 @@ void sound_test_init() {
 
     // Hintergrund-Modul konfigurieren
     menu_bg_set_mode(BG_MODE_MENU);
-    menu_bg_set_active(GET_FLAG(config.flags, FLAG_BG));
 
     // Initialisierung der Werte (Speicher wurde in main.c genullt)
     ctx->currentID = 1;
@@ -21,6 +21,8 @@ void sound_test_init() {
 
 void sound_test_init_draw() {
     if (ctx == NULL) return;
+
+    UI_init_fonts_and_palettes();
 
     // Statische UI-Elemente
     VDP_clearTextArea(0, 0, 40, 28);

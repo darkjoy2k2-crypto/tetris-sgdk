@@ -14,11 +14,12 @@ void highscore_init() {
     ctx->displayTimer = 0;
     
     menu_bg_set_mode(BG_MODE_MENU);
-    menu_bg_set_active(GET_FLAG(config.flags, FLAG_BG));
 }
 
 void highscore_init_draw() {
     if (ctx == NULL) return;
+
+    UI_init_fonts_and_palettes();
     
     VDP_clearTextArea(0, 0, 40, 28);
 

@@ -3,6 +3,7 @@
 #include "menu_bg.h"
 #include <string.h>
 #include "bg.h"
+#include "gfx.h"
 
 /* 0x00200000..0x002001FF => 512 bytes total SRAM window in ROM header. */
 typedef char serializable_fits_sram_window[
@@ -142,13 +143,11 @@ void saving_init() {
     ctx->errorOccurred = FALSE;
 
     VDP_clearTextArea(0, 0, 40, 28);
-    // Sicherstellen, dass das Menü-System weiß, welcher Hintergrund aktiv ist
-    menu_bg_set_active(GET_FLAG(config.flags, FLAG_BG));
-    
-    PAL_fadeInPalette(PAL1, game_bg.palette->data, 30, TRUE);
+    menu_bg_set_mode(BG_MODE_MENU);
 }
 
 void saving_init_draw() {
+    UI_init_fonts_and_palettes();
     VDP_drawText("DO NOT TURN OFF CONSOLE!", 8, 12);
 }
 
@@ -186,11 +185,7 @@ void saving_update() {
     }
 
     if (!ctx->errorOccurred) {
-        if (ctx->timer == 90) {
-            PAL_fadeOut(0, 63, 20, TRUE);
-        }
-
-        if (ctx->timer > 115) {
+        if (ctx->timer > 90) {
             config.sramop = SRAM_NONE;
             // Falls preferredState gesetzt wurde (z.B. zurück zu Options), dahin wechseln
             if (config.preferredState != STATE_NONE) {

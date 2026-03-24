@@ -33,7 +33,6 @@ void options_init() {
     ctx->thresholdSD = config.thresholdSD;
     ctx->needsRedraw = true;
     menu_bg_set_mode(BG_MODE_MENU);
-    menu_bg_set_active(GET_FLAG(ctx->flags, FLAG_BG));
     SYS_showFrameLoad(GET_FLAG(ctx->flags, FLAG_DEBUG));
     
 }
@@ -116,7 +115,7 @@ void options_update() {
             switch(ctx->cursor) {
                 case 0: TOGGLE_FLAG(ctx->flags, FLAG_MUSIC); if (GET_FLAG(ctx->flags, FLAG_MUSIC)) SOUND_playMusic(); else XGM_stopPlay(); break;
                 case 1: TOGGLE_FLAG(ctx->flags, FLAG_SOUND); break;
-                case 3: TOGGLE_FLAG(ctx->flags, FLAG_BG); menu_bg_set_active(GET_FLAG(ctx->flags, FLAG_BG)); break;
+                case 3: TOGGLE_FLAG(ctx->flags, FLAG_BG); break;
                 case 4: TOGGLE_FLAG(ctx->flags, FLAG_DEBUG); SYS_showFrameLoad(GET_FLAG(ctx->flags, FLAG_DEBUG) ? TRUE : FALSE); break;
             }
         }

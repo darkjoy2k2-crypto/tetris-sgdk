@@ -843,7 +843,8 @@ void update_blinking_animation() {
 // handle_active_animations entfernt, Logic nun direkt in game_update
 
 void finishLineClear() {
-    GameContext *ctx = &sctx->game;
+    if (ctx == NULL) return;
+
     u16 linesFound = 0;
     u16 totalHearts = 0;
     u16 totalSkulls = 0;

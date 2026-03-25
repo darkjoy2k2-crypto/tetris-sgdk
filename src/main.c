@@ -16,6 +16,7 @@
 #include "fonts.h"
 #include "states/save_manager.h"
 #include "states/gfxtest.h"
+#include "states/vs_state.h"
 
 // --- GLOBALE VARIABLEN ---
 GameState currentState = STATE_TITLE;
@@ -186,12 +187,13 @@ GlobalConfig config = {
     .sramop = SRAM_NONE
 };
 
-StateHandler states[11]; 
+StateHandler states[12]; 
 
 void initStateMachine() {
     states[STATE_TITLE]     = (StateHandler){ title_init,      title_init_draw,      title_update,      title_draw,      title_cleanup };
     states[STATE_SELECT]    = (StateHandler){ select_init,     select_init_draw,     select_update,     select_draw,     select_cleanup };
     states[STATE_GAME]      = (StateHandler){ game_init,       game_init_draw,       game_update,       game_draw,       game_cleanup };
+    states[STATE_VS]        = (StateHandler){ vs_state_init,   vs_state_init_draw,   vs_state_update,   vs_state_draw,   vs_state_cleanup };
     states[STATE_SOUNDTEST] = (StateHandler){ sound_test_init, sound_test_init_draw, sound_test_update, sound_test_draw, sound_test_cleanup };
     states[STATE_GAMEOVER]  = (StateHandler){ gameover_init,   gameover_init_draw,   gameover_update,   gameover_draw,   gameover_cleanup };
     states[STATE_HIGHSCORE] = (StateHandler){ highscore_init,  highscore_init_draw,  highscore_update,  highscore_draw,  highscore_cleanup };

@@ -15,6 +15,7 @@ typedef enum GameState {
     STATE_TITLE,
     STATE_SELECT,
     STATE_GAME,
+    STATE_VS,
     STATE_SOUNDTEST,
     STATE_GAMEOVER,
     STATE_HIGHSCORE,
@@ -144,12 +145,43 @@ typedef struct GfxTestContext {
     bool needsRedraw;
 } GfxTestContext;
 
+typedef struct VsContext {
+    GameContext left;
+    GameContext right;
+    u16 joy1;
+    u16 joy1Last;
+    u16 joy2;
+    u16 joy2Last;
+    bool leftDead;
+    bool rightDead;
+    bool rightAiEnabled;
+    bool leftNeedsRedraw;
+    bool rightNeedsRedraw;
+    bool rightAiHasBest;
+    bool rightAiPlanReady;
+    bool rightAiHardDropArmed;
+    u16  rightAiState;
+    u16  rightAiScanRot;
+    s16  rightAiTargetX;
+    s16  rightAiScanX;
+    s16  rightAiTargetY;
+    u16  rightAiTargetRot;
+    s16  rightAiPlannedType;
+    s32  rightAiBestScore;
+    u16  rightAiThinkBudget;
+    u16  rightAiThinkTimer;
+    bool rightAiUseSoftDrop;
+    u16  rightAiPulseTimer;
+    u16  gameOverTimer;
+} VsContext;
+
 // --- 3. DIE ZENTRALE UNION ---
 
 typedef union StateUnion {
     TitleContext     title;
     SelectContext    select;
     GameContext      game;
+    VsContext        vs;
     HighscoreContext highscore;
     OptionsContext   options;
     SoundTestContext soundtest;

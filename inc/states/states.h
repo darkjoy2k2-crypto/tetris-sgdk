@@ -172,7 +172,19 @@ typedef struct VsContext {
     u16  rightAiThinkTimer;
     bool rightAiUseSoftDrop;
     u16  rightAiPulseTimer;
+    u16  leftGarbagePending;
+    u16  rightGarbagePending;
+    s16  leftGameOverAnimRow;
+    s16  rightGameOverAnimRow;
     u16  gameOverTimer;
+    bool matchOver;
+    u16  winnerSide;
+    bool leftLastRotate;
+    bool rightLastRotate;
+    u16  leftEventTimer;
+    u16  rightEventTimer;
+    char leftEventText[24];
+    char rightEventText[24];
 } VsContext;
 
 // --- 3. DIE ZENTRALE UNION ---

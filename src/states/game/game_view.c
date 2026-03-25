@@ -271,6 +271,104 @@ void view_init_cache() {
 }
 // --- Hilfsfunktionen ---
 
+
+void view_draw_board_for_context(GameContext* gctx, u16 renderX, u16 renderY, u16 tileStart, u16 skullTileIdx, u16 heartTileIdx, u16* cache, bool drawActivePiece, bool drawShadow) {
+    u16 rowData[10];
+    s16 pX[4], pY[4], sX[4], sY[4];
+    bool hasShadow;
+
+    if (gctx == NULL || cache == NULL) return;
+
+    hasShadow = drawShadow && (gctx->clearTimer == 0);
+
+    for (u16 i = 0; i < 4; i++) {
+        pX[i] = gctx->pieceX + PIECES[gctx->type][gctx->rotation][i][0];
+        pY[i] = gctx->pieceY + PIECES[gctx->type][gctx->rotation][i][1];
+        if (hasShadow) {
+            sX[i] = gctx->pieceX + PIECES[gctx->type][gctx->rotation][i][0];
+            sY[i] = gctx->ghostY + PIECES[gctx->type][gctx->rotation][i][1];
+        }
+    }
+
+    for (u16 y = 0; y < 20; y++) {
+        u16 rowOffset = (u16)((y << 3) + (y << 1));
+        bool isClearingRow = (gctx->clearTimer > 0) && ((gctx->clearingLineMask & (1UL << y)) != 0);
+        bool showClearingBlock = FALSE;
+        bool rowDirty = FALSE;
+
+        if (isClearingRow) {
+            if (gctx->clearTimer > 10) {
+                showClearingBlock = (gctx->clearTimer > 15);
+            } else {
+                showClearingBlock = (gctx->clearTimer > 5);
+            }
+        }
+
+        for (u16 x = 0; x < 10; x++) {
+            u16 tile = tileStart;
+            u8 priority = 0;
+
+            if (isClearingRow && showClearingBlock) {
+                u8 originalCell = gctx->clearingLineBackup[rowOffset + x];
+                if (originalCell != 0) {
+                    priority = 1;
+                    if (originalCell == ITEM_ID_SKULL) {
+                        tile = skullTileIdx;
+                    } else if (originalCell == ITEM_ID_HEART) {
+                        tile = heartTileIdx;
+                    } else {
+                        tile = (u16)(tileStart + 1 + (originalCell - 1));
+                    }
+                }
+            } else if (!isClearingRow) {
+                bool isPiece = FALSE;
+
+                if (drawActivePiece && gctx->clearTimer == 0) {
+                    for (u16 i = 0; i < 4; i++) {
+                        if (pX[i] == (s16)x && pY[i] == (s16)y) {
+                            tile = (i == gctx->itemSlot)
+                                ? ((gctx->itemType == ITEM_ID_SKULL) ? skullTileIdx : heartTileIdx)
+                                : (u16)(tileStart + 1 + gctx->type);
+                            priority = 1;
+                            isPiece = TRUE;
+                            break;
+                        }
+                    }
+                }
+
+                if (!isPiece && hasShadow) {
+                    for (u16 i = 0; i < 4; i++) {
+                        if (sX[i] == (s16)x && sY[i] == (s16)y) {
+                            tile = (u16)(tileStart + 8);
+                            isPiece = TRUE;
+                            break;
+                        }
+                    }
+                }
+
+                if (!isPiece) {
+                    u8 cell = gctx->board[rowOffset + x];
+                    if (cell != 0) {
+                        priority = 1;
+                        if (cell == ITEM_ID_SKULL) tile = skullTileIdx;
+                        else if (cell == ITEM_ID_HEART) tile = heartTileIdx;
+                        else tile = (u16)(tileStart + 1 + (cell - 1));
+                    }
+                }
+            }
+
+            rowData[x] = TILE_ATTR_FULL(PAL2, priority, 0, 0, tile);
+            if (rowData[x] != cache[rowOffset + x]) {
+                rowDirty = TRUE;
+            }
+        }
+
+        if (rowDirty) {
+            VDP_setTileMapDataRow(BG_A, rowData, renderY + y, renderX, 10, CPU);
+            for (u16 i = 0; i < 10; i++) cache[rowOffset + i] = rowData[i];
+        }
+    }
+}
 void drawPreview(s16 type, u16 x, u16 y) {
     VDP_fillTileMapRect(BG_A, TILE_ATTR_FULL(PAL2, 0, 0, 0, GAME_TILE_START), x, y, 4, 2);
     if (type < 0) return;
@@ -434,103 +532,7 @@ u16 sec = (ctx->badEffectTimer + (GET_TICKS(60) - 1)) / GET_TICKS(60);
 void drawBoard() {
     if (ctx == NULL) return;
 
-    u16 rowData[10];
-    s16 pX[4], pY[4], sX[4], sY[4];
-    bool hasShadow = gc_has_rule(GC_RULE_ALLOW_SHADOW) && ctx->clearTimer == 0;
-
-    // 1. Positionen des aktiven Steins und Schattens vorab berechnen (spart Zeit im Loop)
-    for (u16 i = 0; i < 4; i++) {
-        pX[i] = ctx->pieceX + PIECES[ctx->type][ctx->rotation][i][0];
-        pY[i] = ctx->pieceY + PIECES[ctx->type][ctx->rotation][i][1];
-        if (hasShadow) {
-            sX[i] = ctx->pieceX + PIECES[ctx->type][ctx->rotation][i][0];
-            sY[i] = ctx->ghostY + PIECES[ctx->type][ctx->rotation][i][1];
-        }
-    }
-
-    // 2. Kombinierter Loop: Board + Piece + Shadow
-    for (u16 y = 0; y < 20; y++) {
-        u16 rowOffset = (y << 3) + (y << 1);
-        bool isClearingRow = (ctx->clearTimer > 0 && GET_LINE_PENDING(y)); 
-        // Blink-Pattern: 2x blinken mit GET_TICKS(12)
-        // clearTimer 12-10: visible, 9-7: hidden, 6-4: visible, 3-1: hidden
-        u8 blinkPhase = (ctx->clearTimer >> 1) & 3;
-        bool showClearingBlock = (blinkPhase >= 2); // Phases 2,3 = visible
-        bool rowDirty = false;
-
-        for (u16 x = 0; x < 10; x++) {
-            u16 tile = GAME_TILE_START; // Default: Leer
-            u8 priority = 0;
-
-            // Logische Hierarchie: Clearing Animation > Active Piece > Shadow > Board
-            if (isClearingRow && showClearingBlock) {
-                // Zeige die Original-Blöcke aus der clearingLineBackup während Blink-Animation
-                u8 originalCell = ctx->clearingLineBackup[rowOffset + x];
-                if (originalCell != 0) {
-                    priority = 1;
-                    if (originalCell == ITEM_ID_SKULL) {
-                        tile = SKULL_TILE_IDX;
-                    } else if (originalCell == ITEM_ID_HEART) {
-                        tile = HEART_TILE_IDX;
-                    } else {
-                        tile = GAME_TILE_START + 1 + (originalCell - 1);
-                    }
-                }
-            } else if (!isClearingRow) {
-                // Normales Rendering wenn nicht im Clearing-Timer
-                // Ist hier ein Teil des aktiven Steins?
-                bool isPiece = false;
-                if (ctx->clearTimer == 0) {
-                    for (u16 i = 0; i < 4; i++) {
-                        if (pX[i] == (s16)x && pY[i] == (s16)y) {
-                            tile = (i == ctx->itemSlot) ? 
-                                    ((ctx->itemType == 11) ? SKULL_TILE_IDX : HEART_TILE_IDX) : 
-                                    (GAME_TILE_START + 1 + ctx->type);
-                            priority = 1;
-                            isPiece = true;
-                            break;
-                        }
-                    }
-                }
-
-                // Wenn kein aktiver Stein, ist hier der Schatten?
-                if (!isPiece && hasShadow) {
-                    for (u16 i = 0; i < 4; i++) {
-                        if (sX[i] == (s16)x && sY[i] == (s16)y) {
-                            tile = GAME_TILE_START + 8;
-                            priority = 0;
-                            isPiece = true; // "Besetzt" markieren
-                            break;
-                        }
-                    }
-                }
-
-                // Wenn beides nicht, nimm das statische Board
-                if (!isPiece) {
-                    u8 cell = ctx->board[rowOffset + x];
-                    if (cell != 0) {
-                        priority = 1;
-                        if (cell == 11)      tile = SKULL_TILE_IDX;
-                        else if (cell == 12) tile = HEART_TILE_IDX;
-                        else                 tile = GAME_TILE_START + 1 + (cell - 1);
-                    }
-                }
-            }
-
-            u16 attr = TILE_ATTR_FULL(PAL2, priority, 0, 0, tile);
-            rowData[x] = attr;
-
-            if (attr != tileCache[rowOffset + x]) {
-                rowDirty = true;
-            }
-        }
-
-        // Zeichnen (Nur wenn sich wirklich was in der Zeile geändert hat)
-        if (rowDirty) {
-            VDP_setTileMapDataRow(BG_A, rowData, RENDER_Y + y, RENDER_X, 10, CPU);
-            for (u16 i = 0; i < 10; i++) tileCache[rowOffset + i] = rowData[i];
-        }
-    }
+    view_draw_board_for_context(ctx, RENDER_X, RENDER_Y, GAME_TILE_START, SKULL_TILE_IDX, HEART_TILE_IDX, tileCache, TRUE, gc_has_rule(GC_RULE_ALLOW_SHADOW));
 
     // 3. Effekte (Hardware Sprites)
     Vect2D_s16 pPos = { .x = (RENDER_X + ctx->pieceX) << 3, .y = (RENDER_Y + ctx->pieceY) << 3 };

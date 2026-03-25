@@ -4,6 +4,10 @@
 #include "states/game/game_core.h"
 #include "states/states.h"
 
+// Global switch to disable all random particle start delays.
+// FALSE keeps original effect timing behavior.
+static const bool g_disableRandomParticleDelays = FALSE;
+
 // Definition des Arrays (Größe muss mit Header übereinstimmen)
 GameSprite gameSprites[4];
 
@@ -73,6 +77,8 @@ void sprites_init() {
         dustParticles[di].active = FALSE;
         dustParticles[di].frameTickLimit = DUST_FRAME_TICKS;
         dustParticles[di].kind = PARTICLE_KIND_DUST;
+        dustParticles[di].clipMinX = (s16)DUST_BOARD_MIN_X;
+        dustParticles[di].clipMaxX = (s16)DUST_BOARD_MAX_X;
         if (dustParticles[di].vdpSprite != NULL) {
             SPR_setPriority(dustParticles[di].vdpSprite, PRIO_LOW);
             SPR_setDepth(dustParticles[di].vdpSprite, DEPTH_DEFAULT);
@@ -158,18 +164,40 @@ void sprites_trigger_dust(s16 x, s16 y, bool riseUp) {
     dp->risePerFrame = riseUp ? DUST_RISE_DROP : 0;
     dp->startX = x;
     dp->startY = y - DUST_OFFSET;
+    dp->clipMinX = (s16)DUST_BOARD_MIN_X;
+    dp->clipMaxX = (s16)DUST_BOARD_MAX_X;
+
+    if (dp->vdpSprite != NULL) {
+        SPR_setDefinition(dp->vdpSprite, &anim_dust);
+    }
+}
+void sprites_trigger_dust_at_board_origin(s16 boardOriginX, s16 boardOriginY, s16 pieceX, s16 ghostY, bool riseUp) {
+    DustParticle* dp = _acquire_free_particle_slot();
+    if (dp == NULL) return;
+
+    dp->active = TRUE;
+    dp->frame  = 0;
+    dp->frameTick = 0;
+    dp->frameTickLimit = DUST_FRAME_TICKS;
+    dp->startDelay = 0;
+    dp->kind = PARTICLE_KIND_DUST;
+    dp->risePerFrame = riseUp ? DUST_RISE_DROP : 0;
+    dp->startX = (s16)((boardOriginX + pieceX) << 3);
+    dp->startY = (s16)(((boardOriginY + ghostY) << 3) - DUST_OFFSET);
+    dp->clipMinX = (s16)((boardOriginX << 3) + DUST_OFFSET);
+    dp->clipMaxX = (s16)(((boardOriginX + BOARD_WIDTH) << 3) - DUST_OFFSET);
 
     if (dp->vdpSprite != NULL) {
         SPR_setDefinition(dp->vdpSprite, &anim_dust);
     }
 }
 
-void sprites_trigger_line_clear_explosions(u32 clearingLineMask) {
+void sprites_trigger_line_clear_explosions_at_origin(u32 clearingLineMask, s16 boardOriginX, s16 boardOriginY) {
     u8 clearedLines[BOARD_HEIGHT];
     u8 clearedCount = 0;
     u8 freeSlots;
     u8 explosionTarget;
-    const s16 boardLeftPx = (RENDER_X << 3);
+    const s16 boardLeftPx = (boardOriginX << 3);
     const s16 boardWidthPx = (BOARD_WIDTH << 3);
 
     for (u8 y = 0; y < BOARD_HEIGHT; y++) {
@@ -193,14 +221,18 @@ void sprites_trigger_line_clear_explosions(u32 clearingLineMask) {
         u8 lineIndex = (u8)(random() % clearedCount);
         u8 lineY = clearedLines[lineIndex];
         s16 baseX = boardLeftPx + (s16)(((i + 1) * boardWidthPx) / (explosionTarget + 1));
-        s16 baseY = ((RENDER_Y + lineY) << 3) + 4;
+        s16 baseY = ((boardOriginY + lineY) << 3) + 4;
 
         dp->active = TRUE;
         dp->kind = PARTICLE_KIND_EXPLOSION;
         dp->frame = 0;
         dp->frameTick = 0;
         dp->frameTickLimit = EXPLOSION_FRAME_TICKS;
+    if (g_disableRandomParticleDelays) {
+        dp->startDelay = 0;
+    } else {
         dp->startDelay = (u8)(random() % (EXPLOSION_DELAY_MAX + 1));
+    }
         dp->risePerFrame = 0;
         dp->startX = baseX + _rand_jitter(EXPLOSION_JITTER);
         dp->startY = baseY + _rand_jitter(EXPLOSION_JITTER);
@@ -213,7 +245,11 @@ void sprites_trigger_line_clear_explosions(u32 clearingLineMask) {
     }
 }
 
-void sprites_trigger_explosion_at_board_cell(u16 boardX, u16 boardY, u8 delayMax) {
+void sprites_trigger_line_clear_explosions(u32 clearingLineMask) {
+    sprites_trigger_line_clear_explosions_at_origin(clearingLineMask, RENDER_X, RENDER_Y);
+}
+
+void sprites_trigger_explosion_at_board_cell_at_origin(u16 boardX, u16 boardY, u8 delayMax, s16 boardOriginX, s16 boardOriginY) {
     DustParticle* dp = _acquire_free_particle_slot();
     if (dp == NULL) return;
 
@@ -222,10 +258,14 @@ void sprites_trigger_explosion_at_board_cell(u16 boardX, u16 boardY, u8 delayMax
     dp->frame = 0;
     dp->frameTick = 0;
     dp->frameTickLimit = EXPLOSION_FRAME_TICKS;
-    dp->startDelay = (delayMax > 0) ? (u8)(random() % (delayMax + 1)) : 0;
+    if (g_disableRandomParticleDelays) {
+        dp->startDelay = 0;
+    } else {
+        dp->startDelay = (delayMax > 0) ? (u8)(random() % (delayMax + 1)) : 0;
+    }
     dp->risePerFrame = 0;
-    dp->startX = (s16)(((RENDER_X + boardX) << 3) + 4 + _rand_jitter(EXPLOSION_JITTER));
-    dp->startY = (s16)(((RENDER_Y + boardY) << 3) + 4 + _rand_jitter(EXPLOSION_JITTER));
+    dp->startX = (s16)(((boardOriginX + (s16)boardX) << 3) + 4 + _rand_jitter(EXPLOSION_JITTER));
+    dp->startY = (s16)(((boardOriginY + (s16)boardY) << 3) + 4 + _rand_jitter(EXPLOSION_JITTER));
 
     if (dp->vdpSprite != NULL) {
         SPR_setDefinition(dp->vdpSprite, &anim_explosion);
@@ -234,10 +274,12 @@ void sprites_trigger_explosion_at_board_cell(u16 boardX, u16 boardY, u8 delayMax
     }
 }
 
+void sprites_trigger_explosion_at_board_cell(u16 boardX, u16 boardY, u8 delayMax) {
+    sprites_trigger_explosion_at_board_cell_at_origin(boardX, boardY, delayMax, RENDER_X, RENDER_Y);
+}
+
 void sprites_sync_game(Vect2D_s16 piecePos, Vect2D_s16 shadowPos, u8 activeEffect) {
     if (sctx == NULL) return;
-
-// 1. DYNAMISCHE ZENTRIERUNG BERECHNEN
     Vect2D_s16 center = _get_center_offset(sctx->game.type, sctx->game.rotation);
     
     // X nach rechts (+), Y nach oben (-)
@@ -384,8 +426,8 @@ void sprites_update() {
             s16 dustX = dp->startX - DUST_OFFSET;
             s16 dustY = dp->startY - (s16)(dp->frame * dp->risePerFrame);
 
-            if (dustX < DUST_BOARD_MIN_X) dustX = DUST_BOARD_MIN_X;
-            if (dustX > DUST_BOARD_MAX_X) dustX = DUST_BOARD_MAX_X;
+            if (dustX < dp->clipMinX) dustX = dp->clipMinX;
+            if (dustX > dp->clipMaxX) dustX = dp->clipMaxX;
 
             if (dustY < DUST_BOARD_MIN_Y) {
                 dp->active = FALSE;

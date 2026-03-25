@@ -1,6 +1,6 @@
 #pragma once
 
-
+#include "states/states.h"
 
 void game_init();
 void game_init_draw();

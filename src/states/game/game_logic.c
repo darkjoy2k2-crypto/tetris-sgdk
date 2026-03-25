@@ -550,7 +550,7 @@ bool tryRotate(u16 newRotation) {
 
 
 
-u16 clearLines() {
+u16 clearLinesAtOrigin(s16 boardOriginX, s16 boardOriginY) {
     KLog("CLEAR_LINES: Start");
     u16 linesCleared = 0;
     ctx->clearingLineMask = 0; // Reset blink mask
@@ -611,7 +611,7 @@ u16 clearLines() {
         ctx->clearTimer = GET_TICKS(20); 
 
         // Spawn 5 Explosionen auf den geclearten Zeilen (mit Delay/Jitter in sprite.c)
-        sprites_trigger_line_clear_explosions(ctx->clearingLineMask);
+        sprites_trigger_line_clear_explosions_at_origin(ctx->clearingLineMask, boardOriginX, boardOriginY);
 
         // Sound direkt beim Start der Einfärb-/Blinkanimation
         SOUND_play(52 + ctx->comboCount + 1);
@@ -623,6 +623,10 @@ u16 clearLines() {
 
     KLog_U1("CLEAR_LINES: Finished. Total cleared:", linesCleared);
     return linesCleared;
+}
+
+u16 clearLines() {
+    return clearLinesAtOrigin(RENDER_X, RENDER_Y);
 }
 
 void play_game_over_animation() {
@@ -1025,46 +1029,56 @@ void performHold() {
     ctx->flags &= ~GF_CAN_HOLD;
 }
 
-void addGarbageLine() {
-    if (ctx == NULL) return;
+static bool add_garbage_line_to_context(GameContext* target, bool triggerGameOverAnimation) {
+    GameContext* savedCtx;
 
-    // 1. Board physisch nach OBEN schieben (Y-1)
+    if (target == NULL) return FALSE;
+
+    savedCtx = ctx;
+    ctx = target;
+
     for (u16 row = 0; row < 19; row++) {
         memcpy(&ctx->board[row * 10], &ctx->board[(row + 1) * 10], 10);
     }
 
-    // 2. Neue Garbage-Zeile ganz unten (Y=19) generieren
-    u8 randomColor = 1 + (random() % 7); 
-    u16 holeX = random() % 10;
-    // Zeile 19 beginnt bei Index 190
-    memset(&ctx->board[190], randomColor, 10);
-    ctx->board[190 + holeX] = 0;
-
-    // 3. Piece-Push vermeiden: aktive Figur unverändert lassen
-    // Bei Folge-Kollision: Game Over (keine automatische Verschiebung).
-    if (checkCollision(ctx->pieceX, ctx->pieceY, ctx->rotation)) {
-        play_game_over_animation();
-        return;
+    {
+        u8 randomColor = (u8)(1 + (random() % 7));
+        u16 holeX = (u16)(random() % 10);
+        memset(&ctx->board[190], randomColor, 10);
+        ctx->board[190 + holeX] = 0;
     }
 
-    // 4. FLAGS FIX: Pending-Bits rücken nach oben (Richtung Bit 0)
-    // Wir isolieren Bits 10-29 (Pending Lines)
-    u32 lineFlags = (ctx->boardFlags & 0xFFFFFC00); 
-    
-    // Shift nach rechts verringert den Bit-Index (entspricht Y-1)
-    lineFlags >>= 1; 
-    
-    // WICHTIG: Das Bit, das auf Pos 9 gerutscht ist, MUSS gelöscht werden
-    lineFlags &= 0xFFFFFC00; 
+    if (checkCollision(ctx->pieceX, ctx->pieceY, ctx->rotation)) {
+        if (triggerGameOverAnimation) {
+            play_game_over_animation();
+        }
+        ctx = savedCtx;
+        return FALSE;
+    }
 
-    // System-Flags (Bit 0-9) erhalten und neue Line-Flags einsetzen
-    ctx->boardFlags = (ctx->boardFlags & ~0xFFFFFC00) | lineFlags;
+    calculate_ghost_y();
 
-    // 5. Update & Sound
-    if (gc_has_rule(GC_RULE_ALLOW_SHADOW)) calculate_ghost_y();
-    
+    {
+        u32 lineFlags = (ctx->boardFlags & 0xFFFFFC00);
+        lineFlags >>= 1;
+        lineFlags &= 0xFFFFFC00;
+        ctx->boardFlags = (ctx->boardFlags & ~0xFFFFFC00) | lineFlags;
+    }
+
     SOUND_play(SND_GARBAGE);
     ctx->boardFlags |= GF_NEEDS_DRAW;
+
+    ctx = savedCtx;
+    return TRUE;
+}
+
+void addGarbageLine() {
+    if (ctx == NULL) return;
+    (void)add_garbage_line_to_context(ctx, TRUE);
+}
+
+bool addGarbageLineForContext(GameContext* gctx) {
+    return add_garbage_line_to_context(gctx, FALSE);
 }
 
 

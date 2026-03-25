@@ -28,11 +28,13 @@ bool checkCollision(s16 nx, s16 ny, u16 nr);
 void spawnPiece();
 void lockPiece(bool wasDropLock);
 u16 clearLines();
+u16 clearLinesAtOrigin(s16 boardOriginX, s16 boardOriginY);
 void finishLineClear();
 void update_blinking_animation(); // Blink-Animation vor PENDING
 void refillBag();
 void performHold();
 void addGarbageLine();
+bool addGarbageLineForContext(GameContext* gctx);
 void triggerManualSort();
 void reset_game_logic();
 void calculate_ghost_y();

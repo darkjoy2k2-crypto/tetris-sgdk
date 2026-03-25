@@ -18,6 +18,13 @@
 #include "states/gfxtest.h"
 #include "states/vs_state.h"
 
+// Keep explicit prototypes here to avoid state-table build breaks if header discovery is stale.
+void game_init(void);
+void game_init_draw(void);
+void game_update(void);
+void game_draw(void);
+void game_cleanup(void);
+
 // --- GLOBALE VARIABLEN ---
 GameState currentState = STATE_TITLE;
 GameState lastState = STATE_NONE;

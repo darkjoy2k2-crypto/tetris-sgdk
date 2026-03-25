@@ -157,35 +157,19 @@ typedef struct VsContext {
     bool rightAiEnabled;
     bool leftNeedsRedraw;
     bool rightNeedsRedraw;
-    bool rightAiHasBest;
-    bool rightAiPlanReady;
-    bool rightAiHardDropArmed;
     u16  rightAiState;
-    u16  rightAiScanRot;
     s16  rightAiTargetX;
-    s16  rightAiScanX;
     s16  rightAiTargetY;
+    s16  rightAiEntryX;
     u16  rightAiTargetRot;
     s16  rightAiPlannedType;
-    s16  rightAiPlannedNextType;
     s32  rightAiBestScore;
-    bool rightAiCandidateActive;
-    u16  rightAiCandidateRot;
-    s16  rightAiCandidateX;
-    s32  rightAiCandidateScore;
-    s32  rightAiFollowupBestScore;
-    u16  rightAiFollowupScanRot;
-    s16  rightAiFollowupScanX;
-    u16  rightAiCandidateRows[20];
-    u16  rightAiThinkBudget;
-    u16  rightAiThinkTimer;
-    bool rightAiUseSoftDrop;
     u16  rightAiPulseTimer;
+    u16  rightAiThinkBudget;    // NEU: Für CPU-Last-Monitoring
     u16  leftGarbagePending;
     u16  rightGarbagePending;
     s16  leftGameOverAnimRow;
     s16  rightGameOverAnimRow;
-    u16  gameOverTimer;
     bool matchOver;
     u16  winnerSide;
     bool leftLastRotate;
@@ -195,7 +179,6 @@ typedef struct VsContext {
     char leftEventText[24];
     char rightEventText[24];
 } VsContext;
-
 // --- 3. DIE ZENTRALE UNION ---
 
 typedef union StateUnion {

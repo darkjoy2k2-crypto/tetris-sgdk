@@ -30,6 +30,8 @@ static u16 vsTileStart = TILE_USER_INDEX;
 static u16 leftCache[200];
 static u16 rightCache[200];
 static u16 debugOverlayTimer = 0;
+static char leftEventDrawCache[VS_EVENT_W + 1] = "";
+static char rightEventDrawCache[VS_EVENT_W + 1] = "";
 
 static void bind_player(GameContext* player, u16 joyNow, u16 joyPrev, GameContext** savedCtx, u16* savedJoy, u16* savedLastJoy);
 static void unbind_player(GameContext* savedCtx, u16 savedJoy, u16 savedLastJoy);
@@ -97,6 +99,24 @@ static void vs_draw_debug_overlay(void) {
 
     VDP_drawText(line1, 1, 26);
     VDP_drawText(line2, 1, 27);
+}
+
+static bool vs_check_spawn_collision_safe(const GameContext* player) {
+    for (u16 i = 0; i < 4; i++) {
+        s16 gx = player->pieceX + PIECES[player->type][player->rotation][i][0];
+        s16 gy = player->pieceY + PIECES[player->type][player->rotation][i][1];
+
+        if (gx < 0 || gx >= BOARD_WIDTH || gy >= BOARD_HEIGHT) return TRUE;
+
+        if (gy >= 0 && player->board[(gy * BOARD_WIDTH) + gx] != 0) {
+            if ((player->clearTimer > 0) && (player->clearingLineMask & (1UL << gy))) {
+                continue;
+            }
+            return TRUE;
+        }
+    }
+
+    return FALSE;
 }
 
 static void bind_player(GameContext* player, u16 joyNow, u16 joyPrev, GameContext** savedCtx, u16* savedJoy, u16* savedLastJoy) {
@@ -211,21 +231,30 @@ static void vs_update_event_timers(void) {
 }
 
 static void vs_draw_event_text(void) {
-    char line[VS_EVENT_W + 1];
+    char leftLine[VS_EVENT_W + 1];
+    char rightLine[VS_EVENT_W + 1];
 
-    memset(line, ' ', VS_EVENT_W);
-    line[VS_EVENT_W] = '\0';
+    memset(leftLine, ' ', VS_EVENT_W);
+    leftLine[VS_EVENT_W] = '\0';
     if (vctx->leftEventText[0] != '\0') {
-        strncpy(line, vctx->leftEventText, VS_EVENT_W);
+        strncpy(leftLine, vctx->leftEventText, VS_EVENT_W);
     }
-    VDP_drawText(line, VS_LEFT_X, VS_EVENT_Y);
 
-    memset(line, ' ', VS_EVENT_W);
-    line[VS_EVENT_W] = '\0';
+    memset(rightLine, ' ', VS_EVENT_W);
+    rightLine[VS_EVENT_W] = '\0';
     if (vctx->rightEventText[0] != '\0') {
-        strncpy(line, vctx->rightEventText, VS_EVENT_W);
+        strncpy(rightLine, vctx->rightEventText, VS_EVENT_W);
     }
-    VDP_drawText(line, VS_RIGHT_X, VS_EVENT_Y);
+
+    if (strcmp(leftLine, leftEventDrawCache) != 0) {
+        VDP_drawText(leftLine, VS_LEFT_X, VS_EVENT_Y);
+        strcpy(leftEventDrawCache, leftLine);
+    }
+
+    if (strcmp(rightLine, rightEventDrawCache) != 0) {
+        VDP_drawText(rightLine, VS_RIGHT_X, VS_EVENT_Y);
+        strcpy(rightEventDrawCache, rightLine);
+    }
 }
 
 static void vs_finalize_attack(VsContext* vs, bool isLeft, u16 attack, u16 canceled, const char* eventName, bool b2b, bool perfectClear) {
@@ -466,7 +495,7 @@ bool vs_spawn_piece_for_player(GameContext* player) {
     player->boardFlags |= GF_NEEDS_DRAW;
 
     {
-        bool blocked = checkCollision(player->pieceX, player->pieceY, player->rotation);
+        bool blocked = vs_check_spawn_collision_safe(player);
         unbind_player(savedCtx, savedJoy, savedLastJoy);
 
         if (vctx != NULL) {
@@ -753,6 +782,8 @@ void vs_state_init_draw() {
     memset(leftCache, 0xFF, sizeof(leftCache));
     memset(rightCache, 0xFF, sizeof(rightCache));
     debugOverlayTimer = 0;
+    leftEventDrawCache[0] = '\0';
+    rightEventDrawCache[0] = '\0';
 
     vctx->left.boardFlags  |= GF_NEEDS_DRAW;
     vctx->right.boardFlags |= GF_NEEDS_DRAW;
@@ -808,19 +839,23 @@ void vs_state_update() {
             vs_brain_update_player(vctx, &vctx->right, &vctx->rightDead, &vctx->rightNeedsRedraw);
 
             // Zentrale Schwerkraft-Steuerung für CPU
-            s16 threshold = (s16)GET_TICKS(48 - (vctx->right.level > 1 ? (vctx->right.level - 1) * 2 : 0));
-            if (threshold < 2) threshold = 2;
+            // Re-check clearTimer after brain update to avoid gravity/lock in the same frame
+            // in which a lock just started a line-clear animation.
+            if (!vctx->rightDead && vctx->right.clearTimer == 0) {
+                s16 threshold = (s16)GET_TICKS(48 - (vctx->right.level > 1 ? (vctx->right.level - 1) * 2 : 0));
+                if (threshold < 2) threshold = 2;
 
-            vctx->right.moveTimer++;
-            if (vctx->right.moveTimer >= (u16)threshold) {
-                if (!vs_try_step_down(&vctx->right)) {
-                    if (!vs_lock_piece_for_player(vctx, &vctx->right, FALSE, FALSE, vctx->rightLastRotate) || 
-                        !vs_spawn_piece_for_player(&vctx->right)) {
-                        vctx->rightDead = TRUE;
+                vctx->right.moveTimer++;
+                if (vctx->right.moveTimer >= (u16)threshold) {
+                    if (!vs_try_step_down(&vctx->right)) {
+                        if (!vs_lock_piece_for_player(vctx, &vctx->right, FALSE, FALSE, vctx->rightLastRotate) || 
+                            !vs_spawn_piece_for_player(&vctx->right)) {
+                            vctx->rightDead = TRUE;
+                        }
                     }
+                    vctx->right.moveTimer = 0;
+                    vctx->rightNeedsRedraw = TRUE;
                 }
-                vctx->right.moveTimer = 0;
-                vctx->rightNeedsRedraw = TRUE;
             }
         } else {
             // Manueller Modus P2
@@ -876,7 +911,10 @@ void vs_state_draw() {
     vs_draw_player_board(&vctx->left,  VS_LEFT_X,  VS_BOARD_Y, vctx->leftDead,  leftCache, &vctx->leftNeedsRedraw);
     vs_draw_player_board(&vctx->right, VS_RIGHT_X, VS_BOARD_Y, vctx->rightDead, rightCache, &vctx->rightNeedsRedraw);
     vs_draw_event_text();
-    vs_draw_debug_overlay();
+
+    if (GET_FLAG(config.flags, FLAG_DEBUG)) {
+        vs_draw_debug_overlay();
+    }
 
     if (vctx->matchOver) {
         if (vctx->winnerSide == VS_WINNER_DRAW) {

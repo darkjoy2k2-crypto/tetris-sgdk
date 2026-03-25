@@ -167,7 +167,16 @@ typedef struct VsContext {
     s16  rightAiTargetY;
     u16  rightAiTargetRot;
     s16  rightAiPlannedType;
+    s16  rightAiPlannedNextType;
     s32  rightAiBestScore;
+    bool rightAiCandidateActive;
+    u16  rightAiCandidateRot;
+    s16  rightAiCandidateX;
+    s32  rightAiCandidateScore;
+    s32  rightAiFollowupBestScore;
+    u16  rightAiFollowupScanRot;
+    s16  rightAiFollowupScanX;
+    u16  rightAiCandidateRows[20];
     u16  rightAiThinkBudget;
     u16  rightAiThinkTimer;
     bool rightAiUseSoftDrop;

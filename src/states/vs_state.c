@@ -763,98 +763,102 @@ void vs_state_init_draw() {
 void vs_state_update() {
     if (vctx == NULL) return;
 
-    {
-        bool prevLeftDead = vctx->leftDead;
-        bool prevRightDead = vctx->rightDead;
+    bool prevLeftDead = vctx->leftDead;
+    bool prevRightDead = vctx->rightDead;
 
-        vctx->joy1 = JOY_readJoypad(JOY_1);
-        vctx->joy2 = JOY_readJoypad(JOY_2);
+    vctx->joy1 = JOY_readJoypad(JOY_1);
+    vctx->joy2 = JOY_readJoypad(JOY_2);
 
-        if (vctx->matchOver) {
-            if ((vctx->joy1 & BUTTON_START) && !(vctx->joy1Last & BUTTON_START)) {
-                currentState = STATE_TITLE;
-            }
-
-            if (vctx->winnerSide == VS_WINNER_LEFT) {
-                vs_update_player_animations(vctx, &vctx->left, TRUE, &vctx->leftNeedsRedraw);
-            } else if (vctx->winnerSide == VS_WINNER_RIGHT) {
-                vs_update_player_animations(vctx, &vctx->right, FALSE, &vctx->rightNeedsRedraw);
-            }
-
-            if (vctx->leftDead) {
-                vs_step_game_over_animation(&vctx->left, VS_LEFT_X, &vctx->leftGameOverAnimRow, &vctx->leftNeedsRedraw);
-            }
-            if (vctx->rightDead) {
-                vs_step_game_over_animation(&vctx->right, VS_RIGHT_X, &vctx->rightGameOverAnimRow, &vctx->rightNeedsRedraw);
-            }
-
-            vs_update_event_timers();
-            sprites_update();
-
-            vctx->joy1Last = vctx->joy1;
-            vctx->joy2Last = vctx->joy2;
-            return;
+    // --- MATCH OVER LOGIK ---
+    if (vctx->matchOver) {
+        if ((vctx->joy1 & BUTTON_START) && !(vctx->joy1Last & BUTTON_START)) {
+            currentState = STATE_TITLE;
         }
 
-        if (!vctx->leftDead) {
+        if (vctx->winnerSide == VS_WINNER_LEFT) {
             vs_update_player_animations(vctx, &vctx->left, TRUE, &vctx->leftNeedsRedraw);
-        }
-
-        if (!vctx->rightDead) {
+        } else if (vctx->winnerSide == VS_WINNER_RIGHT) {
             vs_update_player_animations(vctx, &vctx->right, FALSE, &vctx->rightNeedsRedraw);
         }
 
-        if (!vctx->leftDead && vctx->left.clearTimer == 0) {
-            vs_update_player(vctx, &vctx->left, vctx->joy1, vctx->joy1Last, &vctx->leftDead, &vctx->leftNeedsRedraw, TRUE);
-        }
+        if (vctx->leftDead) vs_step_game_over_animation(&vctx->left, VS_LEFT_X, &vctx->leftGameOverAnimRow, &vctx->leftNeedsRedraw);
+        if (vctx->rightDead) vs_step_game_over_animation(&vctx->right, VS_RIGHT_X, &vctx->rightGameOverAnimRow, &vctx->rightNeedsRedraw);
 
-        if (!vctx->rightDead && vctx->right.clearTimer == 0) {
-            if (vctx->rightAiEnabled) {
-                vs_brain_update_player(vctx, &vctx->right, &vctx->rightDead, &vctx->rightNeedsRedraw);
-            } else {
-                vs_update_player(vctx, &vctx->right, vctx->joy2, vctx->joy2Last, &vctx->rightDead, &vctx->rightNeedsRedraw, FALSE);
-            }
-        }
-
-        if (!vctx->leftDead && vctx->rightGarbagePending > 0 && vctx->left.clearTimer == 0 && (vctx->left.boardFlags & GF_PENDING_MASK) == 0) {
-            if (!addGarbageLineForContext(&vctx->left)) {
-                vctx->leftDead = TRUE;
-            }
-            vctx->rightGarbagePending--;
-            vctx->leftNeedsRedraw = TRUE;
-        }
-
-        if (!vctx->rightDead && vctx->leftGarbagePending > 0 && vctx->right.clearTimer == 0 && (vctx->right.boardFlags & GF_PENDING_MASK) == 0) {
-            if (!addGarbageLineForContext(&vctx->right)) {
-                vctx->rightDead = TRUE;
-            }
-            vctx->leftGarbagePending--;
-            vctx->rightNeedsRedraw = TRUE;
-        }
-
-        if (!prevLeftDead && vctx->leftDead) {
-            SOUND_play(SND_GAME_OVER);
-            vctx->leftGameOverAnimRow = 0;
-            vs_handle_match_end();
-        }
-
-        if (!prevRightDead && vctx->rightDead) {
-            SOUND_play(SND_GAME_OVER);
-            vctx->rightGameOverAnimRow = 0;
-            vs_handle_match_end();
-        }
-
-        if (vctx->leftDead) {
-            vs_step_game_over_animation(&vctx->left, VS_LEFT_X, &vctx->leftGameOverAnimRow, &vctx->leftNeedsRedraw);
-        }
-        if (vctx->rightDead) {
-            vs_step_game_over_animation(&vctx->right, VS_RIGHT_X, &vctx->rightGameOverAnimRow, &vctx->rightNeedsRedraw);
-        }
-
-        sprites_update();
         vs_update_event_timers();
+        sprites_update();
 
-    // Force final redraw of both boards when someone just died.
+        vctx->joy1Last = vctx->joy1;
+        vctx->joy2Last = vctx->joy2;
+        return;
+    }
+
+    // --- ANIMATIONS-UPDATES ---
+    if (!vctx->leftDead)  vs_update_player_animations(vctx, &vctx->left, TRUE, &vctx->leftNeedsRedraw);
+    if (!vctx->rightDead) vs_update_player_animations(vctx, &vctx->right, FALSE, &vctx->rightNeedsRedraw);
+
+    // --- PLAYER 1 (LINKS) LOGIK ---
+    if (!vctx->leftDead && vctx->left.clearTimer == 0) {
+        vs_update_player(vctx, &vctx->left, vctx->joy1, vctx->joy1Last, &vctx->leftDead, &vctx->leftNeedsRedraw, TRUE);
+    }
+
+    // --- PLAYER 2 / CPU (RECHTS) LOGIK ---
+    if (!vctx->rightDead && vctx->right.clearTimer == 0) {
+        if (vctx->rightAiEnabled) {
+            // KI simuliert nur Eingaben (X und Rotation)
+            vs_brain_update_player(vctx, &vctx->right, &vctx->rightDead, &vctx->rightNeedsRedraw);
+
+            // Zentrale Schwerkraft-Steuerung für CPU
+            s16 threshold = (s16)GET_TICKS(48 - (vctx->right.level > 1 ? (vctx->right.level - 1) * 2 : 0));
+            if (threshold < 2) threshold = 2;
+
+            vctx->right.moveTimer++;
+            if (vctx->right.moveTimer >= (u16)threshold) {
+                if (!vs_try_step_down(&vctx->right)) {
+                    if (!vs_lock_piece_for_player(vctx, &vctx->right, FALSE, FALSE, vctx->rightLastRotate) || 
+                        !vs_spawn_piece_for_player(&vctx->right)) {
+                        vctx->rightDead = TRUE;
+                    }
+                }
+                vctx->right.moveTimer = 0;
+                vctx->rightNeedsRedraw = TRUE;
+            }
+        } else {
+            // Manueller Modus P2
+            vs_update_player(vctx, &vctx->right, vctx->joy2, vctx->joy2Last, &vctx->rightDead, &vctx->rightNeedsRedraw, FALSE);
+        }
+    }
+
+    // --- GARBAGE PROCESSING ---
+    if (!vctx->leftDead && vctx->rightGarbagePending > 0 && vctx->left.clearTimer == 0 && (vctx->left.boardFlags & GF_PENDING_MASK) == 0) {
+        if (!addGarbageLineForContext(&vctx->left)) vctx->leftDead = TRUE;
+        vctx->rightGarbagePending--;
+        vctx->leftNeedsRedraw = TRUE;
+    }
+
+    if (!vctx->rightDead && vctx->leftGarbagePending > 0 && vctx->right.clearTimer == 0 && (vctx->right.boardFlags & GF_PENDING_MASK) == 0) {
+        if (!addGarbageLineForContext(&vctx->right)) vctx->rightDead = TRUE;
+        vctx->leftGarbagePending--;
+        vctx->rightNeedsRedraw = TRUE;
+    }
+
+    // --- DEATH & MATCH END CHECKS ---
+    if (!prevLeftDead && vctx->leftDead) {
+        SOUND_play(SND_GAME_OVER);
+        vctx->leftGameOverAnimRow = 0;
+        vs_handle_match_end();
+    }
+    if (!prevRightDead && vctx->rightDead) {
+        SOUND_play(SND_GAME_OVER);
+        vctx->rightGameOverAnimRow = 0;
+        vs_handle_match_end();
+    }
+
+    if (vctx->leftDead)  vs_step_game_over_animation(&vctx->left, VS_LEFT_X, &vctx->leftGameOverAnimRow, &vctx->leftNeedsRedraw);
+    if (vctx->rightDead) vs_step_game_over_animation(&vctx->right, VS_RIGHT_X, &vctx->rightGameOverAnimRow, &vctx->rightNeedsRedraw);
+
+    sprites_update();
+    vs_update_event_timers();
+
     if (vctx->leftDead || vctx->rightDead) {
         vctx->left.boardFlags  |= GF_NEEDS_DRAW;
         vctx->right.boardFlags |= GF_NEEDS_DRAW;
@@ -864,7 +868,6 @@ void vs_state_update() {
 
     vctx->joy1Last = vctx->joy1;
     vctx->joy2Last = vctx->joy2;
-    }
 }
 
 void vs_state_draw() {

@@ -157,6 +157,8 @@ typedef struct VsContext {
     bool rightAiEnabled;
     bool leftNeedsRedraw;
     bool rightNeedsRedraw;
+    u16  leftItemMode;
+    u16  rightItemMode;
     u16  rightAiState;
     s16  rightAiTargetX;
     s16  rightAiTargetY;
@@ -166,6 +168,7 @@ typedef struct VsContext {
     s32  rightAiBestScore;
     u16  rightAiPulseTimer;
     u16  rightAiThinkBudget;    // NEU: Für CPU-Last-Monitoring
+    u16  rightAiActionDelay;
     u16  leftGarbagePending;
     u16  rightGarbagePending;
     s16  leftGameOverAnimRow;

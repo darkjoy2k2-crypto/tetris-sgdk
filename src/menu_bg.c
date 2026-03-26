@@ -17,8 +17,11 @@
 #define RIISTAR_SPRING_K       FIX16(0.10)
 #define RIISTAR_DAMPING        FIX16(0.88)
 #define RIISTAR_PULSE_SOFT     FIX16(0.35)
-#define RIISTAR_PULSE_SOFTDROP FIX16(0.75)
-#define RIISTAR_PULSE_HARDDROP FIX16(1.35)
+#define RIISTAR_PULSE_SOFTDROP FIX16(1.20)
+#define RIISTAR_PULSE_HARDDROP FIX16(2.20)
+#define CLUB_SCROLL_STEP FIX16(0.5)
+#define CLUB_SCROLL_MAX_X 1536
+#define CLUB_SCROLL_Y_OFFSET (8)
 
 #define COL_GRAY   0x0444 
 #define COL_YELLOW 0x0440 
@@ -43,6 +46,15 @@ static fix16 flash_level = F16_0;
 static fix16 riistar_group_scroll[5] = { F16_0, F16_0, F16_0, F16_0, F16_0 };
 static s16 riistar_hscroll_lines[240];
 static s16 riistar_map_row_scroll[32];
+static bool bg_has_line_parallax = TRUE;
+static const Palette* bg_dynamic_palette = &riistar_bg_palette;
+static Map* club_map = NULL;
+static fix32 club_scroll_x = FIX32(0);
+static fix32 club_scroll_diff = FIX32(0.5);
+static fix16 club_vertical_center = F16_0;
+static fix16 club_vertical_max = F16_0;
+static fix16 club_vertical_offset = F16_0;
+static s16 club_debug_scroll_px = 0;
 static fix16 riistar_vertical_center = F16_0;
 static fix16 riistar_vertical_amplitude = F16_0;
 static fix16 riistar_vertical_max = F16_0;
@@ -68,12 +80,14 @@ static const u16 target_palette[8] = {
 };
 
 static void draw_riistar_background(void);
+static void draw_club_background(void);
 static void reset_riistar_scroll(void);
 static void update_riistar_scroll_lines(s16 verticalScrollPx);
 static void update_palette_fade(void);
 static void update_star_tiles(u8 intensity);
 static void draw_stars_dynamic(u8 intensity);
 static void draw_menu_shapes(void);
+static void draw_club_debug_info(void);
 
 u16 menu_bg_get_base_color(void) {
     return MENU_BG_COLOR;
@@ -93,13 +107,27 @@ static void apply_current_mode_state(void) {
     is_flashing = false;
     flash_level = F16_0;
 
-    if (bg_mode == BG_MODE_RIISTAR) {
-        VDP_setScrollingMode(HSCROLL_LINE, VSCROLL_PLANE);
+    if ((bg_mode != BG_MODE_CLUB) && (club_map != NULL)) {
+        MAP_release(club_map);
+        club_map = NULL;
+    }
+
+    if (bg_mode == BG_MODE_RIISTAR || bg_mode == BG_MODE_CLUB) {
+        // club_scroll_x und club_scroll_diff werden NICHT mehr hier zurückgesetzt!
+        if (bg_mode == BG_MODE_RIISTAR) {
+            bg_has_line_parallax = TRUE;
+            bg_dynamic_palette = &riistar_bg_palette;
+        } else {
+            bg_has_line_parallax = FALSE;
+            bg_dynamic_palette = &club_bg_palette;
+        }
+        VDP_setScrollingMode(bg_has_line_parallax ? HSCROLL_LINE : HSCROLL_PLANE, VSCROLL_PLANE);
         reset_riistar_scroll();
         VDP_setHorizontalScroll(BG_B, 0);
         VDP_setVerticalScroll(BG_B, F16_toInt(sub_y));
-        draw_riistar_background();
-        update_riistar_scroll_lines(F16_toInt(sub_y));
+        if (bg_mode == BG_MODE_RIISTAR) draw_riistar_background();
+        else draw_club_background();
+        if (bg_has_line_parallax) update_riistar_scroll_lines(F16_toInt(sub_y));
     } else {
         VDP_setScrollingMode(HSCROLL_PLANE, VSCROLL_PLANE);
         VDP_setHorizontalScroll(BG_B, 0);
@@ -179,6 +207,87 @@ static void draw_riistar_background() {
     VDP_setVerticalScroll(BG_B, F16_toInt(sub_y));
 }
 
+static void draw_club_background() {
+    u16 tileBase;
+    u16 tileCount = club_bg_tileset.numTile;
+    u16 safeUserMax;
+    u16 baseAttr;
+    s16 maxScrollY;
+    s16 mapY;
+
+    if (tileCount == 0) return;
+
+    safeUserMax = TILE_USER_MAX_INDEX;
+    {
+        u16 spriteReservedMax = (u16)(TILE_FONT_INDEX - SPRITE_VRAM_RESERVE_TILES - 1);
+        if (spriteReservedMax < safeUserMax) safeUserMax = spriteReservedMax;
+    }
+
+    if ((u16)(tileCount + 16) >= safeUserMax) {
+        tileBase = TILE_USER_INDEX;
+    } else {
+        tileBase = safeUserMax - tileCount - 16;
+        if (tileBase < TILE_USER_INDEX) tileBase = TILE_USER_INDEX;
+    }
+
+    VDP_clearPlane(BG_B, TRUE);
+
+    riistar_y_offset = F16_0;
+    riistar_y_velocity = F16_0;
+
+    if (!VDP_loadTileSet(&club_bg_tileset, tileBase, CPU)) {
+        return;
+    }
+
+    // Let the tileset DMA settle before creating/scanning the map.
+    SYS_doVBlankProcess();
+
+    PAL_setPalette(PAL0, club_bg_palette.data, CPU);
+
+    baseAttr = TILE_ATTR_FULL(PAL0, 0, 0, 0, tileBase);
+    if (club_map != NULL) {
+        MAP_release(club_map);
+        club_map = NULL;
+    }
+    club_map = MAP_create(&club_bg_map, BG_B, baseAttr);
+
+
+    maxScrollY = (s16)(club_bg_map.h << 7) - (IS_PAL_SYSTEM ? 240 : 224);
+    if (maxScrollY < 0) maxScrollY = 0;
+    club_vertical_offset = FIX16(CLUB_SCROLL_Y_OFFSET);
+    club_vertical_center = FIX16(maxScrollY / 2) + club_vertical_offset;
+    club_vertical_max = FIX16(maxScrollY);
+    riistar_y_offset = F16_0;
+    riistar_y_velocity = F16_0;
+
+    if (club_map != NULL) {
+        mapY = F16_toInt(club_vertical_center);
+        if (mapY < 0) mapY = 0;
+        if (mapY > maxScrollY) mapY = maxScrollY;
+        MAP_scrollTo(club_map, 0, (u32)mapY);
+        // First MAP_scrollTo can schedule a full-plane update; flush once now.
+        SYS_doVBlankProcess();
+    }
+
+    scroll_x = F16_0;
+    sub_y = club_vertical_center;
+    curr_dx = F16_0;
+    curr_dy = F16_0;
+    VDP_setHorizontalScroll(BG_B, 0);
+    VDP_setVerticalScroll(BG_B, 0);
+
+    draw_club_debug_info();
+}
+
+static void draw_club_debug_info(void) {
+    char text[40];
+    const u16 screenHeight = IS_PAL_SYSTEM ? 30 : 28;
+    const u16 y = screenHeight - 1;
+
+    sprintf(text, "X:%d W:%d MW:%ld", club_debug_scroll_px, club_bg_map.w, ((s32)club_bg_map.w << 7));
+    VDP_drawTextBG(BG_A, text, 0, y);
+}
+
 static void reset_riistar_scroll() {
     scroll_x = F16_0;
     sub_y = riistar_vertical_center;
@@ -246,7 +355,7 @@ void menu_bg_riistar_pulse(u8 pulseType)
 {
     fix16 impulse = F16_0;
 
-    if (bg_mode != BG_MODE_RIISTAR) return;
+    if (bg_mode != BG_MODE_RIISTAR && bg_mode != BG_MODE_CLUB) return;
     if (!is_active) return;
 
     switch (pulseType) {
@@ -264,8 +373,12 @@ void menu_bg_riistar_pulse(u8 pulseType)
 static void update_palette_fade() {
     if (palette_frozen) return;
 
+    if (bg_mode == BG_MODE_CLUB) {
+        return;
+    }
+
     if (bg_mode == BG_MODE_RIISTAR) {
-        const u16* pal = riistar_bg_palette.data;
+        const u16* pal = bg_dynamic_palette->data;
 
         for (u16 i = 0; i < 16; i++) {
             u16 target = pal[i];
@@ -486,10 +599,38 @@ void menu_bg_update() {
         } else if (bg_mode == BG_MODE_SPACE) {
             curr_dx = F16_0;
             if (curr_dy < target_dy) curr_dy += FIX16(0.05); else if (curr_dy > target_dy) curr_dy -= FIX16(0.05);
+} else if (bg_mode == BG_MODE_CLUB) {
+
+            // FEHLENDE OPERATION: Inkrementierung hinzufügen
+            club_scroll_x += club_scroll_diff;
+
+            club_debug_scroll_px = F32_toInt(club_scroll_x);
+
+            // Vergleich auf fix32 Ebene
+            if (club_scroll_x >= FIX32(1216) || club_scroll_x < FIX32(0)) {
+                club_scroll_diff = -club_scroll_diff;
+            }
+
+            curr_dx = F16_0;
+            curr_dy = F16_0;
+            riistar_y_velocity += F16_mul((F16_0 - riistar_y_offset), RIISTAR_SPRING_K);
+            riistar_y_velocity = F16_mul(riistar_y_velocity, RIISTAR_DAMPING);
+            riistar_y_offset += riistar_y_velocity;
+            sub_y = club_vertical_center + riistar_y_offset;
+            s16 mapYPx = F16_toInt(sub_y);
+
+            if (club_map != NULL) {
+                MAP_scrollTo(club_map, F32_toInt(club_scroll_x), (u32)mapYPx);
+            }
+            VDP_setVerticalScroll(BG_B, mapYPx);
+            draw_club_debug_info();
+
         } else {
             curr_dx = F16_0;
-            for (u16 g = 0; g < 5; g++) {
-                riistar_group_scroll[g] += F16_mul(riistar_group_speeds[g], riistar_speed_scale);
+            if (bg_has_line_parallax) {
+                for (u16 g = 0; g < 5; g++) {
+                    riistar_group_scroll[g] += F16_mul(riistar_group_speeds[g], riistar_speed_scale);
+                }
             }
 
             riistar_y_velocity += F16_mul((F16_0 - riistar_y_offset), RIISTAR_SPRING_K);
@@ -507,13 +648,13 @@ void menu_bg_update() {
                 if (riistar_y_velocity > F16_0) riistar_y_velocity = F16_0;
             }
 
-            update_riistar_scroll_lines(F16_toInt(sub_y));
+            if (bg_has_line_parallax) update_riistar_scroll_lines(F16_toInt(sub_y));
         }
         scroll_x += curr_dx; sub_y += curr_dy;
-        if (bg_mode != BG_MODE_RIISTAR) {
+        if (bg_mode != BG_MODE_RIISTAR && bg_mode != BG_MODE_CLUB) {
             VDP_setHorizontalScroll(BG_B, F16_toInt(scroll_x));
         }
-        VDP_setVerticalScroll(BG_B, F16_toInt(sub_y));
+        if (bg_mode != BG_MODE_CLUB) VDP_setVerticalScroll(BG_B, F16_toInt(sub_y));
 
         if (is_flashing) {
             flash_level -= FIX16(0.04); 

@@ -7,7 +7,7 @@
 #include "states/game/game_logic.h"
 
 // --- KONFIGURATION ---
-#define AI_BASE_STRATEGY  4  
+#define AI_BASE_STRATEGY  1  
 #define AI_BASE_REACTION  4  
 #define PANIC_HEIGHT      8 
 #define AI_SCORE_MIN      -2000000L
@@ -17,10 +17,35 @@ typedef struct { u16 rows[20]; } BitBoard;
 
 // --- HELFER-FUNKTIONEN ---
 
+static u16 ai_get_rotation_count_for_player(const GameContext* player) {
+    if ((player->activeBadEffect == EFFECT_NO_ROTATE) || (player->flags & GF_ROT_LOCKED)) {
+        return 1;
+    }
+
+    switch (player->type) {
+        case 0:
+        case 3:
+        case 4:
+            return 2;
+        case 1:
+            return 1;
+        default:
+            return 4;
+    }
+}
+
+static u16 ai_get_rotation_for_state(const GameContext* player, u16 stateIndex) {
+    if ((player->activeBadEffect == EFFECT_NO_ROTATE) || (player->flags & GF_ROT_LOCKED)) {
+        return (player->rotation & 3);
+    }
+
+    return stateIndex;
+}
+
 static bool ai_bit_collide(const BitBoard* bb, u16 type, u16 r, s16 x, s16 y) {
     for (u16 i = 0; i < 4; i++) {
-        s16 px = x + PIECES[type][r & 3][i][0];
-        s16 py = y + PIECES[type][r & 3][i][1];
+        s16 px = x + PIECES[type][r][i][0];
+        s16 py = y + PIECES[type][r][i][1];
         if (px < 0 || px >= 10 || py >= 20) return TRUE;
         if (py >= 0 && (bb->rows[py] & (0x8000 >> px))) return TRUE;
     }
@@ -39,7 +64,7 @@ static u16 ai_bit_clear_lines(BitBoard* bb) {
     return cleared;
 }
 
-static u16 ai_get_human_delay(VsContext* vctx, GameContext* player) {
+static u16 ai_get_human_delay(GameContext* player) {
     u16 maxH = 0;
     for (s16 x = 0; x < 10; x++) {
         for (s16 y = 0; y < 20; y++) {
@@ -109,62 +134,82 @@ static s32 ai_evaluate(VsContext* vctx, const BitBoard* bb, u16 lines) {
 
 void vs_brain_think_split(VsContext* vctx, GameContext* player) {
     static BitBoard bb;
+    u16 rotationCount = ai_get_rotation_count_for_player(player);
+
     if (vctx->rightAiState == 0) {
         vctx->rightAiThinkBudget = 0;
+        vctx->rightAiActionDelay = ai_get_human_delay(player);
         for (u16 y = 0; y < 20; y++) {
             bb.rows[y] = 0;
-            for (u16 x = 0; x < 10; x++)
+            for (u16 x = 0; x < 10; x++) {
                 if (player->board[(y << 3) + (y << 1) + x]) bb.rows[y] |= (0x8000 >> x);
+            }
         }
-        vctx->rightAiBestScore = AI_SCORE_MIN; vctx->rightAiState = 1; return;
+        vctx->rightAiBestScore = AI_SCORE_MIN;
+        vctx->rightAiState = 1;
+        return;
     }
 
-    u16 r = (vctx->rightAiState - 1);
-    if (r < 4) {
-        s16 minX = 100, maxX = -100;
+    if ((vctx->rightAiState - 1) < rotationCount) {
+        u16 r = ai_get_rotation_for_state(player, (u16)(vctx->rightAiState - 1));
+        s16 minX = 100;
+        s16 maxX = -100;
+
         for (u16 i = 0; i < 4; i++) {
             if (PIECES[player->type][r][i][0] < minX) minX = PIECES[player->type][r][i][0];
             if (PIECES[player->type][r][i][0] > maxX) maxX = PIECES[player->type][r][i][0];
         }
+
         for (s16 x = (s16)-minX; x <= (s16)(9 - maxX); x++) {
             if (ai_bit_collide(&bb, player->type, r, x, 0)) continue;
-            s16 y = 0; while (!ai_bit_collide(&bb, player->type, r, x, (s16)(y + 1))) y++;
+            s16 y = 0;
+            while (!ai_bit_collide(&bb, player->type, r, x, (s16)(y + 1))) y++;
 
             BitBoard tb = bb;
             for (u16 i = 0; i < 4; i++) {
-                s16 bx = x + PIECES[player->type][r][i][0], by = y + PIECES[player->type][r][i][1];
+                s16 bx = x + PIECES[player->type][r][i][0];
+                s16 by = y + PIECES[player->type][r][i][1];
                 if (by >= 0 && by < 20) tb.rows[by] |= (0x8000 >> bx);
             }
             s32 s = ai_evaluate(vctx, &tb, ai_bit_clear_lines(&tb));
             if (s > vctx->rightAiBestScore) {
-                vctx->rightAiBestScore = s; vctx->rightAiTargetX = x;
-                vctx->rightAiTargetY = y; vctx->rightAiTargetRot = r; vctx->rightAiEntryX = x;
+                vctx->rightAiBestScore = s;
+                vctx->rightAiTargetX = x;
+                vctx->rightAiTargetY = y;
+                vctx->rightAiTargetRot = r;
+                vctx->rightAiEntryX = x;
             }
 
             for (s16 slide = -1; slide <= 1; slide++) {
                 if (slide == 0) continue;
                 vctx->rightAiThinkBudget++;
-                s16 tx = x + slide; s16 ty = y;
+                s16 tx = x + slide;
+                s16 ty = y;
                 if (ai_bit_collide(&bb, player->type, r, tx, ty)) continue;
                 while (!ai_bit_collide(&bb, player->type, r, tx, (s16)(ty + 1))) ty++;
 
                 if (ty > y) {
                     BitBoard tbt = bb;
                     for (u16 i = 0; i < 4; i++) {
-                        s16 bx = tx + PIECES[player->type][r][i][0], by = ty + PIECES[player->type][r][i][1];
+                        s16 bx = tx + PIECES[player->type][r][i][0];
+                        s16 by = ty + PIECES[player->type][r][i][1];
                         if (by >= 0 && by < 20) tbt.rows[by] |= (0x8000 >> bx);
                     }
                     s32 st = ai_evaluate(vctx, &tbt, ai_bit_clear_lines(&tbt)) - TUCK_PENALTY;
                     if (st > vctx->rightAiBestScore) {
-                        vctx->rightAiBestScore = st; vctx->rightAiTargetX = tx;
-                        vctx->rightAiTargetY = ty; vctx->rightAiTargetRot = r; vctx->rightAiEntryX = x;
+                        vctx->rightAiBestScore = st;
+                        vctx->rightAiTargetX = tx;
+                        vctx->rightAiTargetY = ty;
+                        vctx->rightAiTargetRot = r;
+                        vctx->rightAiEntryX = x;
                     }
                 }
             }
         }
         vctx->rightAiState++;
     }
-    if (vctx->rightAiState >= 5) vctx->rightAiPlannedType = (s16)player->type;
+
+    if (vctx->rightAiState > rotationCount) vctx->rightAiPlannedType = (s16)player->type;
 }
 
 void vs_brain_update_player(VsContext* vctx, GameContext* player, bool* deadFlag, bool* needsRedraw) {
@@ -172,11 +217,13 @@ void vs_brain_update_player(VsContext* vctx, GameContext* player, bool* deadFlag
     vs_brain_think_split(vctx, player);
     if (vctx->rightAiPulseTimer > 0) { vctx->rightAiPulseTimer--; return; }
 
-    if (vctx->rightAiState >= 5) {
+    if (vctx->rightAiState > ai_get_rotation_count_for_player(player)) {
         GameContext* savedCtx = ctx; ctx = player;
         bool dirty = FALSE;
         u16 targetRot = vctx->rightAiTargetRot & 3;
-        u16 baseDelay = ai_get_human_delay(vctx, player);
+        u16 baseDelay = vctx->rightAiActionDelay;
+
+        if (baseDelay == 0) baseDelay = ai_get_human_delay(player);
 
         if ((player->rotation & 3) != targetRot) {
             if (tryRotate(targetRot)) { dirty = TRUE; vctx->rightLastRotate = TRUE; vctx->rightAiPulseTimer = baseDelay; }
@@ -212,5 +259,6 @@ void vs_brain_update_player(VsContext* vctx, GameContext* player, bool* deadFlag
 void vs_brain_reset(VsContext* vctx) {
     vctx->rightAiBestScore = AI_SCORE_MIN; vctx->rightAiPlannedType = -1;
     vctx->rightAiState = 0; vctx->rightAiPulseTimer = 0;
-    vctx->rightAiThinkBudget = 0; vctx->rightAiEntryX = 0; vctx->rightAiTargetY = 0;
+    vctx->rightAiThinkBudget = 0; vctx->rightAiActionDelay = 0;
+    vctx->rightAiEntryX = 0; vctx->rightAiTargetY = 0;
 }

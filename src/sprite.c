@@ -343,6 +343,46 @@ void sprites_sync_game(Vect2D_s16 piecePos, Vect2D_s16 shadowPos, u8 activeEffec
     }
 }
 
+void sprites_sync_vs_effect(const GameContext* player, s16 boardOriginX, s16 boardOriginY) {
+    if (player == NULL) {
+        _setup_sprite(INDEX_PIECE, 0, 0, 0, FALSE);
+        _setup_sprite(INDEX_SHADOW, 0, 0, 0, FALSE);
+        _setup_sprite(INDEX_NEXT, 0, 0, 0, FALSE);
+        _setup_sprite(INDEX_HOLD, 0, 0, 0, FALSE);
+        return;
+    }
+
+    {
+        Vect2D_s16 center = _get_center_offset(player->type, player->rotation);
+        s16 dynOffsetX = center.x - 16;
+        s16 dynOffsetY = center.y - 16;
+
+        gameSprites[INDEX_PIECE].x = (s16)((boardOriginX + player->pieceX) << 3);
+        gameSprites[INDEX_PIECE].y = (s16)((boardOriginY + player->pieceY) << 3);
+        gameSprites[INDEX_PIECE].offsetX = dynOffsetX;
+        gameSprites[INDEX_PIECE].offsetY = dynOffsetY;
+    }
+
+    _setup_sprite(INDEX_SHADOW, 0, 0, 0, FALSE);
+    _setup_sprite(INDEX_NEXT, 0, 0, 0, FALSE);
+    _setup_sprite(INDEX_HOLD, 0, 0, 0, FALSE);
+
+    switch (player->activeBadEffect) {
+        case EFFECT_NO_ROTATE:
+            _setup_sprite(INDEX_PIECE, SPRITE_TYPE_NOROTATE, PRIO_HIGH, DEPTH_FOREGROUND, TRUE);
+            break;
+        case EFFECT_REVERSED:
+            _setup_sprite(INDEX_PIECE, SPRITE_TYPE_SPIRAL, PRIO_LOW, 10, TRUE);
+            break;
+        case EFFECT_FULLSPEED:
+            _setup_sprite(INDEX_PIECE, SPRITE_TYPE_SPEED, PRIO_LOW, DEPTH_BACKGROUND, TRUE);
+            break;
+        default:
+            _setup_sprite(INDEX_PIECE, 0, 0, 0, FALSE);
+            break;
+    }
+}
+
 /**
  * Verarbeitet Animationen und Hardware-Updates.
  */

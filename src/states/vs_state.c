@@ -11,6 +11,7 @@
 #include "fonts.h"
 #include "menu_bg.h"
 #include "sound_manager.h"
+#include "sounds.h"
 #include "sprite.h"
 
 #define VS_LEFT_X   5
@@ -23,15 +24,32 @@
 #define VS_WINNER_RIGHT 2
 #define VS_WINNER_DRAW  3
 
+typedef enum VsItemMode {
+    VS_ITEM_MODE_NONE = 0,
+    VS_ITEM_MODE_BOTH = 1,
+    VS_ITEM_MODE_HEART_ONLY = 2,
+    VS_ITEM_MODE_SKULL_ONLY = 3
+} VsItemMode;
+
+// Per-side VS item config.
+#define VS_LEFT_ITEM_MODE  VS_ITEM_MODE_NONE
+#define VS_RIGHT_ITEM_MODE VS_ITEM_MODE_BOTH
+
 static VsContext* vctx = NULL;
 static u16 vsTileStart = TILE_USER_INDEX;
+static u16 vsSkullTileIdx = TILE_USER_INDEX;
+static u16 vsHeartTileIdx = TILE_USER_INDEX;
 
 // Per-player tile caches: only write to VDP when tile actually changes.
 static u16 leftCache[200];
 static u16 rightCache[200];
+static u8 leftSortBuffer[200];
+static u8 rightSortBuffer[200];
 static u16 debugOverlayTimer = 0;
 static char leftEventDrawCache[VS_EVENT_W + 1] = "";
 static char rightEventDrawCache[VS_EVENT_W + 1] = "";
+static u16 winnerDrawCache = 0xFFFF;
+static bool winnerModeCache = FALSE;
 
 static void bind_player(GameContext* player, u16 joyNow, u16 joyPrev, GameContext** savedCtx, u16* savedJoy, u16* savedLastJoy);
 static void unbind_player(GameContext* savedCtx, u16 savedJoy, u16 savedLastJoy);
@@ -42,14 +60,412 @@ static bool vs_is_perfect_clear(const GameContext* player);
 static u16 vs_base_attack(u16 lines, bool tSpin);
 static void vs_set_rotate_flag(bool isLeft, bool value);
 static bool vs_get_rotate_flag(bool isLeft);
+static u16 vs_get_item_mode(bool isLeft);
+static u8* vs_get_sort_buffer(bool isLeft);
+static void vs_prepare_sort_buffer(GameContext* player, u8* sortBuffer);
+static void vs_trigger_multiclear(GameContext* player, bool isLeft);
+static void vs_trigger_good_effect(VsContext* vs, GameContext* player, bool isLeft);
+static void vs_trigger_bad_effect(VsContext* vs, GameContext* player, bool isLeft);
+static bool vs_effect_slot_busy(const GameContext* player);
+static void vs_tick_player_effects(GameContext* player, bool* needsRedraw);
+static bool vs_update_board_effect_animation(VsContext* vs, GameContext* player, bool isLeft);
+static void vs_handle_item_spawn(GameContext* player, u16 itemMode);
+static u16 vs_get_gravity_threshold(GameContext* player, u16 joyNow, bool allowSoftDrop);
 static void vs_set_event_text(bool isLeft, const char* text);
 static void vs_update_event_timers(void);
 static void vs_draw_event_text(void);
 static void vs_handle_match_end(void);
 static void vs_finalize_attack(VsContext* vs, bool isLeft, u16 attack, u16 canceled, const char* eventName, bool b2b, bool perfectClear);
+static void vs_sync_effect_sprites(void);
 
 static s16 vs_board_x_for(bool isLeft) {
     return isLeft ? VS_LEFT_X : VS_RIGHT_X;
+}
+
+static u16 vs_get_item_mode(bool isLeft) {
+    return isLeft ? vctx->leftItemMode : vctx->rightItemMode;
+}
+
+static u8* vs_get_sort_buffer(bool isLeft) {
+    return isLeft ? leftSortBuffer : rightSortBuffer;
+}
+
+static void vs_prepare_sort_buffer(GameContext* player, u8* sortBuffer) {
+    memcpy(sortBuffer, player->board, 200);
+
+    for (s16 targetY = 19; targetY >= 0; targetY--) {
+        u16 maxBlocksIndex = 0;
+        u16 maxBlocksCount = 0;
+
+        for (u16 currentY = 0; currentY <= (u16)targetY; currentY++) {
+            u16 currentCount = 0;
+            u16 rowOffset = (u16)((currentY << 3) + (currentY << 1));
+
+            for (u16 x = 0; x < BOARD_WIDTH; x++) {
+                if (sortBuffer[rowOffset + x] != 0) currentCount++;
+            }
+
+            if (currentCount >= maxBlocksCount) {
+                maxBlocksCount = currentCount;
+                maxBlocksIndex = currentY;
+            }
+        }
+
+        {
+            u16 targetOffset = (u16)((targetY << 3) + (targetY << 1));
+            u16 maxOffset = (u16)((maxBlocksIndex << 3) + (maxBlocksIndex << 1));
+
+            if (targetOffset != maxOffset) {
+                for (u16 x = 0; x < BOARD_WIDTH; x++) {
+                    u8 temp = sortBuffer[targetOffset + x];
+                    sortBuffer[targetOffset + x] = sortBuffer[maxOffset + x];
+                    sortBuffer[maxOffset + x] = temp;
+                }
+            }
+        }
+    }
+}
+
+static void vs_trigger_multiclear(GameContext* player, bool isLeft) {
+    u16 nonFullLines[BOARD_HEIGHT];
+    u16 nonFullCount = 0;
+
+    if (player == NULL || player->sortingRow != -1) return;
+
+    for (u16 y = 0; y < BOARD_HEIGHT; y++) {
+        bool full = TRUE;
+        u16 rowOffset = (u16)((y << 3) + (y << 1));
+
+        for (u16 x = 0; x < BOARD_WIDTH; x++) {
+            if (player->board[rowOffset + x] == 0) {
+                full = FALSE;
+                break;
+            }
+        }
+
+        if (!full) nonFullLines[nonFullCount++] = y;
+    }
+
+    if (nonFullCount == 0) {
+        if (player->activeBadEffect == EFFECT_MULTIPLIER) {
+            player->activeBadEffect = EFFECT_NONE;
+            player->badEffectTimer = 0;
+            player->lastActiveBadEffect = 99;
+        }
+        return;
+    }
+
+    {
+        u16 linesToClear = (u16)((random() % 4) + 1);
+        if (linesToClear > nonFullCount) linesToClear = nonFullCount;
+
+        player->clearingLineMask = 0;
+        for (u16 i = 0; i < linesToClear; i++) {
+            u16 randomIdx = (u16)(random() % nonFullCount);
+            u16 y = nonFullLines[randomIdx];
+            u16 rowOffset = (u16)((y << 3) + (y << 1));
+
+            for (u16 x = 0; x < BOARD_WIDTH; x++) {
+                player->clearingLineBackup[rowOffset + x] = player->board[rowOffset + x];
+            }
+
+            player->clearingLineMask |= (1UL << y);
+            nonFullLines[randomIdx] = nonFullLines[nonFullCount - 1];
+            nonFullCount--;
+        }
+    }
+
+    player->clearTimer = GET_TICKS(20);
+    player->boardFlags |= GF_NEEDS_DRAW;
+    SOUND_play(52);
+    sprites_trigger_line_clear_explosions_at_origin(player->clearingLineMask, vs_board_x_for(isLeft), VS_BOARD_Y);
+}
+
+static bool vs_effect_slot_busy(const GameContext* player) {
+    if (player == NULL) return TRUE;
+    if (player->activeBadEffect != EFFECT_NONE) return TRUE;
+    if (player->sortingRow >= 0) return TRUE;
+    return FALSE;
+}
+
+static void vs_trigger_good_effect(VsContext* vs, GameContext* player, bool isLeft) {
+    u16 roll;
+
+    if (vs_effect_slot_busy(player)) return;
+
+    roll = (u16)(random() % 5);
+    switch (roll) {
+        case 0:
+            player->activeBadEffect = EFFECT_I_RAIN;
+            player->badEffectTimer = DUR_I_RAIN_SPAWNS;
+            vs_set_event_text(isLeft, "I-RAIN!");
+            break;
+        case 1:
+            vs_prepare_sort_buffer(player, vs_get_sort_buffer(isLeft));
+            player->sortingRow = 0;
+            vs_set_event_text(isLeft, "SORTED!");
+            SOUND_play(SND_TETRIS);
+            break;
+        case 2:
+            player->activeBadEffect = EFFECT_RAINBOW;
+            player->badEffectTimer = 0;
+            player->sortingRow = 0;
+            vs_set_event_text(isLeft, "RAINBOW!");
+            break;
+        case 3:
+            player->activeBadEffect = EFFECT_FREEZE;
+            player->badEffectTimer = DUR_FREEZE_TICKS;
+            vs_set_event_text(isLeft, "FROZEN!");
+            break;
+        default:
+            player->activeBadEffect = EFFECT_MULTIPLIER;
+            player->badEffectTimer = 1;
+            vs_set_event_text(isLeft, "CLEARED!");
+            vs_trigger_multiclear(player, isLeft);
+            break;
+    }
+
+    for (u16 i = 0; i < 200; i++) {
+        if (player->board[i] == ITEM_ID_HEART) player->board[i] = (u8)(1 + (random() % 7));
+    }
+
+    player->boardFlags |= GF_NEEDS_DRAW;
+    SOUND_play(SND_GOOD_ITEM);
+    (void)vs;
+}
+
+static void vs_trigger_bad_effect(VsContext* vs, GameContext* player, bool isLeft) {
+    u16 roll;
+    bool playGenericBadSound = TRUE;
+
+    if (vs_effect_slot_busy(player)) return;
+
+    roll = (u16)(random() % 7);
+    switch (roll) {
+        case 0:
+            player->activeBadEffect = EFFECT_NO_ROTATE;
+            player->badEffectTimer = DUR_NO_ROTATE_TICKS;
+            player->flags |= GF_ROT_LOCKED;
+            vs_set_event_text(isLeft, "NO ROTATE!");
+            break;
+        case 1:
+            player->activeBadEffect = EFFECT_REVERSED;
+            player->badEffectTimer = DUR_REVERSED_TICKS;
+            vs_set_event_text(isLeft, "CONFUSED!");
+            break;
+        case 2:
+            player->activeBadEffect = EFFECT_FULLSPEED;
+            player->badEffectTimer = GET_TICKS(120) + DUR_FULLSPEED_SPAWNS;
+            playGenericBadSound = FALSE;
+            vs_set_event_text(isLeft, "FAST!");
+            break;
+        case 3:
+            player->activeBadEffect = EFFECT_SAME_TILES;
+            player->badEffectTimer = DUR_SAME_TILES_SPAWNS;
+            player->forcedPieceType = (s16)(random() % 7);
+            vs_set_event_text(isLeft, "SAME!");
+            break;
+        case 4:
+            player->activeBadEffect = EFFECT_HOLD_LOCK;
+            player->badEffectTimer = DUR_HOLD_LOCK_TICKS;
+            vs_set_event_text(isLeft, "HOLD LOCK!");
+            break;
+        case 5:
+            player->activeBadEffect = EFFECT_HIDE_NEXT;
+            player->badEffectTimer = DUR_HIDE_NEXT_TICKS;
+            vs_set_event_text(isLeft, "NO NEXT!");
+            break;
+        default:
+            player->activeBadEffect = EFFECT_SHADOW_BOARD;
+            player->badEffectTimer = DUR_SHADOW_TICKS;
+            player->sortingRow = 0;
+            vs_set_event_text(isLeft, "FADE!");
+            break;
+    }
+
+    if (playGenericBadSound) SOUND_play(SND_BAD_ITEM);
+    player->lastActiveBadEffect = 99;
+    player->boardFlags |= GF_NEEDS_DRAW;
+    (void)vs;
+}
+
+static void vs_tick_player_effects(GameContext* player, bool* needsRedraw) {
+    if (player->badEffectTimer <= 0) return;
+
+    if (player->activeBadEffect == EFFECT_FULLSPEED) {
+        if (player->badEffectTimer > DUR_FULLSPEED_SPAWNS) {
+            u16 warningTicks = (u16)(player->badEffectTimer - DUR_FULLSPEED_SPAWNS);
+            if (warningTicks == GET_TICKS(120) || warningTicks == GET_TICKS(60)) {
+                SOUND_play(SND_ALERT);
+            }
+            player->badEffectTimer--;
+        }
+        return;
+    }
+
+    if (player->activeBadEffect == EFFECT_RAINBOW ||
+        player->activeBadEffect == EFFECT_SAME_TILES ||
+        player->activeBadEffect == EFFECT_I_RAIN ||
+        player->activeBadEffect == EFFECT_MULTIPLIER) {
+        return;
+    }
+
+    player->badEffectTimer--;
+    if (player->badEffectTimer > 0) return;
+
+    switch (player->activeBadEffect) {
+        case EFFECT_NO_ROTATE:
+            player->flags &= ~GF_ROT_LOCKED;
+            player->activeBadEffect = EFFECT_NONE;
+            break;
+        case EFFECT_SHADOW_BOARD:
+            player->activeBadEffect = EFFECT_RAINBOW;
+            player->sortingRow = 0;
+            break;
+        default:
+            player->activeBadEffect = EFFECT_NONE;
+            break;
+    }
+
+    if (player->activeBadEffect == EFFECT_NONE) {
+        player->lastActiveBadEffect = 99;
+    }
+
+    player->boardFlags |= GF_NEEDS_DRAW;
+    *needsRedraw = TRUE;
+    SOUND_play(SND_GOOD_ITEM);
+}
+
+static bool vs_update_board_effect_animation(VsContext* vs, GameContext* player, bool isLeft) {
+    if (player->activeBadEffect == EFFECT_RAINBOW) {
+        if (player->sortingRow >= 0 && player->sortingRow < BOARD_HEIGHT) {
+            u16 rowOffset = (u16)(((u16)player->sortingRow << 3) + ((u16)player->sortingRow << 1));
+            u8 rowColor = (u8)((random() % 7) + 1);
+
+            for (u16 x = 0; x < BOARD_WIDTH; x++) {
+                if (player->board[rowOffset + x] != 0) player->board[rowOffset + x] = rowColor;
+            }
+
+            player->boardFlags |= GF_NEEDS_DRAW;
+            player->sortingRow++;
+            if (player->sortingRow >= BOARD_HEIGHT) {
+                player->sortingRow = -1;
+                player->activeBadEffect = EFFECT_NONE;
+                player->badEffectTimer = 0;
+            }
+        }
+        return TRUE;
+    }
+
+    if (player->activeBadEffect == EFFECT_SHADOW_BOARD) {
+        if (player->sortingRow >= 0 && player->sortingRow < BOARD_HEIGHT) {
+            u16 rowOffset = (u16)(((u16)player->sortingRow << 3) + ((u16)player->sortingRow << 1));
+
+            for (u16 x = 0; x < BOARD_WIDTH; x++) {
+                if (player->board[rowOffset + x] != 0) player->board[rowOffset + x] = TILE_ID_GARBAGE;
+            }
+
+            player->boardFlags |= GF_NEEDS_DRAW;
+            player->sortingRow++;
+            if (player->sortingRow >= BOARD_HEIGHT) player->sortingRow = -1;
+        }
+        return TRUE;
+    }
+
+    if (player->sortingRow >= 0 && player->sortingRow < BOARD_HEIGHT) {
+        u8 tempRow[BOARD_WIDTH];
+        u8* sortBuffer = vs_get_sort_buffer(isLeft);
+        u16 rowOffset = (u16)(((u16)player->sortingRow << 3) + ((u16)player->sortingRow << 1));
+        u16 filled = 0;
+        GameContext* savedCtx;
+        u16 savedJoy;
+        u16 savedLastJoy;
+
+        for (u16 x = 0; x < BOARD_WIDTH; x++) {
+            player->board[rowOffset + x] = sortBuffer[rowOffset + x];
+        }
+
+        for (u16 x = 0; x < BOARD_WIDTH; x++) {
+            u8 tile = player->board[rowOffset + x];
+            if (tile != 0) tempRow[filled++] = tile;
+        }
+        for (u16 x = 0; x < filled; x++) player->board[rowOffset + x] = tempRow[x];
+        if (filled < BOARD_WIDTH) memset(&player->board[rowOffset + filled], 0, BOARD_WIDTH - filled);
+
+        player->boardFlags |= GF_NEEDS_DRAW;
+        player->sortingRow++;
+        if (player->sortingRow >= BOARD_HEIGHT) {
+            player->sortingRow = -1;
+            bind_player(player, 0, 0, &savedCtx, &savedJoy, &savedLastJoy);
+            clearLinesAtOrigin(vs_board_x_for(isLeft), VS_BOARD_Y);
+            unbind_player(savedCtx, savedJoy, savedLastJoy);
+        }
+        (void)vs;
+        return TRUE;
+    }
+
+    (void)vs;
+    return FALSE;
+}
+
+static void vs_handle_item_spawn(GameContext* player, u16 itemMode) {
+    if (itemMode == 0) {
+        player->itemSlot = 255;
+        player->itemType = ITEM_ID_NONE;
+        return;
+    }
+
+    if (player->itemSpawnCounter <= 0) {
+        player->itemSlot = (u16)(random() % 4);
+        if (itemMode == 1) player->itemType = (random() % 100 < ITEM_RATIO_HEART) ? ITEM_ID_HEART : ITEM_ID_SKULL;
+        else player->itemType = (itemMode == 2) ? ITEM_ID_HEART : ITEM_ID_SKULL;
+        player->itemSpawnCounter = (u16)((random() % 2) + 1);
+    } else {
+        player->itemSlot = 255;
+        player->itemType = ITEM_ID_NONE;
+        player->itemSpawnCounter--;
+    }
+}
+
+static u16 vs_get_gravity_threshold(GameContext* player, u16 joyNow, bool allowSoftDrop) {
+    u16 vBtnSoftDrop = (player->activeBadEffect == EFFECT_REVERSED) ? BUTTON_LEFT : BUTTON_DOWN;
+    s16 threshold = (s16)GET_TICKS(48 - (player->level > 1 ? (player->level - 1) * 2 : 0));
+
+    if (threshold < 2) threshold = 2;
+
+    if (player->activeBadEffect == EFFECT_FULLSPEED) {
+        if (player->badEffectTimer > 0 && player->badEffectTimer <= DUR_FULLSPEED_SPAWNS) {
+            threshold = 4;
+        }
+    }
+
+    if (allowSoftDrop && (joyNow & vBtnSoftDrop)) {
+        threshold = (s16)config.thresholdSD;
+    } else if (player->activeBadEffect == EFFECT_FREEZE) {
+        threshold = 9999;
+    }
+
+    if (threshold < 1) threshold = 1;
+    return (u16)threshold;
+}
+
+static void vs_sync_effect_sprites(void) {
+    bool leftHasEffect = (!vctx->leftDead) && (
+        vctx->left.activeBadEffect == EFFECT_NO_ROTATE ||
+        vctx->left.activeBadEffect == EFFECT_REVERSED ||
+        vctx->left.activeBadEffect == EFFECT_FULLSPEED);
+    bool rightHasEffect = (!vctx->rightDead) && (
+        vctx->right.activeBadEffect == EFFECT_NO_ROTATE ||
+        vctx->right.activeBadEffect == EFFECT_REVERSED ||
+        vctx->right.activeBadEffect == EFFECT_FULLSPEED);
+
+    if (rightHasEffect) {
+        sprites_sync_vs_effect(&vctx->right, VS_RIGHT_X, VS_BOARD_Y);
+    } else if (leftHasEffect) {
+        sprites_sync_vs_effect(&vctx->left, VS_LEFT_X, VS_BOARD_Y);
+    } else {
+        sprites_sync_vs_effect(NULL, 0, 0);
+    }
 }
 
 static void vs_step_game_over_animation(GameContext* player, s16 boardOriginX, s16* animRow, bool* needsRedraw) {
@@ -332,6 +748,8 @@ static void vs_handle_match_end(void) {
 
 static void vs_finish_line_clear(VsContext* vs, GameContext* player, bool isLeft) {
     u16 linesFound = 0;
+    u16 totalHearts = 0;
+    u16 totalSkulls = 0;
     bool tSpin = FALSE;
     bool difficult = FALSE;
     bool b2bBonus = FALSE;
@@ -345,7 +763,10 @@ static void vs_finish_line_clear(VsContext* vs, GameContext* player, bool isLeft
         if ((player->clearingLineMask & (1UL << y)) != 0) {
             u16 rowOffset = (u16)((y << 3) + (y << 1));
             for (u16 x = 0; x < BOARD_WIDTH; x++) {
-                player->board[rowOffset + x] = player->clearingLineBackup[rowOffset + x];
+                u8 tile = player->clearingLineBackup[rowOffset + x];
+                player->board[rowOffset + x] = tile;
+                if (tile == ITEM_ID_HEART) totalHearts++;
+                else if (tile == ITEM_ID_SKULL) totalSkulls++;
             }
         }
     }
@@ -410,6 +831,13 @@ static void vs_finish_line_clear(VsContext* vs, GameContext* player, bool isLeft
         }
 
         vs_finalize_attack(vs, isLeft, attack, counter, eventName, b2bBonus, perfectClear);
+
+        if (totalHearts > totalSkulls) {
+            vs_trigger_good_effect(vs, player, isLeft);
+        } else if (totalSkulls > totalHearts) {
+            GameContext* opponent = isLeft ? &vs->right : &vs->left;
+            vs_trigger_bad_effect(vs, opponent, !isLeft);
+        }
     } else {
         player->comboCount = 0;
     }
@@ -443,12 +871,11 @@ static void vs_update_player_animations(VsContext* vs, GameContext* player, bool
         animated = TRUE;
     }
 
-    if (player->activeBadEffect == EFFECT_RAINBOW || player->activeBadEffect == EFFECT_SHADOW_BOARD || player->sortingRow >= 0) {
-        update_board_animations();
+    unbind_player(savedCtx, savedJoy, savedLastJoy);
+
+    if (vs_update_board_effect_animation(vs, player, isLeft)) {
         animated = TRUE;
     }
-
-    unbind_player(savedCtx, savedJoy, savedLastJoy);
 
     if (animated || ((player->boardFlags & GF_NEEDS_DRAW) != 0)) {
         *needsRedraw = TRUE;
@@ -474,8 +901,32 @@ bool vs_spawn_piece_for_player(GameContext* player) {
     GameContext* savedCtx;
     u16 savedJoy;
     u16 savedLastJoy;
+    bool isLeft;
+    u16 itemMode;
 
     bind_player(player, 0, 0, &savedCtx, &savedJoy, &savedLastJoy);
+
+    if (player->activeBadEffect == EFFECT_FULLSPEED) {
+        if (player->badEffectTimer > 0 && player->badEffectTimer <= DUR_FULLSPEED_SPAWNS) {
+            player->badEffectTimer--;
+            if (player->badEffectTimer <= 0) {
+                player->activeBadEffect = EFFECT_NONE;
+                player->badEffectTimer = 0;
+                player->lastActiveBadEffect = 99;
+                SOUND_play(SND_GOOD_ITEM);
+            }
+        }
+    } else if (player->activeBadEffect == EFFECT_SAME_TILES || player->activeBadEffect == EFFECT_I_RAIN) {
+        if (player->badEffectTimer > 0) {
+            player->badEffectTimer--;
+            if (player->badEffectTimer <= 0) {
+                player->activeBadEffect = EFFECT_NONE;
+                player->badEffectTimer = 0;
+                player->lastActiveBadEffect = 99;
+                SOUND_play(SND_GOOD_ITEM);
+            }
+        }
+    }
 
     player->type = player->nextType;
 
@@ -484,12 +935,17 @@ bool vs_spawn_piece_for_player(GameContext* player) {
     }
     player->nextType = player->bag[player->bagIndex++];
 
+    if (player->activeBadEffect == EFFECT_SAME_TILES) player->type = (u16)player->forcedPieceType;
+    if (player->activeBadEffect == EFFECT_I_RAIN) player->type = 0;
+
     player->rotation = 0;
     player->pieceX = 3;
     player->pieceY = (player->type == 0) ? -1 : 0;
-    player->itemSlot = 255;
-    player->itemType = ITEM_ID_NONE;
     player->moveTimer = 0;
+
+    isLeft = (vctx != NULL && player == &vctx->left);
+    itemMode = vs_get_item_mode(isLeft);
+    vs_handle_item_spawn(player, itemMode);
 
     calculate_ghost_y();
     player->boardFlags |= GF_NEEDS_DRAW;
@@ -523,13 +979,16 @@ static void vs_reset_player(GameContext* player) {
     player->lastComboCount = 0xFFFF;
     player->lastActiveBadEffect = 99;
     player->lastBadEffectTimer = -1;
+    player->forcedPieceType = -1;
     player->level = 1;
     player->startLevel = 1;
-    player->flags = GF_CAN_HOLD;
+    player->flags = 0;
     player->boardFlags = GF_NEEDS_DRAW;
     player->dasNextThreshold = config.thresholdLRInitial;
     player->activeBadEffect = EFFECT_NONE;
     player->sortingRow = -1;
+    player->itemSlot = 255;
+    player->itemType = ITEM_ID_NONE;
 
     bind_player(player, 0, 0, &savedCtx, &savedJoy, &savedLastJoy);
     refillBag();
@@ -544,19 +1003,21 @@ static void vs_reset_player(GameContext* player) {
 static void vs_draw_player_board(GameContext* player, u16 ox, u16 oy, bool isDead, u16* cache, bool* needsRedraw) {
     if (!(*needsRedraw)) return;
 
-    view_draw_board_for_context(player, ox, oy, vsTileStart, (u16)(vsTileStart + 8), (u16)(vsTileStart + 8), cache, !isDead, !isDead && GET_FLAG(config.flags, FLAG_SHADOW));
+    view_draw_board_for_context(player, ox, oy, vsTileStart, vsSkullTileIdx, vsHeartTileIdx, cache, !isDead, !isDead && GET_FLAG(config.flags, FLAG_SHADOW));
 
     player->boardFlags &= ~GF_NEEDS_DRAW;
     *needsRedraw = FALSE;
 }
-bool vs_lock_piece_for_player(VsContext* vs, GameContext* player, bool isLeft, bool wasDropLock, bool lastMoveWasRotate) {
+bool vs_lock_piece_for_player(VsContext* vs, GameContext* player, bool isLeft, u8 lockPulseType, bool lastMoveWasRotate) {
     bool lockedAbove = FALSE;
+    bool wasDropLock = (lockPulseType != 1);
     s16 boardX = vs_board_x_for(isLeft);
     GameContext* savedCtx;
     u16 savedJoy;
     u16 savedLastJoy;
 
     sprites_trigger_dust_at_board_origin(boardX, VS_BOARD_Y, player->pieceX, player->ghostY, wasDropLock);
+    menu_bg_riistar_pulse(lockPulseType);
 
     for (u16 i = 0; i < 4; i++) {
         s16 gx = player->pieceX + PIECES[player->type][player->rotation][i][0];
@@ -565,7 +1026,10 @@ bool vs_lock_piece_for_player(VsContext* vs, GameContext* player, bool isLeft, b
         if (gy < 0) lockedAbove = TRUE;
 
         if (gx >= 0 && gx < BOARD_WIDTH && gy >= 0 && gy < BOARD_HEIGHT) {
-            player->board[gx + ((gy << 3) + (gy << 1))] = (u8)(player->type + 1);
+            u8 cell = ((u16)i == player->itemSlot)
+                ? (u8)player->itemType
+                : (u8)(player->type + 1);
+            player->board[gx + ((gy << 3) + (gy << 1))] = cell;
         }
     }
 
@@ -627,18 +1091,32 @@ static bool vs_try_step_down(GameContext* player) {
 static void vs_update_player(VsContext* vs, GameContext* player, u16 joyNow, u16 joyPrev, bool* deadFlag, bool* needsRedraw, bool isLeft) {
     u16 changed;
     u16 currentDir;
+    u16 vBtnLeft = BUTTON_LEFT;
+    u16 vBtnRight = BUTTON_RIGHT;
+    u16 vBtnSoftDrop = BUTTON_DOWN;
+    u16 vBtnHardDrop = BUTTON_UP;
+    u16 vBtnRotCCW = BUTTON_A;
+    u16 vBtnRotCW = BUTTON_B;
     bool dirty = FALSE;
 
     if (*deadFlag) return;
     if (vctx->matchOver) return;
 
+    if (player->activeBadEffect == EFFECT_REVERSED) {
+        vBtnLeft = BUTTON_B;
+        vBtnRight = BUTTON_A;
+        vBtnRotCW = BUTTON_UP;
+        vBtnRotCCW = BUTTON_DOWN;
+        vBtnHardDrop = BUTTON_RIGHT;
+        vBtnSoftDrop = BUTTON_LEFT;
+    }
+
     changed = joyNow & ~joyPrev;
 
-    // Left / Right movement with DAS
-    currentDir = (joyNow & BUTTON_LEFT) ? BUTTON_LEFT : ((joyNow & BUTTON_RIGHT) ? BUTTON_RIGHT : 0);
+    currentDir = (joyNow & vBtnLeft) ? vBtnLeft : ((joyNow & vBtnRight) ? vBtnRight : 0);
     if (currentDir != 0) {
         if (changed & currentDir) {
-            s16 step = (currentDir == BUTTON_LEFT) ? -1 : 1;
+            s16 step = (currentDir == vBtnLeft) ? -1 : 1;
             GameContext* savedCtx;
             u16 savedJoy;
             u16 savedLastJoy;
@@ -659,7 +1137,7 @@ static void vs_update_player(VsContext* vs, GameContext* player, u16 joyNow, u16
         } else if (player->dasDir == currentDir) {
             player->dasTimer++;
             if (player->dasTimer >= player->dasNextThreshold) {
-                s16 step = (currentDir == BUTTON_LEFT) ? -1 : 1;
+                s16 step = (currentDir == vBtnLeft) ? -1 : 1;
                 GameContext* savedCtx;
                 u16 savedJoy;
                 u16 savedLastJoy;
@@ -684,58 +1162,44 @@ static void vs_update_player(VsContext* vs, GameContext* player, u16 joyNow, u16
         player->dasNextThreshold = config.thresholdLRInitial;
     }
 
-    // A = CCW, B = CW  (matches normal game controls)
-    if (changed & BUTTON_A) {
-        if (vs_try_rotate(player, (u16)((player->rotation + 3) & 3))) {
-            dirty = TRUE;
-            vs_set_rotate_flag(isLeft, TRUE);
-            SOUND_play(SND_ROTATE);
-        }
-    }
-    if (changed & BUTTON_B) {
-        if (vs_try_rotate(player, (u16)((player->rotation + 1) & 3))) {
-            dirty = TRUE;
-            vs_set_rotate_flag(isLeft, TRUE);
-            SOUND_play(SND_ROTATE);
+    if (changed & (vBtnRotCCW | vBtnRotCW)) {
+        if (player->activeBadEffect == EFFECT_NO_ROTATE || (player->flags & GF_ROT_LOCKED)) {
+            if (vs_try_step_down(player)) dirty = TRUE;
+            SOUND_play(SND_BAD_ITEM);
+        } else {
+            u16 newRotation = (changed & vBtnRotCW) ? (u16)((player->rotation + 1) & 3) : (u16)((player->rotation + 3) & 3);
+            if (vs_try_rotate(player, newRotation)) {
+                dirty = TRUE;
+                vs_set_rotate_flag(isLeft, TRUE);
+                SOUND_play(SND_ROTATE);
+            }
         }
     }
 
-    // Up = hard drop
-    if (changed & BUTTON_UP) {
+    if (changed & vBtnHardDrop) {
         SOUND_play(SND_HARD_DROP);
         while (vs_try_step_down(player)) { }
         dirty = TRUE;
-        if (!vs_lock_piece_for_player(vs, player, isLeft, TRUE, vs_get_rotate_flag(isLeft)) || !vs_spawn_piece_for_player(player)) {
+        if (!vs_lock_piece_for_player(vs, player, isLeft, 3, vs_get_rotate_flag(isLeft)) || !vs_spawn_piece_for_player(player)) {
             *deadFlag = TRUE;
         }
     }
 
-    // Gravity + soft drop
-    {
-        s16 threshold = (s16)GET_TICKS(48 - (player->level > 1 ? (player->level - 1) * 2 : 0));
-        if (threshold < 2) threshold = 2;
-
-        if (joyNow & BUTTON_DOWN) {
-            threshold = (s16)config.thresholdSD;
-            if (threshold < 1) threshold = 1;
-        }
-
-        player->moveTimer++;
-        if (player->moveTimer >= (u16)threshold) {
-            if (!vs_try_step_down(player)) {
-                if (!vs_lock_piece_for_player(vs, player, isLeft, (joyNow & BUTTON_DOWN) != 0, vs_get_rotate_flag(isLeft)) || !vs_spawn_piece_for_player(player)) {
-                    *deadFlag = TRUE;
-                }
-                dirty = TRUE;
-            } else {
-                dirty = TRUE;
-                if (joyNow & BUTTON_DOWN) {
-                    player->score++;
-                    SOUND_play(SND_SOFT_DROP);
-                }
+    player->moveTimer++;
+    if (player->moveTimer >= vs_get_gravity_threshold(player, joyNow, TRUE)) {
+        if (!vs_try_step_down(player)) {
+            if (!vs_lock_piece_for_player(vs, player, isLeft, (joyNow & vBtnSoftDrop) ? 2 : 1, vs_get_rotate_flag(isLeft)) || !vs_spawn_piece_for_player(player)) {
+                *deadFlag = TRUE;
             }
-            player->moveTimer = 0;
+            dirty = TRUE;
+        } else {
+            dirty = TRUE;
+            if (joyNow & vBtnSoftDrop) {
+                player->score++;
+                SOUND_play(SND_SOFT_DROP);
+            }
         }
+        player->moveTimer = 0;
     }
 
     if (dirty) {
@@ -749,12 +1213,14 @@ void vs_state_init() {
 
     memset(vctx, 0, sizeof(VsContext));
     vctx->rightAiEnabled = TRUE;
+    vctx->leftItemMode = VS_LEFT_ITEM_MODE;
+    vctx->rightItemMode = VS_RIGHT_ITEM_MODE;
     vctx->leftGameOverAnimRow = -1;
     vctx->rightGameOverAnimRow = -1;
     vctx->winnerSide = VS_WINNER_NONE;
     vs_brain_reset(vctx);
 
-    menu_bg_set_mode(BG_MODE_NONE);
+    menu_bg_set_mode(BG_MODE_CLUB);
 
     vs_reset_player(&vctx->left);
     vs_reset_player(&vctx->right);
@@ -764,10 +1230,17 @@ void vs_state_init_draw() {
     VDP_clearPlane(BG_A, TRUE);
     VDP_clearPlane(BG_B, TRUE);
 
+    // BG_B was cleared by VS init draw, so force club background redraw now.
+    menu_bg_set_mode_instant(BG_MODE_CLUB);
+
     sprites_init();
 
     vsTileStart = TILE_USER_INDEX;
     gfx_load_tiles(vsTileStart);
+    vsSkullTileIdx = (u16)(vsTileStart + 9);
+    VDP_loadTileData(tile_skull, vsSkullTileIdx, 1, CPU);
+    vsHeartTileIdx = (u16)(vsTileStart + 10);
+    VDP_loadTileData(tile_heart, vsHeartTileIdx, 1, CPU);
     set_vs_palette();
 
     VDP_loadFont(&TS_FONT_CLEAR, CPU);
@@ -784,6 +1257,8 @@ void vs_state_init_draw() {
     debugOverlayTimer = 0;
     leftEventDrawCache[0] = '\0';
     rightEventDrawCache[0] = '\0';
+    winnerDrawCache = 0xFFFF;
+    winnerModeCache = FALSE;
 
     vctx->left.boardFlags  |= GF_NEEDS_DRAW;
     vctx->right.boardFlags |= GF_NEEDS_DRAW;
@@ -816,12 +1291,16 @@ void vs_state_update() {
         if (vctx->rightDead) vs_step_game_over_animation(&vctx->right, VS_RIGHT_X, &vctx->rightGameOverAnimRow, &vctx->rightNeedsRedraw);
 
         vs_update_event_timers();
+        vs_sync_effect_sprites();
         sprites_update();
 
         vctx->joy1Last = vctx->joy1;
         vctx->joy2Last = vctx->joy2;
         return;
     }
+
+    if (!vctx->leftDead) vs_tick_player_effects(&vctx->left, &vctx->leftNeedsRedraw);
+    if (!vctx->rightDead) vs_tick_player_effects(&vctx->right, &vctx->rightNeedsRedraw);
 
     // --- ANIMATIONS-UPDATES ---
     if (!vctx->leftDead)  vs_update_player_animations(vctx, &vctx->left, TRUE, &vctx->leftNeedsRedraw);
@@ -842,13 +1321,10 @@ void vs_state_update() {
             // Re-check clearTimer after brain update to avoid gravity/lock in the same frame
             // in which a lock just started a line-clear animation.
             if (!vctx->rightDead && vctx->right.clearTimer == 0) {
-                s16 threshold = (s16)GET_TICKS(48 - (vctx->right.level > 1 ? (vctx->right.level - 1) * 2 : 0));
-                if (threshold < 2) threshold = 2;
-
                 vctx->right.moveTimer++;
-                if (vctx->right.moveTimer >= (u16)threshold) {
+                if (vctx->right.moveTimer >= vs_get_gravity_threshold(&vctx->right, 0, FALSE)) {
                     if (!vs_try_step_down(&vctx->right)) {
-                        if (!vs_lock_piece_for_player(vctx, &vctx->right, FALSE, FALSE, vctx->rightLastRotate) || 
+                        if (!vs_lock_piece_for_player(vctx, &vctx->right, FALSE, 1, vctx->rightLastRotate) || 
                             !vs_spawn_piece_for_player(&vctx->right)) {
                             vctx->rightDead = TRUE;
                         }
@@ -891,6 +1367,7 @@ void vs_state_update() {
     if (vctx->leftDead)  vs_step_game_over_animation(&vctx->left, VS_LEFT_X, &vctx->leftGameOverAnimRow, &vctx->leftNeedsRedraw);
     if (vctx->rightDead) vs_step_game_over_animation(&vctx->right, VS_RIGHT_X, &vctx->rightGameOverAnimRow, &vctx->rightNeedsRedraw);
 
+    vs_sync_effect_sprites();
     sprites_update();
     vs_update_event_timers();
 
@@ -917,14 +1394,18 @@ void vs_state_draw() {
     }
 
     if (vctx->matchOver) {
-        if (vctx->winnerSide == VS_WINNER_DRAW) {
-            VDP_drawText("  DRAW  ", 16, 13);
-        } else if (vctx->winnerSide == VS_WINNER_RIGHT) {
-            VDP_drawText(vctx->rightAiEnabled ? "CPU WINS" : "P2 WINS!", 16, 13);
-        } else if (vctx->winnerSide == VS_WINNER_LEFT) {
-            VDP_drawText("P1 WINS!", 16, 13);
+        if (winnerDrawCache != vctx->winnerSide || winnerModeCache != vctx->rightAiEnabled) {
+            if (vctx->winnerSide == VS_WINNER_DRAW) {
+                VDP_drawText("  DRAW  ", 16, 13);
+            } else if (vctx->winnerSide == VS_WINNER_RIGHT) {
+                VDP_drawText(vctx->rightAiEnabled ? "CPU WINS" : "P2 WINS!", 16, 13);
+            } else if (vctx->winnerSide == VS_WINNER_LEFT) {
+                VDP_drawText("P1 WINS!", 16, 13);
+            }
+            VDP_drawText("START: EXIT", 14, 15);
+            winnerDrawCache = vctx->winnerSide;
+            winnerModeCache = vctx->rightAiEnabled;
         }
-        VDP_drawText("START: EXIT", 14, 15);
     }
 
 }

@@ -6,6 +6,7 @@
 #define BG_MODE_MENU    1
 #define BG_MODE_SPACE   2
 #define BG_MODE_RIISTAR 3
+#define BG_MODE_CLUB    4
 
 void menu_bg_init();
 void menu_bg_set_mode(u8 mode);

@@ -97,6 +97,7 @@ extern DustParticle dustParticles[DUST_SLOT_COUNT];
 void sprites_init();
 void sprites_update();
 void sprites_sync_game(Vect2D_s16 piecePos, Vect2D_s16 shadowPos, u8 activeEffect);
+void sprites_sync_vs_effect(const GameContext* player, s16 boardOriginX, s16 boardOriginY);
 void sprites_set_visible(u8 index, bool visible);
 void sprites_trigger_dust(s16 x, s16 y, bool riseUp);
 void sprites_trigger_dust_at_board_origin(s16 boardOriginX, s16 boardOriginY, s16 pieceX, s16 ghostY, bool riseUp);

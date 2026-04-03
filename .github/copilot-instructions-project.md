@@ -50,6 +50,11 @@ Suchstrategie:
 - Output-ROMs:
   - `out/tetr-vibe-debug.gen`
   - `out/tetr-vibe.gen`
+- Pflicht-Policy für KI nach Codeänderungen:
+  - Immer Debug-Build ausführen (`make debug` bzw. Task `Genesis: Debug & Run (Gens KLog)`; Emulatorteil nur wenn gefordert).
+  - Build-Output im Terminal auf Fehler prüfen.
+  - Bei Fehlern: Ursache beheben, Debug-Build erneut ausführen; Schleife bis Build erfolgreich.
+  - Arbeit erst nach erfolgreichem Debug-Build abschließen.
 
 ## 3. STATE-MASCHINE / BOOT / KERNEL
 `GameState`:
@@ -270,11 +275,13 @@ Partikel:
 
 BG-Manager:
 - `menu_bg` ist exklusiver Besitzer von `BG_B`
+- Speicherarchitektur: gemeinsamer Basiszustand + mode-spezifische Union (RIISTAR/CLUB), keine Vollallokation aller Mode-Daten gleichzeitig
 - Modi: `NONE MENU SPACE RIISTAR CLUB`
 - `menu_bg_set_mode()` = normaler Wechsel
 - `menu_bg_set_mode_instant()` = harter Sofortwechsel
 - `menu_bg_set_active()` = Legacy-Wrapper, in neuem Code vermeiden
 - `menu_bg_set_palette_frozen()` = notwendig während UI-Fades
+- Detailliertes Subsystem-Regelwerk: `.github/copilot-instructions-menu-bg.md`
 - Riistar-spezifisch:
   - `menu_bg_riistar_set_stack_top(topRow)`
   - `menu_bg_riistar_pulse(pulseType)`

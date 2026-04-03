@@ -17,6 +17,9 @@
 - Code im Chat: immer **„Datei – Funktion – ab Zeile ##"** voranstellen
 - Code: niemals mit `...` oder `// ...` kürzen — Funktion immer vollständig zeigen
 - Nach größerer Änderung: Verifikation auf weggelassene Funktionalität, ggf. nachbessern ohne Aufforderung
+- Nach Codeänderungen Build selbstständig ausführen, Terminal-Fehler analysieren, automatisch korrigieren.
+- Erst bei erfolgreichem Build beenden; bei Build-Fehlern nicht vorzeitig stoppen.
+- Build-Priorität für dieses Projekt: immer Debug-Build (`tetr-vibe-debug.gen`).
 
 ## 2. PLATTFORM
 - CPU: M68000 · 16/32-bit · Big-Endian · ~7.67 MHz
@@ -51,7 +54,7 @@ Attribute:
 - `__attribute__((aligned(4)))` → DMA-Puffer
 - `static inline` → Hot-Path (kein Call-Overhead, Code wird direkt eingefügt)
 
-Typedef-Tag immer in Header, nie in `.c`:
+Typedef-Tag immer in Header, nie in `.c` — **PFLICHT: `typedef struct Foo { ... } Foo;` — nie `typedef struct { ... } Foo;` (anonyme Structs sind verboten)**:
 ```c
 typedef struct Foo { u32 a; u16 b; u8 c; u8 _pad; } Foo;
 typedef union Bar { u32 raw; struct { u16 hi; u16 lo; }; } Bar;

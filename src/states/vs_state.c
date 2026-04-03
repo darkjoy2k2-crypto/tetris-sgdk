@@ -1220,7 +1220,7 @@ void vs_state_init() {
     vctx->winnerSide = VS_WINNER_NONE;
     vs_brain_reset(vctx);
 
-    menu_bg_set_mode(BG_MODE_CLUB);
+    menu_bg_set_mode_instant(BG_MODE_CLUB);
 
     vs_reset_player(&vctx->left);
     vs_reset_player(&vctx->right);
@@ -1228,10 +1228,7 @@ void vs_state_init() {
 
 void vs_state_init_draw() {
     VDP_clearPlane(BG_A, TRUE);
-    VDP_clearPlane(BG_B, TRUE);
-
-    // BG_B was cleared by VS init draw, so force club background redraw now.
-    menu_bg_set_mode_instant(BG_MODE_CLUB);
+    // BG_B ist exklusiv für menu_bg — nicht löschen! menu_bg_set_mode_instant verwaltet es.
 
     sprites_init();
 

@@ -10,6 +10,8 @@
 !/inc/**
 !/py/
 !/py/**
+!/.github/
+!/.github/**
 
 # Spezialfall /out:
 # Wir erlauben den Ordner, ignorieren aber den gesamten Inhalt rekursiv

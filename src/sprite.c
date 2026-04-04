@@ -8,11 +8,24 @@
 // FALSE keeps original effect timing behavior.
 static const bool g_disableRandomParticleDelays = FALSE;
 
-// Definition des Arrays (Größe muss mit Header übereinstimmen)
+// Definition des Arrays (Gr????e muss mit Header ??bereinstimmen)
 GameSprite gameSprites[4];
 
 // Dust-Partikel Slots
 DustParticle dustParticles[DUST_SLOT_COUNT];
+
+typedef struct TitleTextSprite {
+    Sprite* vdpSprite;
+    const SpriteDefinition* def;
+    u8 frame;
+    s16 x;
+    s16 y;
+    bool visible;
+} TitleTextSprite;
+
+static TitleTextSprite titleTextSprites[TITLE_TEXT_MAX_CHARS];
+static u8 titleTextLength = 0;
+static bool titleTextEnabled = FALSE;
 
 #define PARTICLE_KIND_DUST      0
 #define PARTICLE_KIND_EXPLOSION 1
@@ -40,6 +53,53 @@ static u8 _count_free_particle_slots() {
     return freeCount;
 }
 
+static bool _map_char_to_glyph(char c, const SpriteDefinition** def, u8* frame) {
+    switch (c) {
+        case 'I': case 'i': *def = &alpha_16; *frame = 0; return TRUE;
+        case '!': *def = &alpha_16; *frame = 1; return TRUE;
+        case '.': *def = &alpha_16; *frame = 2; return TRUE;
+        case ';': *def = &alpha_16; *frame = 2; return TRUE;
+
+        case 'M': case 'm': *def = &alpha_48; *frame = 0; return TRUE;
+        case 'W': case 'w': *def = &alpha_48; *frame = 1; return TRUE;
+
+        case 'A': case 'a': *def = &alpha_32; *frame = 0; return TRUE;
+        case 'B': case 'b': *def = &alpha_32; *frame = 1; return TRUE;
+        case 'C': case 'c': *def = &alpha_32; *frame = 2; return TRUE;
+        case 'D': case 'd': *def = &alpha_32; *frame = 3; return TRUE;
+        case 'E': case 'e': *def = &alpha_32; *frame = 4; return TRUE;
+        case 'F': case 'f': *def = &alpha_32; *frame = 5; return TRUE;
+        case 'G': case 'g': *def = &alpha_32; *frame = 6; return TRUE;
+        case 'H': case 'h': *def = &alpha_32; *frame = 7; return TRUE;
+        case 'J': case 'j': *def = &alpha_32; *frame = 8; return TRUE;
+        case 'K': case 'k': *def = &alpha_32; *frame = 9; return TRUE;
+        case 'L': case 'l': *def = &alpha_32; *frame = 10; return TRUE;
+        case 'N': case 'n': *def = &alpha_32; *frame = 11; return TRUE;
+        case 'O': case 'o': *def = &alpha_32; *frame = 12; return TRUE;
+        case 'P': case 'p': *def = &alpha_32; *frame = 13; return TRUE;
+        case 'Q': case 'q': *def = &alpha_32; *frame = 14; return TRUE;
+        case 'R': case 'r': *def = &alpha_32; *frame = 15; return TRUE;
+        case 'S': case 's': *def = &alpha_32; *frame = 16; return TRUE;
+        case 'T': case 't': *def = &alpha_32; *frame = 17; return TRUE;
+        case 'U': case 'u': *def = &alpha_32; *frame = 18; return TRUE;
+        case 'V': case 'v': *def = &alpha_32; *frame = 19; return TRUE;
+        case 'X': case 'x': *def = &alpha_32; *frame = 20; return TRUE;
+        case 'Y': case 'y': *def = &alpha_32; *frame = 21; return TRUE;
+        case 'Z': case 'z': *def = &alpha_32; *frame = 22; return TRUE;
+        case '1': *def = &alpha_32; *frame = 23; return TRUE;
+        case '2': *def = &alpha_32; *frame = 24; return TRUE;
+        case '3': *def = &alpha_32; *frame = 25; return TRUE;
+        case '4': *def = &alpha_32; *frame = 26; return TRUE;
+        case '5': *def = &alpha_32; *frame = 27; return TRUE;
+        case '6': *def = &alpha_32; *frame = 28; return TRUE;
+        case '7': *def = &alpha_32; *frame = 29; return TRUE;
+        case '8': *def = &alpha_32; *frame = 30; return TRUE;
+        case '9': *def = &alpha_32; *frame = 31; return TRUE;
+        case '0': *def = &alpha_32; *frame = 32; return TRUE;
+        default: return FALSE;
+    }
+}
+
 
 /**
  * Initialisiert die Sprite-Engine und die 4 Basis-Sprites.
@@ -64,7 +124,7 @@ void sprites_init() {
         gameSprites[i].animDir = 1;
     }
     
-    // Initial-Offsets für die Zentrierung auf den Tetromino-Blöcken
+    // Initial-Offsets f??r die Zentrierung auf den Tetromino-Bl??cken
     gameSprites[INDEX_PIECE].offsetX  = -8;  gameSprites[INDEX_PIECE].offsetY  = -8;
     gameSprites[INDEX_SHADOW].offsetX = -8;  gameSprites[INDEX_SHADOW].offsetY = 0;
     gameSprites[INDEX_NEXT].offsetX   = 0; gameSprites[INDEX_NEXT].offsetY   = 8;
@@ -84,10 +144,52 @@ void sprites_init() {
             SPR_setDepth(dustParticles[di].vdpSprite, DEPTH_DEFAULT);
         }
     }
+
+    for (u8 i = 0; i < TITLE_TEXT_MAX_CHARS; i++) {
+        memset(&titleTextSprites[i], 0, sizeof(TitleTextSprite));
+        titleTextSprites[i].vdpSprite = SPR_addSprite(&alpha_32, -128, -128, TILE_ATTR(PAL2, 0, 0, 0));
+        titleTextSprites[i].def = &alpha_32;
+        titleTextSprites[i].frame = 0;
+        titleTextSprites[i].visible = FALSE;
+
+        if (titleTextSprites[i].vdpSprite != NULL) {
+            SPR_setPriority(titleTextSprites[i].vdpSprite, PRIO_HIGH);
+            SPR_setDepth(titleTextSprites[i].vdpSprite, DEPTH_FOREGROUND);
+        }
+    }
+
+    titleTextLength = 0;
+    titleTextEnabled = FALSE;
+}
+
+void sprites_init_text_only() {
+    if (SPR_isInitialized()) {
+        SPR_end();
+    }
+    SPR_init();
+
+    memset(gameSprites, 0, sizeof(gameSprites));
+    memset(dustParticles, 0, sizeof(dustParticles));
+
+    for (u8 i = 0; i < TITLE_TEXT_MAX_CHARS; i++) {
+        memset(&titleTextSprites[i], 0, sizeof(TitleTextSprite));
+        titleTextSprites[i].vdpSprite = SPR_addSprite(&alpha_32, -128, -128, TILE_ATTR(PAL2, 0, 0, 0));
+        titleTextSprites[i].def = &alpha_32;
+        titleTextSprites[i].frame = 0;
+        titleTextSprites[i].visible = FALSE;
+
+        if (titleTextSprites[i].vdpSprite != NULL) {
+            SPR_setPriority(titleTextSprites[i].vdpSprite, PRIO_HIGH);
+            SPR_setDepth(titleTextSprites[i].vdpSprite, DEPTH_FOREGROUND);
+        }
+    }
+
+    titleTextLength = 0;
+    titleTextEnabled = FALSE;
 }
 
 /**
- * Hilfsfunktion zum Ressourcenwechsel ohne unnötige VDP-Uploads.
+ * Hilfsfunktion zum Ressourcenwechsel ohne unn??tige VDP-Uploads.
  */
 static void _update_sprite_resource(GameSprite* gs, u8 targetType) {
     if (gs->type == targetType) return;
@@ -114,7 +216,7 @@ static void _update_sprite_resource(GameSprite* gs, u8 targetType) {
 }
 
 /**
- * Interne Hilfsfunktion zur Zustandssteuerung ohne Koordinaten-Übergabe
+ * Interne Hilfsfunktion zur Zustandssteuerung ohne Koordinaten-??bergabe
  */
 static void _setup_sprite(u8 idx, u8 type, bool prio, u8 depth, bool visible) {
     GameSprite* gs = &gameSprites[idx];
@@ -138,7 +240,7 @@ static Vect2D_s16 _get_center_offset(u8 type, u8 rotation) {
     offset.x = (sumX << 1) + 4;
     offset.y = (sumY << 1) + 4;
 
-    // Sonderkorrektur für L/J-Winkel in Grundposition (Rotation 0)
+    // Sonderkorrektur f??r L/J-Winkel in Grundposition (Rotation 0)
     // Wenn X spiegelverkehrt wirkt, ziehen wir hier die 4 Pixel ab.
     if ((type == 5 || type == 6) && rotation == 0) {
         offset.x -= 4;
@@ -285,9 +387,9 @@ void sprites_sync_game(Vect2D_s16 piecePos, Vect2D_s16 shadowPos, u8 activeEffec
     // X nach rechts (+), Y nach oben (-)
     // Wir nehmen das mathematische Zentrum und verschieben das Sprite-Mapping
     s16 dynOffsetX = center.x - 16;  // X korrigiert nach rechts
-    s16 dynOffsetY = center.y - 16; // Y Feinjustierung (etwas höher als zuvor)
+    s16 dynOffsetY = center.y - 16; // Y Feinjustierung (etwas h??her als zuvor)
 
-    // 2. POSITIONIERUNG & OFFSETS ÜBERNEHMEN
+    // 2. POSITIONIERUNG & OFFSETS ??BERNEHMEN
     gameSprites[INDEX_PIECE].x = piecePos.x;
     gameSprites[INDEX_PIECE].y = piecePos.y;
     gameSprites[INDEX_PIECE].offsetX = dynOffsetX;
@@ -497,11 +599,25 @@ void sprites_update() {
         }
     }
 
+    for (u8 i = 0; i < TITLE_TEXT_MAX_CHARS; i++) {
+        TitleTextSprite* ts = &titleTextSprites[i];
+        if (ts->vdpSprite == NULL) continue;
+
+        if (!titleTextEnabled || !ts->visible || i >= titleTextLength) {
+            SPR_setPosition(ts->vdpSprite, -128, -128);
+            continue;
+        }
+
+        SPR_setAnim(ts->vdpSprite, 0);
+        SPR_setFrame(ts->vdpSprite, ts->frame);
+        SPR_setPosition(ts->vdpSprite, ts->x, ts->y);
+    }
+
     SPR_update();
 }
 
 /**
- * Schaltet Sichtbarkeit manuell (für UI/Spezialeffekte).
+ * Schaltet Sichtbarkeit manuell (f??r UI/Spezialeffekte).
  */
 void sprites_set_visible(u8 index, bool visible) {
     if (index < 4) {
@@ -510,6 +626,90 @@ void sprites_set_visible(u8 index, bool visible) {
     }
 }
 
+void sprites_text_set_enabled(bool enabled) {
+    titleTextEnabled = enabled;
+}
+
+void sprites_text_set_string(const char* text) {
+    u8 inPos = 0;
+    u8 outPos = 0;
+
+    while (outPos < TITLE_TEXT_MAX_CHARS && text != NULL && text[inPos] != '\0') {
+        const SpriteDefinition* def;
+        u8 frame;
+
+        if (_map_char_to_glyph(text[inPos], &def, &frame)) {
+            if (titleTextSprites[outPos].vdpSprite != NULL) {
+                SPR_setDefinition(titleTextSprites[outPos].vdpSprite, def);
+                titleTextSprites[outPos].def = def;
+            }
+
+            titleTextSprites[outPos].frame = frame;
+            titleTextSprites[outPos].visible = TRUE;
+            outPos++;
+        }
+
+        inPos++;
+    }
+
+    titleTextLength = outPos;
+
+    for (; outPos < TITLE_TEXT_MAX_CHARS; outPos++) {
+        titleTextSprites[outPos].visible = FALSE;
+    }
+}
+
+void sprites_text_set_position(u8 index, s16 x, s16 y) {
+    if (index >= TITLE_TEXT_MAX_CHARS) return;
+
+    titleTextSprites[index].x = x;
+    titleTextSprites[index].y = y;
+}
+
+void sprites_text_set_glyph(u8 index, char c, s16 x, s16 y, bool visible) {
+    const SpriteDefinition* def;
+    u8 frame;
+
+    if (index >= TITLE_TEXT_MAX_CHARS) return;
+
+    if (!visible || !_map_char_to_glyph(c, &def, &frame)) {
+        titleTextSprites[index].visible = FALSE;
+        return;
+    }
+
+    if (titleTextSprites[index].vdpSprite != NULL) {
+        SPR_setDefinition(titleTextSprites[index].vdpSprite, def);
+        titleTextSprites[index].def = def;
+    }
+
+    titleTextSprites[index].frame = frame;
+    titleTextSprites[index].x = x;
+    titleTextSprites[index].y = y;
+    titleTextSprites[index].visible = TRUE;
+
+    if ((u8)(index + 1) > titleTextLength) {
+        titleTextLength = (u8)(index + 1);
+    }
+}
+
+void sprites_text_clear(void) {
+    for (u8 i = 0; i < TITLE_TEXT_MAX_CHARS; i++) {
+        titleTextSprites[i].visible = FALSE;
+    }
+    titleTextLength = 0;
+}
+
+u8 sprites_text_get_length(void) {
+    return titleTextLength;
+}
+
 void sprites_cleanup() {
+    titleTextEnabled = FALSE;
+    titleTextLength = 0;
+
+    for (u8 i = 0; i < TITLE_TEXT_MAX_CHARS; i++) {
+        titleTextSprites[i].visible = FALSE;
+    }
+
     SPR_reset();
 }

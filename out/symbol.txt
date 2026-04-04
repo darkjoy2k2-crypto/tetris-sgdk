@@ -3,12 +3,14 @@
 00000000 t _Vecteurs_68K	F:\Projekte\tetris\tetris-sgdk/src/menu_bg.c:295
 00000004 a club_bg_map_mapBlockRowOffsets_size
 00000018 a club_bg_map_mapBlockIndexes_size
+00000020 a alpha_16_palette_data_size
 00000020 a anim_norotate_palette_data_size
 00000020 a font_pal_default_data_size
 00000020 a sgdk_logo_palette_data_size
 00000026 a anim_dust_animation0_frame15_tileset_data_size
 00000028 a anim_explosion_animation0_frame10_tileset_data_size
 0000002c a anim_dust_animation0_frame14_tileset_data_size
+00000036 a alpha_16_animation0_frame2_tileset_data_size
 0000003a a anim_dust_animation0_frame0_tileset_data_size
 0000003a a anim_explosion_animation0_frame9_tileset_data_size
 00000040 a anim_explosion_animation0_frame0_tileset_data_size
@@ -16,6 +18,7 @@
 00000046 a anim_dust_animation0_frame13_tileset_data_size
 00000064 a anim_dust_animation0_frame12_tileset_data_size
 00000070 a anim_dust_animation0_frame3_tileset_data_size
+0000007a a alpha_16_animation0_frame0_tileset_data_size
 00000080 a anim_dust_animation0_frame1_tileset_data_size
 00000080 a anim_dust_animation0_frame2_tileset_data_size
 00000080 a anim_explosion_animation0_frame1_tileset_data_size
@@ -32,11 +35,14 @@
 00000080 a riistar_bg_palette_data_size
 00000082 a anim_dust_animation0_frame11_tileset_data_size
 00000084 a anim_dust_animation0_frame4_tileset_data_size
+00000094 a alpha_32_animation0_frame23_tileset_data_size
 00000094 a anim_dust_animation0_frame5_tileset_data_size
 0000009c a anim_speed_animation0_frame3_tileset_data_size
+000000a0 a alpha_32_animation0_frame17_tileset_data_size
 000000a0 a anim_dust_animation0_frame10_tileset_data_size
 000000a8 a anim_dust_animation0_frame9_tileset_data_size
 000000aa a anim_dust_animation0_frame6_tileset_data_size
+000000ac a alpha_16_animation0_frame1_tileset_data_size
 000000ac A stop_xgm_size
 000000ae a anim_speed_animation0_frame2_tileset_data_size
 000000b8 a anim_skull_animation0_frame0_tileset_data_size
@@ -47,24 +53,57 @@
 000000ce a anim_skull_animation0_frame2_tileset_data_size
 000000ce a anim_spiral_animation0_frame3_tileset_data_size
 000000d0 a game_bg_tilemap_data_size
+000000d2 a alpha_32_animation0_frame22_tileset_data_size
 000000d2 a anim_speed_animation0_frame0_tileset_data_size
 000000d2 a anim_spiral_animation0_frame0_tileset_data_size
 000000de a anim_norotate_animation0_frame3_tileset_data_size
+000000e0 a alpha_32_animation0_frame13_tileset_data_size
 000000e2 a anim_skull_animation0_frame3_tileset_data_size
 000000e2 a anim_speed_animation0_frame1_tileset_data_size
 000000e2 a anim_spiral_animation0_frame1_tileset_data_size
+000000e6 a alpha_32_animation0_frame26_tileset_data_size
+000000e6 a alpha_32_animation0_frame8_tileset_data_size
 000000e6 a anim_norotate_animation0_frame0_tileset_data_size
 000000e6 a anim_norotate_animation0_frame1_tileset_data_size
 000000e8 a anim_skull_animation0_frame5_tileset_data_size
+000000ea a alpha_32_animation0_frame10_tileset_data_size
 000000ea a anim_norotate_animation0_frame2_tileset_data_size
+000000f2 a alpha_32_animation0_frame29_tileset_data_size
+000000f2 a alpha_32_animation0_frame7_tileset_data_size
 000000f4 a anim_norotate_animation1_frame2_tileset_data_size
+000000f6 a alpha_32_animation0_frame15_tileset_data_size
 000000f8 a anim_norotate_animation1_frame3_tileset_data_size
 000000f8 a anim_skull_animation0_frame4_tileset_data_size
-00000100 T rom_header	D:\apps\SGDK/src/bmp.c:1468
+00000100 a alpha_32_animation0_frame18_tileset_data_size
+00000100 T rom_header	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_view.c:235
+00000104 a alpha_32_animation0_frame12_tileset_data_size
+00000104 a alpha_32_animation0_frame21_tileset_data_size
+00000104 a alpha_32_animation0_frame28_tileset_data_size
 00000104 a anim_skull_animation0_frame6_tileset_data_size
+00000108 a alpha_32_animation0_frame19_tileset_data_size
+0000010a a alpha_32_animation0_frame9_tileset_data_size
+0000010a a alpha_48_animation0_frame0_tileset_data_size
+0000010c a alpha_32_animation0_frame1_tileset_data_size
+00000110 a alpha_32_animation0_frame14_tileset_data_size
 00000110 a anim_norotate_animation1_frame1_tileset_data_size
 00000110 a anim_skull_animation0_frame7_tileset_data_size
+00000112 a alpha_32_animation0_frame24_tileset_data_size
+00000112 a alpha_32_animation0_frame6_tileset_data_size
+00000118 a alpha_32_animation0_frame11_tileset_data_size
+0000011a a alpha_32_animation0_frame30_tileset_data_size
+0000011a a alpha_32_animation0_frame31_tileset_data_size
+0000011e a alpha_32_animation0_frame32_tileset_data_size
+00000120 a alpha_32_animation0_frame27_tileset_data_size
+00000122 a alpha_32_animation0_frame5_tileset_data_size
+00000124 a alpha_32_animation0_frame0_tileset_data_size
+00000126 a alpha_32_animation0_frame4_tileset_data_size
 0000012a a anim_norotate_animation1_frame0_tileset_data_size
+0000012e a alpha_32_animation0_frame16_tileset_data_size
+0000012e a alpha_32_animation0_frame25_tileset_data_size
+0000013a a alpha_32_animation0_frame3_tileset_data_size
+0000013e a alpha_32_animation0_frame2_tileset_data_size
+0000015e a alpha_32_animation0_frame20_tileset_data_size
+0000016e a alpha_48_animation0_frame1_tileset_data_size
 00000200 t _Entry_Point	D:\apps\SGDK/src/bmp.c:1469
 00000202 a game_bg_tileset_data_size
 0000020a a club_bg_map_mapBlocks_size
@@ -93,7 +132,7 @@
 00000370 t lr3	D:\apps\SGDK/src/bmp.c:1470
 00000372 t ldivu	D:\apps\SGDK/src/bmp.c:1470
 00000380 t lmulu	D:\apps\SGDK/src/bmp.c:1470
-00000386 A _sdata
+0000038a A _sdata
 0000038e t lremu	D:\apps\SGDK/src/bmp.c:1470
 0000039e t i_lmul	D:\apps\SGDK/src/bmp.c:1470
 000003ba t i_ldiv	D:\apps\SGDK/src/bmp.c:1471
@@ -109,17 +148,19 @@
 00000440 t moreadj	D:\apps\SGDK/src/bmp.c:1471
 0000044e t adj	D:\apps\SGDK/src/bmp.c:1471
 00000458 t ltuns	D:\apps\SGDK/src/bmp.c:1471
-00000468 t scale_vdp_color	F:\Projekte\tetris\tetris-sgdk/src/main.c:61
-00000508 t build_menu_text_bg_ramp	F:\Projekte\tetris\tetris-sgdk/src/main.c:76
-000005ba t set_all_palettes_black	F:\Projekte\tetris\tetris-sgdk/src/main.c:133
-000005fe T initStateMachine	F:\Projekte\tetris\tetris-sgdk/src/main.c:199
-00000826 T initHighscores	F:\Projekte\tetris\tetris-sgdk/src/main.c:213
-000008cc T main	F:\Projekte\tetris\tetris-sgdk/src/main.c:223
+00000468 T gfx_load_tiles	F:\Projekte\tetris\tetris-sgdk/src/gfx.c:25
+00000656 T UI_init_fonts_and_palettes	F:\Projekte\tetris\tetris-sgdk/src/gfx.c:89
+00000710 t scale_vdp_color	F:\Projekte\tetris\tetris-sgdk/src/main.c:61
+000007b0 t build_menu_text_bg_ramp	F:\Projekte\tetris\tetris-sgdk/src/main.c:76
+00000862 t set_all_palettes_black	F:\Projekte\tetris\tetris-sgdk/src/main.c:133
+000008a6 T initStateMachine	F:\Projekte\tetris\tetris-sgdk/src/main.c:199
 00000a00 A WAV_033_size
 00000a00 A WAV_034_size
 00000a8a a club_bg_tileset_data_size
+00000ace T initHighscores	F:\Projekte\tetris\tetris-sgdk/src/main.c:213
 00000b00 A WAV_003_size
 00000b00 A WAV_093_size
+00000b74 T main	F:\Projekte\tetris\tetris-sgdk/src/main.c:223
 00000c00 a TS_FONT_CLEAR_data_size
 00000c00 a TS_FONT_SOLID_data_size
 00000c00 A WAV_070_size
@@ -130,1517 +171,1680 @@
 00000e00 A WAV_065_size
 00000e00 A WAV_092_size
 00000f00 A WAV_022_size
-00000f64 t update_palette_fade	F:\Projekte\tetris\tetris-sgdk/src/menu_bg.c:131
 00001000 A WAV_047_size
 00001000 A WAV_048_size
 00001000 A WAV_050_size
 00001000 A WAV_075_size
 00001100 A WAV_021_size
 00001100 A WAV_063_size
-0000120a t apply_current_mode_state	F:\Projekte\tetris\tetris-sgdk/src/menu_bg.c:76
+0000120c t update_palette_fade	F:\Projekte\tetris\tetris-sgdk/src/menu_bg.c:131
 00001300 A WAV_044_size
-0000142a T menu_bg_set_palette_frozen	F:\Projekte\tetris\tetris-sgdk/src/menu_bg.c:72
-00001434 T menu_bg_riistar_set_stack_top	F:\Projekte\tetris\tetris-sgdk/src/menu_bg.c:119
-0000144a T menu_bg_riistar_pulse	F:\Projekte\tetris\tetris-sgdk/src/menu_bg.c:124
-00001478 T menu_bg_init	F:\Projekte\tetris\tetris-sgdk/src/menu_bg.c:223
-000014fa T menu_bg_set_mode	F:\Projekte\tetris\tetris-sgdk/src/menu_bg.c:235
+000014b2 t apply_current_mode_state	F:\Projekte\tetris\tetris-sgdk/src/menu_bg.c:76
 00001500 A WAV_032_size
 00001500 A WAV_072_size
-00001586 T menu_bg_set_mode_instant	F:\Projekte\tetris\tetris-sgdk/src/menu_bg.c:269
-000015fc T menu_bg_set_intensity	F:\Projekte\tetris\tetris-sgdk/src/menu_bg.c:298
-00001636 T menu_bg_update	F:\Projekte\tetris\tetris-sgdk/src/menu_bg.c:304
+000016d2 T menu_bg_set_palette_frozen	F:\Projekte\tetris\tetris-sgdk/src/menu_bg.c:72
+000016dc T menu_bg_riistar_set_stack_top	F:\Projekte\tetris\tetris-sgdk/src/menu_bg.c:119
+000016f2 T menu_bg_riistar_pulse	F:\Projekte\tetris\tetris-sgdk/src/menu_bg.c:124
+00001720 T menu_bg_init	F:\Projekte\tetris\tetris-sgdk/src/menu_bg.c:223
+000017a2 T menu_bg_set_mode	F:\Projekte\tetris\tetris-sgdk/src/menu_bg.c:235
 00001800 A WAV_042_size
-0000193a t draw_club_debug_info	F:\Projekte\tetris\tetris-sgdk/src/menubg/club_mode.c:6
-000019a0 T menubg_club_cleanup	F:\Projekte\tetris\tetris-sgdk/src/menubg/club_mode.c:23
-000019be T menubg_club_apply	F:\Projekte\tetris\tetris-sgdk/src/menubg/club_mode.c:30
+0000182e T menu_bg_set_mode_instant	F:\Projekte\tetris\tetris-sgdk/src/menu_bg.c:269
+000018a4 T menu_bg_set_intensity	F:\Projekte\tetris\tetris-sgdk/src/menu_bg.c:298
+000018de T menu_bg_update	F:\Projekte\tetris\tetris-sgdk/src/menu_bg.c:304
 00001a00 A WAV_076_size
 00001a00 A WAV_077_size
 00001b00 A WAV_052_size
-00001ba0 T menubg_club_update	F:\Projekte\tetris\tetris-sgdk/src/menubg/club_mode.c:105
-00001c68 T menubg_none_apply	F:\Projekte\tetris\tetris-sgdk/src/menubg/none_mode.c:3
-00001c86 t update_riistar_scroll_lines	F:\Projekte\tetris\tetris-sgdk/src/menubg/riistar_mode.c:27
+00001be2 T SOUND_init	F:\Projekte\tetris\tetris-sgdk/src/sound_manager.c:48
+00001bf2 T SOUND_play	F:\Projekte\tetris\tetris-sgdk/src/sound_manager.c:52
+00001c40 T SOUND_playMusic	F:\Projekte\tetris\tetris-sgdk/src/sound_manager.c:65
+00001c42 t _acquire_free_particle_slot	F:\Projekte\tetris\tetris-sgdk/src/sprite.c:37
+00001c7a t _map_char_to_glyph	F:\Projekte\tetris\tetris-sgdk/src/sprite.c:56
 00001d00 A WAV_001_size
-00001d5a T menubg_riistar_apply	F:\Projekte\tetris\tetris-sgdk/src/menubg/riistar_mode.c:51
 00001e00 A WAV_023_size
 00001e00 A WAV_049_size
 00001f00 A WAV_024_size
-00001f14 T menubg_riistar_update	F:\Projekte\tetris\tetris-sgdk/src/menubg/riistar_mode.c:109
-00001fe2 T menubg_riistar_set_stack_top	F:\Projekte\tetris\tetris-sgdk/src/menubg/riistar_mode.c:133
 00002000 A WAV_069_size
-0000204c T menubg_riistar_pulse	F:\Projekte\tetris\tetris-sgdk/src/menubg/riistar_mode.c:158
-00002090 t update_star_tiles	F:\Projekte\tetris\tetris-sgdk/src/menubg/space_mode.c:5
-0000212c t draw_stars_dynamic	F:\Projekte\tetris\tetris-sgdk/src/menubg/space_mode.c:22
-000021ec T menubg_space_init_tiles	F:\Projekte\tetris\tetris-sgdk/src/menubg/space_mode.c:39
-000021fe T menubg_space_apply	F:\Projekte\tetris\tetris-sgdk/src/menubg/space_mode.c:43
+000020e8 t _get_center_offset	F:\Projekte\tetris\tetris-sgdk/src/sprite.c:232
+00002152 t _setup_sprite	F:\Projekte\tetris\tetris-sgdk/src/sprite.c:221
 00002200 A WAV_007_size
 00002200 A WAV_080_size
-00002232 T menubg_space_update	F:\Projekte\tetris\tetris-sgdk/src/menubg/space_mode.c:54
-0000225a T menubg_space_set_intensity	F:\Projekte\tetris\tetris-sgdk/src/menubg/space_mode.c:60
-000022f6 t challenge_build_translation_table	F:\Projekte\tetris\tetris-sgdk/src/states/challenge.c:150
 00002300 A WAV_013_size
 00002300 A WAV_073_size
-0000237a T challenge_is_unlocked	F:\Projekte\tetris\tetris-sgdk/src/states/challenge.c:368
-000023ae T challenge_is_cleared	F:\Projekte\tetris\tetris-sgdk/src/states/challenge.c:373
-000023e2 t challenge_try_move	F:\Projekte\tetris\tetris-sgdk/src/states/challenge.c:227
+00002308 T sprites_init	F:\Projekte\tetris\tetris-sgdk/src/sprite.c:107
 00002400 A WAV_006_size
 00002400 A WAV_074_size
-00002464 T challenge_translate_grid_to_level	F:\Projekte\tetris\tetris-sgdk/src/states/challenge.c:378
-00002496 T challenge_get_level_name	F:\Projekte\tetris\tetris-sgdk/src/states/challenge.c:386
-000024bc T challenge_mark_cleared	F:\Projekte\tetris\tetris-sgdk/src/states/challenge.c:391
-000025a4 T challenge_init	F:\Projekte\tetris\tetris-sgdk/src/states/challenge.c:411
+000024c2 T sprites_init_text_only	F:\Projekte\tetris\tetris-sgdk/src/sprite.c:165
+00002590 T sprites_trigger_dust	F:\Projekte\tetris\tetris-sgdk/src/sprite.c:256
 00002600 A WAV_041_size
+00002604 T sprites_trigger_dust_at_board_origin	F:\Projekte\tetris\tetris-sgdk/src/sprite.c:276
+00002690 T sprites_trigger_line_clear_explosions_at_origin	F:\Projekte\tetris\tetris-sgdk/src/sprite.c:297
 00002700 A WAV_018_size
 00002800 A WAV_046_size
+00002826 T sprites_trigger_explosion_at_board_cell_at_origin	F:\Projekte\tetris\tetris-sgdk/src/sprite.c:354
 00002900 A WAV_060_size
 00002900 A WAV_084_size
-00002908 T challenge_init_draw	F:\Projekte\tetris\tetris-sgdk/src/states/challenge.c:459
-0000297e T challenge_draw	F:\Projekte\tetris\tetris-sgdk/src/states/challenge.c:472
+00002908 T sprites_trigger_explosion_at_board_cell	F:\Projekte\tetris\tetris-sgdk/src/sprite.c:379
+00002934 T sprites_sync_game	F:\Projekte\tetris\tetris-sgdk/src/sprite.c:383
 00002a00 A WAV_035_size
 00002b00 A WAV_012_size
 00002b00 A WAV_045_size
+00002bc6 T sprites_sync_vs_effect	F:\Projekte\tetris\tetris-sgdk/src/sprite.c:448
 00002c00 A WAV_090_size
 00002d00 A WAV_016_size
 00002d00 A WAV_025_size
 00002d00 A WAV_026_size
-00002d2e T challenge_update	F:\Projekte\tetris\tetris-sgdk/src/states/challenge.c:565
+00002d2c T sprites_update	F:\Projekte\tetris\tetris-sgdk/src/sprite.c:491
 00002e00 A WAV_089_size
-00003096 T challenge_cleanup	F:\Projekte\tetris\tetris-sgdk/src/states/challenge.c:616
-000030b4 T game_init	F:\Projekte\tetris\tetris-sgdk/src/states/game.c:215
+000030f8 T sprites_set_visible	F:\Projekte\tetris\tetris-sgdk/src/sprite.c:622
 00003100 A WAV_038_size
-00003102 T game_init_draw	F:\Projekte\tetris\tetris-sgdk/src/states/game.c:236
-00003138 T game_update	F:\Projekte\tetris\tetris-sgdk/src/states/game.c:261
+00003166 T sprites_text_set_enabled	F:\Projekte\tetris\tetris-sgdk/src/sprite.c:629
+00003170 T sprites_text_set_glyph	F:\Projekte\tetris\tetris-sgdk/src/sprite.c:669
 00003200 A WAV_087_size
+00003232 T sprites_text_clear	F:\Projekte\tetris\tetris-sgdk/src/sprite.c:695
+00003250 T sprites_cleanup	F:\Projekte\tetris\tetris-sgdk/src/sprite.c:706
+0000327a t text_manager_glyph_width	F:\Projekte\tetris\tetris-sgdk/src/text_manager.c:68
 00003300 A WAV_008_size
+00003338 T text_manager_init	F:\Projekte\tetris\tetris-sgdk/src/text_manager.c:174
 00003400 A WAV_088_size
+000034b8 T text_manager_set_enabled	F:\Projekte\tetris\tetris-sgdk/src/text_manager.c:224
+000034d4 T text_manager_update	F:\Projekte\tetris\tetris-sgdk/src/text_manager.c:229
 00003600 A WAV_010_size
 00003600 A WAV_028_size
 00003700 A WAV_066_size
 00003700 A WAV_091_size
-00003798 T game_draw	F:\Projekte\tetris\tetris-sgdk/src/states/game.c:344
-000037d0 T game_cleanup	F:\Projekte\tetris\tetris-sgdk/src/states/game.c:364
 00003800 A WAV_019_size
 00003800 A WAV_079_size
-00003848 t draw_menu_line	F:\Projekte\tetris\tetris-sgdk/src/states/game_select.c:17
-00003910 T select_init	F:\Projekte\tetris\tetris-sgdk/src/states/game_select.c:60
-000039a2 T select_init_draw	F:\Projekte\tetris\tetris-sgdk/src/states/game_select.c:80
-00003a0c T select_update	F:\Projekte\tetris\tetris-sgdk/src/states/game_select.c:92
+00003878 T text_manager_is_finished	F:\Projekte\tetris\tetris-sgdk/src/text_manager.c:288
+000038c0 T text_manager_cleanup	F:\Projekte\tetris\tetris-sgdk/src/text_manager.c:298
+000038f4 t draw_club_debug_info	F:\Projekte\tetris\tetris-sgdk/src/menubg/club_mode.c:6
+0000395a T menubg_club_cleanup	F:\Projekte\tetris\tetris-sgdk/src/menubg/club_mode.c:23
+00003978 T menubg_club_apply	F:\Projekte\tetris\tetris-sgdk/src/menubg/club_mode.c:30
 00003b00 A WAV_039_size
 00003b00 A WAV_086_size
+00003b5a T menubg_club_update	F:\Projekte\tetris\tetris-sgdk/src/menubg/club_mode.c:105
 00003c00 A WAV_099_size
+00003c22 T menubg_none_apply	F:\Projekte\tetris\tetris-sgdk/src/menubg/none_mode.c:3
+00003c40 t update_riistar_scroll_lines	F:\Projekte\tetris\tetris-sgdk/src/menubg/riistar_mode.c:27
+00003d14 T menubg_riistar_apply	F:\Projekte\tetris\tetris-sgdk/src/menubg/riistar_mode.c:51
 00003e00 A WAV_057_size
-00003e4a T select_draw	F:\Projekte\tetris\tetris-sgdk/src/states/game_select.c:187
+00003ece T menubg_riistar_update	F:\Projekte\tetris\tetris-sgdk/src/menubg/riistar_mode.c:109
 00003f00 A WAV_053_size
 00003f00 A WAV_056_size
 00003f00 A WAV_059_size
+00003f9c T menubg_riistar_set_stack_top	F:\Projekte\tetris\tetris-sgdk/src/menubg/riistar_mode.c:133
 00004000 A WAV_037_size
-000040e8 T select_cleanup	F:\Projekte\tetris\tetris-sgdk/src/states/game_select.c:207
+00004006 T menubg_riistar_pulse	F:\Projekte\tetris\tetris-sgdk/src/menubg/riistar_mode.c:158
+0000404a t update_star_tiles	F:\Projekte\tetris\tetris-sgdk/src/menubg/space_mode.c:5
+000040e6 t draw_stars_dynamic	F:\Projekte\tetris\tetris-sgdk/src/menubg/space_mode.c:22
 00004100 A WAV_055_size
 00004100 A WAV_058_size
 00004100 A WAV_078_size
-00004112 T gameover_init	F:\Projekte\tetris\tetris-sgdk/src/states/gameover.c:12
-00004120 T gameover_init_draw	F:\Projekte\tetris\tetris-sgdk/src/states/gameover.c:16
+000041a6 T menubg_space_init_tiles	F:\Projekte\tetris\tetris-sgdk/src/menubg/space_mode.c:39
+000041b8 T menubg_space_apply	F:\Projekte\tetris\tetris-sgdk/src/menubg/space_mode.c:43
+000041ec T menubg_space_update	F:\Projekte\tetris\tetris-sgdk/src/menubg/space_mode.c:54
 00004200 A WAV_067_size
-00004260 T gameover_update	F:\Projekte\tetris\tetris-sgdk/src/states/gameover.c:49
-00004292 T gameover_draw	F:\Projekte\tetris\tetris-sgdk/src/states/gameover.c:59
-00004294 T gameover_cleanup	F:\Projekte\tetris\tetris-sgdk/src/states/gameover.c:62
-000042ac t gfxtest_refill_bag	F:\Projekte\tetris\tetris-sgdk/src/states/gfxtest.c:20
-00004320 T gfxtest_init	F:\Projekte\tetris\tetris-sgdk/src/states/gfxtest.c:62
-00004352 T gfxtest_init_draw	F:\Projekte\tetris\tetris-sgdk/src/states/gfxtest.c:71
-00004382 T gfxtest_update	F:\Projekte\tetris\tetris-sgdk/src/states/gfxtest.c:79
-000043b8 T gfxtest_draw	F:\Projekte\tetris\tetris-sgdk/src/states/gfxtest.c:96
+00004214 T menubg_space_set_intensity	F:\Projekte\tetris\tetris-sgdk/src/menubg/space_mode.c:60
+000042b0 t challenge_build_translation_table	F:\Projekte\tetris\tetris-sgdk/src/states/challenge.c:150
+00004334 T challenge_is_unlocked	F:\Projekte\tetris\tetris-sgdk/src/states/challenge.c:368
+00004368 T challenge_is_cleared	F:\Projekte\tetris\tetris-sgdk/src/states/challenge.c:373
+0000439c t challenge_try_move	F:\Projekte\tetris\tetris-sgdk/src/states/challenge.c:227
 00004400 A WAV_014_size
 00004400 A WAV_054_size
-000044aa T gfxtest_cleanup	F:\Projekte\tetris\tetris-sgdk/src/states/gfxtest.c:104
-000044b2 T highscore_init	F:\Projekte\tetris\tetris-sgdk/src/states/highscore.c:12
-000044d0 T highscore_init_draw	F:\Projekte\tetris\tetris-sgdk/src/states/highscore.c:19
+0000441e T challenge_translate_grid_to_level	F:\Projekte\tetris\tetris-sgdk/src/states/challenge.c:378
+00004450 T challenge_get_level_name	F:\Projekte\tetris\tetris-sgdk/src/states/challenge.c:386
+00004476 T challenge_mark_cleared	F:\Projekte\tetris\tetris-sgdk/src/states/challenge.c:391
 00004500 A WAV_068_size
-000045d2 T highscore_update	F:\Projekte\tetris\tetris-sgdk/src/states/highscore.c:49
+0000455e T challenge_init	F:\Projekte\tetris\tetris-sgdk/src/states/challenge.c:411
 00004600 A WAV_051_size
-0000465c T highscore_draw	F:\Projekte\tetris\tetris-sgdk/src/states/highscore.c:87
-0000465e T highscore_cleanup	F:\Projekte\tetris\tetris-sgdk/src/states/highscore.c:90
-00004692 t draw_option_line	F:\Projekte\tetris\tetris-sgdk/src/states/options.c:12
-0000475a T options_init	F:\Projekte\tetris\tetris-sgdk/src/states/options.c:26
-000047b8 T options_init_draw	F:\Projekte\tetris\tetris-sgdk/src/states/options.c:40
 00004800 A WAV_011_size
-00004822 T options_update	F:\Projekte\tetris\tetris-sgdk/src/states/options.c:50
+000048c2 T challenge_init_draw	F:\Projekte\tetris\tetris-sgdk/src/states/challenge.c:459
+00004938 T challenge_draw	F:\Projekte\tetris\tetris-sgdk/src/states/challenge.c:472
 00004b00 A WAV_062_size
-00004c72 T options_draw	F:\Projekte\tetris\tetris-sgdk/src/states/options.c:157
+00004ce8 T challenge_update	F:\Projekte\tetris\tetris-sgdk/src/states/challenge.c:565
 00004f00 A WAV_083_size
 00004f00 A WAV_085_size
+00005050 T challenge_cleanup	F:\Projekte\tetris\tetris-sgdk/src/states/challenge.c:616
+0000506e T game_init	F:\Projekte\tetris\tetris-sgdk/src/states/game.c:215
+000050bc T game_init_draw	F:\Projekte\tetris\tetris-sgdk/src/states/game.c:236
+000050f2 T game_update	F:\Projekte\tetris\tetris-sgdk/src/states/game.c:261
 00005100 A WAV_082_size
-00005124 T options_cleanup	F:\Projekte\tetris\tetris-sgdk/src/states/options.c:197
-00005142 T save_execute	F:\Projekte\tetris\tetris-sgdk/src/states/save_manager.c:15
-0000521c T save_verify	F:\Projekte\tetris\tetris-sgdk/src/states/save_manager.c:42
-000052cc T save_load	F:\Projekte\tetris\tetris-sgdk/src/states/save_manager.c:72
 00005300 A WAV_097_size
-00005364 T save_clear	F:\Projekte\tetris\tetris-sgdk/src/states/save_manager.c:89
-000054a2 T save_init	F:\Projekte\tetris\tetris-sgdk/src/states/save_manager.c:122
-00005508 T saving_init	F:\Projekte\tetris\tetris-sgdk/src/states/save_manager.c:139
-0000553c T saving_init_draw	F:\Projekte\tetris\tetris-sgdk/src/states/save_manager.c:149
-0000555c T saving_update	F:\Projekte\tetris\tetris-sgdk/src/states/save_manager.c:154
-00005660 T saving_draw	F:\Projekte\tetris\tetris-sgdk/src/states/save_manager.c:201
-00005708 T saving_cleanup	F:\Projekte\tetris\tetris-sgdk/src/states/save_manager.c:219
-00005720 T sound_test_init	F:\Projekte\tetris\tetris-sgdk/src/states/sound_test.c:10
-00005748 T sound_test_init_draw	F:\Projekte\tetris\tetris-sgdk/src/states/sound_test.c:22
-000057ac T sound_test_update	F:\Projekte\tetris\tetris-sgdk/src/states/sound_test.c:34
-00005826 T sound_test_draw	F:\Projekte\tetris\tetris-sgdk/src/states/sound_test.c:61
-0000587e T sound_test_cleanup	F:\Projekte\tetris\tetris-sgdk/src/states/sound_test.c:73
-0000589c t draw_title_menu_line	F:\Projekte\tetris\tetris-sgdk/src/states/title.c:12
+00005752 T game_draw	F:\Projekte\tetris\tetris-sgdk/src/states/game.c:344
+0000578a T game_cleanup	F:\Projekte\tetris\tetris-sgdk/src/states/game.c:364
+00005802 t draw_menu_line	F:\Projekte\tetris\tetris-sgdk/src/states/game_select.c:17
+000058ca T select_init	F:\Projekte\tetris\tetris-sgdk/src/states/game_select.c:60
 00005900 A WAV_031_size
-0000590e T title_init	F:\Projekte\tetris\tetris-sgdk/src/states/title.c:27
-00005950 T title_init_draw	F:\Projekte\tetris\tetris-sgdk/src/states/title.c:43
-000059c0 T title_update	F:\Projekte\tetris\tetris-sgdk/src/states/title.c:55
-00005bbe T title_draw	F:\Projekte\tetris\tetris-sgdk/src/states/title.c:113
-00005d1c T title_cleanup	F:\Projekte\tetris\tetris-sgdk/src/states/title.c:137
-00005d24 t vs_get_gravity_threshold	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:430
-00005dea t vs_set_rotate_flag	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:554
+0000595c T select_init_draw	F:\Projekte\tetris\tetris-sgdk/src/states/game_select.c:80
+000059c6 T select_update	F:\Projekte\tetris\tetris-sgdk/src/states/game_select.c:92
 00005e00 A WAV_064_size
-00005e0c t vs_update_event_timers	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:637
-00005e38 t vs_tick_player_effects	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:292
+00005e04 T select_draw	F:\Projekte\tetris\tetris-sgdk/src/states/game_select.c:187
 00005f00 A WAV_043_size
-00005f0e t vs_set_event_text	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:622
-00005f7e t vs_handle_match_end	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:714
 00006000 A WAV_040_size
-00006046 t vs_step_game_over_animation	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:471
+000060a2 T select_cleanup	F:\Projekte\tetris\tetris-sgdk/src/states/game_select.c:207
+000060cc T gameover_init	F:\Projekte\tetris\tetris-sgdk/src/states/gameover.c:12
+000060da T gameover_init_draw	F:\Projekte\tetris\tetris-sgdk/src/states/gameover.c:16
 00006100 A WAV_030_size
-00006116 t vs_sync_effect_sprites	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:452
-000061aa t vs_draw_player_board	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:1003
-00006230 t vs_try_step_down	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:1073
-000062aa t vs_update_player_animations	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:850
+0000621a T gameover_update	F:\Projekte\tetris\tetris-sgdk/src/states/gameover.c:49
+0000624c T gameover_draw	F:\Projekte\tetris\tetris-sgdk/src/states/gameover.c:59
+0000624e T gameover_cleanup	F:\Projekte\tetris\tetris-sgdk/src/states/gameover.c:62
+00006266 t gfxtest_refill_bag	F:\Projekte\tetris\tetris-sgdk/src/states/gfxtest.c:20
+000062da T gfxtest_init	F:\Projekte\tetris\tetris-sgdk/src/states/gfxtest.c:62
+0000630c T gfxtest_init_draw	F:\Projekte\tetris\tetris-sgdk/src/states/gfxtest.c:71
+0000633c T gfxtest_update	F:\Projekte\tetris\tetris-sgdk/src/states/gfxtest.c:79
+00006372 T gfxtest_draw	F:\Projekte\tetris\tetris-sgdk/src/states/gfxtest.c:96
+00006464 T gfxtest_cleanup	F:\Projekte\tetris\tetris-sgdk/src/states/gfxtest.c:104
+0000646c T highscore_init	F:\Projekte\tetris\tetris-sgdk/src/states/highscore.c:12
+0000648a T highscore_init_draw	F:\Projekte\tetris\tetris-sgdk/src/states/highscore.c:19
+0000658c T highscore_update	F:\Projekte\tetris\tetris-sgdk/src/states/highscore.c:49
+00006616 T highscore_draw	F:\Projekte\tetris\tetris-sgdk/src/states/highscore.c:87
+00006618 T highscore_cleanup	F:\Projekte\tetris\tetris-sgdk/src/states/highscore.c:90
+0000664c t draw_option_line	F:\Projekte\tetris\tetris-sgdk/src/states/options.c:12
+00006714 T options_init	F:\Projekte\tetris\tetris-sgdk/src/states/options.c:26
+00006772 T options_init_draw	F:\Projekte\tetris\tetris-sgdk/src/states/options.c:40
+000067dc T options_update	F:\Projekte\tetris\tetris-sgdk/src/states/options.c:50
 00006a00 A WAV_036_size
-00006f32 T vs_spawn_piece_for_player	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:900
-000071b8 t vs_reset_player	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:966
-000072aa T vs_lock_piece_for_player	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:1011
-00007416 t vs_update_player	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:1091
+00006c2c T options_draw	F:\Projekte\tetris\tetris-sgdk/src/states/options.c:157
+000070de T options_cleanup	F:\Projekte\tetris\tetris-sgdk/src/states/options.c:197
+000070fc T save_execute	F:\Projekte\tetris\tetris-sgdk/src/states/save_manager.c:15
+000071d6 T save_verify	F:\Projekte\tetris\tetris-sgdk/src/states/save_manager.c:42
+00007286 T save_load	F:\Projekte\tetris\tetris-sgdk/src/states/save_manager.c:72
+0000731e T save_clear	F:\Projekte\tetris\tetris-sgdk/src/states/save_manager.c:89
+0000745c T save_init	F:\Projekte\tetris\tetris-sgdk/src/states/save_manager.c:122
+000074c2 T saving_init	F:\Projekte\tetris\tetris-sgdk/src/states/save_manager.c:139
+000074f6 T saving_init_draw	F:\Projekte\tetris\tetris-sgdk/src/states/save_manager.c:149
+00007516 T saving_update	F:\Projekte\tetris\tetris-sgdk/src/states/save_manager.c:154
 00007600 A WAV_071_size
-000078e8 T vs_state_init	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:1211
-00007962 T vs_state_init_draw	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:1229
-00007b4e T vs_state_update	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:1266
-0000803a T vs_state_draw	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:1382
-00008346 T vs_state_cleanup	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:1410
-00008362 T controls_update	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_controls.c:10
+0000761a T saving_draw	F:\Projekte\tetris\tetris-sgdk/src/states/save_manager.c:201
+000076c2 T saving_cleanup	F:\Projekte\tetris\tetris-sgdk/src/states/save_manager.c:219
+000076da T sound_test_init	F:\Projekte\tetris\tetris-sgdk/src/states/sound_test.c:10
+00007702 T sound_test_init_draw	F:\Projekte\tetris\tetris-sgdk/src/states/sound_test.c:22
+00007766 T sound_test_update	F:\Projekte\tetris\tetris-sgdk/src/states/sound_test.c:34
+000077e0 T sound_test_draw	F:\Projekte\tetris\tetris-sgdk/src/states/sound_test.c:61
+00007838 T sound_test_cleanup	F:\Projekte\tetris\tetris-sgdk/src/states/sound_test.c:73
+00007856 t draw_title_menu_line	F:\Projekte\tetris\tetris-sgdk/src/states/title.c:13
+000078c8 T title_init	F:\Projekte\tetris\tetris-sgdk/src/states/title.c:28
+0000790a T title_init_draw	F:\Projekte\tetris\tetris-sgdk/src/states/title.c:44
+0000793c T title_update	F:\Projekte\tetris\tetris-sgdk/src/states/title.c:53
+00007b64 T title_draw	F:\Projekte\tetris\tetris-sgdk/src/states/title.c:115
+00007cc2 T title_cleanup	F:\Projekte\tetris\tetris-sgdk/src/states/title.c:139
+00007cd0 t vs_get_gravity_threshold	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:430
+00007d96 t vs_set_rotate_flag	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:554
+00007db8 t vs_update_event_timers	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:637
+00007de4 t vs_tick_player_effects	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:292
+00007eba t vs_set_event_text	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:622
+00007f2a t vs_handle_match_end	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:714
+00007ff2 t vs_step_game_over_animation	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:471
+000080c2 t vs_sync_effect_sprites	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:452
+00008156 t vs_draw_player_board	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:1003
+000081dc t vs_try_step_down	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:1073
+00008256 t vs_update_player_animations	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:850
 00008700 A WAV_098_size
-0000870a T triggerManualSort	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_logic.c:53
-000087e4 T checkCollision	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_logic.c:105
-0000886e T calculate_ghost_y	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_logic.c:121
-000088b2 T refillBag	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_logic.c:127
-00008930 T transfer_piece_to_board	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_logic.c:226
-000089be T set_game_comment	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_logic.c:289
-000089f6 T triggerGoodEffect	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_logic.c:295
-00008d74 T triggerBadEffect	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_logic.c:362
-0000902c T check_and_update_highscore	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_logic.c:502
-0000910a t route_session_end	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_logic.c:22
-00009158 T tryRotate	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_logic.c:531
-000091e6 T clearLinesAtOrigin	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_logic.c:553
-000093d2 T clearLines	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_logic.c:628
-000093e4 T play_game_over_animation	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_logic.c:632
-00009578 t add_garbage_line_to_context	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_logic.c:1032
-000096a6 T spawnPiece	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_logic.c:698
-00009b50 T lockPiece	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_logic.c:458
-00009c86 T update_blinking_animation	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_logic.c:808
-00009cfa T finishLineClear	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_logic.c:849
-00009f74 T handle_board_collapse	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_logic.c:931
-0000a078 T update_shadows	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_logic.c:974
-0000a09a T performHold	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_logic.c:982
-0000a1dc T addGarbageLine	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_logic.c:1075
-0000a1f4 T addGarbageLineForContext	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_logic.c:1080
-0000a204 T reset_game_logic	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_logic.c:1105
-0000a416 T update_board_animations	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_logic.c:1243
-0000a5dc T SRAM_readLong
-0000a5f2 T SRAM_writeLong
-0000a60c T TSK_init
-0000a632 t .loop
-0000a63a T TSK_superPost
-0000a650 t no_task
-0000a652 T TSK_userYield
-0000a65a t userYield
-0000a684 T _trap_0
-0000a6a8 T BMP_doVBlankProcess	D:\apps\SGDK/src/bmp.c:1214
-0000a6b2 T DMA_getMaxTransferSize	D:\apps\SGDK/src/dma.c:130
-0000a6c4 T DMA_setMaxTransferSize	D:\apps\SGDK/src/dma.c:135
-0000a6d4 T DMA_setMaxTransferSizeToDefault	D:\apps\SGDK/src/dma.c:141
-0000a6f8 T DMA_clearQueue	D:\apps\SGDK/src/dma.c:183
-0000a716 T DMA_setBufferSize	D:\apps\SGDK/src/dma.c:151
-0000a770 T DMA_setBufferSizeToDefault	D:\apps\SGDK/src/dma.c:167
-0000a784 T DMA_initEx	D:\apps\SGDK/src/dma.c:52
-0000a834 T DMA_init	D:\apps\SGDK/src/dma.c:47
-0000a84a T DMA_flushQueue	D:\apps\SGDK/src/dma.c:194
-0000a8be T DMA_getQueueTransferSize	D:\apps\SGDK/src/dma.c:317
-0000a8c6 T DMA_releaseTemp	D:\apps\SGDK/src/dma.c:368
-0000a8d6 T DMA_allocateTemp	D:\apps\SGDK/src/dma.c:346
-0000a942 T DMA_queueDmaFast	D:\apps\SGDK/src/dma.c:454
-0000aa86 T DMA_allocateAndQueueDma	D:\apps\SGDK/src/dma.c:382
-0000aae2 T DMA_copyAndQueueDma	D:\apps\SGDK/src/dma.c:406
-0000ab56 T DMA_queueDma	D:\apps\SGDK/src/dma.c:432
-0000abe0 T DMA_doDmaFast	D:\apps\SGDK/src/dma.c:566
-0000ace4 T DMA_doDma	D:\apps\SGDK/src/dma.c:545
-0000ad68 T DMA_doCPUCopyDirect	D:\apps\SGDK/src/dma.c:663
-0000ae14 T DMA_doCPUCopy	D:\apps\SGDK/src/dma.c:640
-0000ae88 T DMA_transfer	D:\apps\SGDK/src/dma.c:322
-0000af54 T DMA_doVRamFill	D:\apps\SGDK/src/dma.c:704
-0000aff8 t TH_CONTROL_PHASE	D:\apps\SGDK/src/joy.c:639
-0000b016 t THREELINE_HANDSHAKE	D:\apps\SGDK/src/joy.c:655
-0000b06a t externalIntCB	D:\apps\SGDK/src/joy.c:281
-0000b136 t read3Btn	D:\apps\SGDK/src/joy.c:675
-0000b186 t read6Btn	D:\apps\SGDK/src/joy.c:693
-0000b204 t start3lhs	D:\apps\SGDK/src/joy.c:722
-0000b2f6 t readMouse	D:\apps\SGDK/src/joy.c:773
+00008ede T vs_spawn_piece_for_player	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:900
+00009164 t vs_reset_player	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:966
+00009256 T vs_lock_piece_for_player	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:1011
+000093c2 t vs_update_player	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:1091
+00009894 T vs_state_init	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:1211
+0000990e T vs_state_init_draw	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:1229
+00009afa T vs_state_update	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:1266
+00009fe6 T vs_state_draw	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:1382
+0000a2f2 T vs_state_cleanup	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:1410
+0000a30e t game_conditions_reset_goals	F:\Projekte\tetris\tetris-sgdk/src/states/game/conditions.c:10
+0000a370 T game_conditions_set_from_select	F:\Projekte\tetris\tetris-sgdk/src/states/game/conditions.c:39
+0000a43c T game_conditions_set_challenge_training	F:\Projekte\tetris\tetris-sgdk/src/states/game/conditions.c:65
+0000a48c T game_conditions_set_challenge_score_training	F:\Projekte\tetris\tetris-sgdk/src/states/game/conditions.c:79
+0000a4da T game_conditions_set_for_challenge_level	F:\Projekte\tetris\tetris-sgdk/src/states/game/conditions.c:135
+0000a626 T game_conditions_is_success	F:\Projekte\tetris\tetris-sgdk/src/states/game/conditions.c:189
+0000a6c6 t game_conditions_update_success_state	F:\Projekte\tetris\tetris-sgdk/src/states/game/conditions.c:30
+0000a6f6 T game_conditions_update_progress_from_score	F:\Projekte\tetris\tetris-sgdk/src/states/game/conditions.c:157
+0000a710 T game_conditions_on_lines_cleared	F:\Projekte\tetris\tetris-sgdk/src/states/game/conditions.c:164
+0000a79c T controls_update	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_controls.c:10
+0000ab44 T triggerManualSort	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_logic.c:53
+0000ac1e T checkCollision	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_logic.c:105
+0000aca8 T calculate_ghost_y	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_logic.c:121
+0000acec T refillBag	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_logic.c:127
+0000ad6a T transfer_piece_to_board	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_logic.c:226
+0000adf8 T set_game_comment	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_logic.c:289
+0000ae30 T triggerGoodEffect	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_logic.c:295
+0000b1ae T triggerBadEffect	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_logic.c:362
 0000b300 A WAV_009_size
-0000b4fa t readTrackball	D:\apps\SGDK/src/joy.c:1175
-0000b650 t readTeamPlayer	D:\apps\SGDK/src/joy.c:844
-0000b9fc t readLightgun	D:\apps\SGDK/src/joy.c:1027
-0000bda2 T JOY_setSupport	D:\apps\SGDK/src/joy.c:316
-0000c21e T JOY_reset	D:\apps\SGDK/src/joy.c:59
-0000c5ec T JOY_init	D:\apps\SGDK/src/joy.c:50
-0000c5fa T JOY_readJoypad	D:\apps\SGDK/src/joy.c:530
-0000c64a T JOY_update	D:\apps\SGDK/src/joy.c:1248
-0000c940 t prepareMapDataColumn	D:\apps\SGDK/src/map.c:499
-0000c9c8 t prepareMapDataRow	D:\apps\SGDK/src/map.c:520
-0000ca4c t prepareMapDataColumn_MTI8_BI8	D:\apps\SGDK/src/map.c:542
-0000cb4a t prepareMapDataColumn_MTI8_BI16	D:\apps\SGDK/src/map.c:603
-0000cc4c t prepareMapDataColumn_MTI16_BI8	D:\apps\SGDK/src/map.c:664
-0000cd5a t prepareMapDataColumn_MTI16_BI16	D:\apps\SGDK/src/map.c:725
-0000ce6c t prepareMapDataColumnEx_MTI8_BI8	D:\apps\SGDK/src/map.c:786
-0000cf84 t prepareMapDataColumnEx_MTI8_BI16	D:\apps\SGDK/src/map.c:850
-0000d0a0 t prepareMapDataColumnEx_MTI16_BI8	D:\apps\SGDK/src/map.c:914
-0000d1c6 t prepareMapDataColumnEx_MTI16_BI16	D:\apps\SGDK/src/map.c:978
-0000d2f0 t prepareMapDataRow_MTI8_BI8	D:\apps\SGDK/src/map.c:1042
-0000d3e4 t prepareMapDataRow_MTI8_BI16	D:\apps\SGDK/src/map.c:1098
-0000d4da t prepareMapDataRow_MTI16_BI8	D:\apps\SGDK/src/map.c:1154
-0000d5d2 t prepareMapDataRow_MTI16_BI16	D:\apps\SGDK/src/map.c:1210
-0000d6ce t prepareMapDataRowEx_MTI8_BI8	D:\apps\SGDK/src/map.c:1266
-0000d7d8 t prepareMapDataRowEx_MTI8_BI16	D:\apps\SGDK/src/map.c:1325
-0000d8e8 t prepareMapDataRowEx_MTI16_BI8	D:\apps\SGDK/src/map.c:1384
-0000d9fc t prepareMapDataRowEx_MTI16_BI16	D:\apps\SGDK/src/map.c:1443
-0000db14 t getMetaTile_MTI8_BI8	D:\apps\SGDK/src/map.c:1570
-0000db7e t getMetaTile_MTI8_BI16	D:\apps\SGDK/src/map.c:1584
-0000dbe8 t getMetaTile_MTI16_BI8	D:\apps\SGDK/src/map.c:1598
-0000dc54 t getMetaTile_MTI16_BI16	D:\apps\SGDK/src/map.c:1612
-0000dcc0 t getMetaTilemapRect_MTI8_BI8	D:\apps\SGDK/src/map.c:1626
-0000ddee t getMetaTilemapRect_MTI8_BI16	D:\apps\SGDK/src/map.c:1684
-0000df1e t getMetaTilemapRect_MTI16_BI8	D:\apps\SGDK/src/map.c:1742
-0000e042 t getMetaTilemapRect_MTI16_BI16	D:\apps\SGDK/src/map.c:1800
-0000e166 t setMapColumn	D:\apps\SGDK/src/map.c:383
-0000e2aa t setMapRow	D:\apps\SGDK/src/map.c:442
-0000e3f0 T MAP_create	D:\apps\SGDK/src/map.c:62
-0000e600 T MAP_release	D:\apps\SGDK/src/map.c:207
-0000e60e T MAP_scrollToEx	D:\apps\SGDK/src/map.c:213
-0000e92e T MAP_scrollTo	D:\apps\SGDK/src/map.c:281
-0000e948 T mulu	D:\apps\SGDK/src/maths.c:76
-0000e962 T divu	D:\apps\SGDK/src/maths.c:106
-0000e96e T divs	D:\apps\SGDK/src/maths.c:116
-0000e97a T getNextPow2	D:\apps\SGDK/src/maths.c:210
-0000e9a4 T F16_toInt	D:\apps\SGDK/src/maths.c:286
-0000e9ac T F16_mul	D:\apps\SGDK/src/maths.c:332
-0000e9c4 T F16_div	D:\apps\SGDK/src/maths.c:337
-0000e9d4 T sinFix16	D:\apps\SGDK/src/maths.c:500
-0000ea5e T cosFix16	D:\apps\SGDK/src/maths.c:506
-0000eb04 T F32_toInt	D:\apps\SGDK/src/maths.c:522
-0000eb0e T MEM_init	D:\apps\SGDK/src/memory.c:155
-0000eb36 T MEM_getFree	D:\apps\SGDK/src/memory.c:186
-0000eb62 T MEM_getLargestFreeBlock	D:\apps\SGDK/src/memory.c:208
-0000eb98 T MEM_alloc	D:\apps\SGDK/src/memory.c:259
-0000ecdc T MEM_free	D:\apps\SGDK/src/memory.c:386
-0000ed0c T MEM_pack	D:\apps\SGDK/src/memory.c:409
-0000ed7c T memset	D:\apps\SGDK/src/memory.c:694
-0000ed9c T memcpy	D:\apps\SGDK/src/memory.c:701
-0000edb8 T PAL_getColor	D:\apps\SGDK/src/pal.c:204
-0000ede0 T PAL_getColors	D:\apps\SGDK/src/pal.c:213
-0000eed0 T PAL_setColor	D:\apps\SGDK/src/pal.c:266
-0000eef4 T PAL_setColors	D:\apps\SGDK/src/pal.c:274
-0000ef22 T PAL_setPaletteColors	D:\apps\SGDK/src/pal.c:279
-0000ef48 T PAL_setPalette	D:\apps\SGDK/src/pal.c:284
-0000ef6a T PAL_initFade	D:\apps\SGDK/src/pal.c:290
-0000f0f2 T PAL_doFadeStep	D:\apps\SGDK/src/pal.c:342
-0000f1b2 T PAL_fade	D:\apps\SGDK/src/pal.c:389
-0000f21e T PAL_fadeTo	D:\apps\SGDK/src/pal.c:407
-0000f28a T PAL_fadeOut	D:\apps\SGDK/src/pal.c:420
-0000f2bc T PAL_fadeIn	D:\apps\SGDK/src/pal.c:425
-0000f2f2 T PAL_fadeOutPalette	D:\apps\SGDK/src/pal.c:441
-0000f328 T PAL_fadeInPalette	D:\apps\SGDK/src/pal.c:446
-0000f362 T PAL_isDoingFade	D:\apps\SGDK/src/pal.c:473
-0000f36e t updateVisibility	D:\apps\SGDK/src/sprite_eng.c:1729
-0000f594 t moveAfter	D:\apps\SGDK/src/sprite_eng.c:2071
-0000f646 t checkSpriteValid	D:\apps\SGDK/src/sprite_eng.c:321
-0000f668 t releaseSprite	D:\apps\SGDK/src/sprite_eng.c:270
-0000f6de T SPR_end	D:\apps\SGDK/src/sprite_eng.c:160
-0000f73e T SPR_isInitialized	D:\apps\SGDK/src/sprite_eng.c:190
-0000f74a T SPR_reset	D:\apps\SGDK/src/sprite_eng.c:195
-0000f786 T SPR_initEx	D:\apps\SGDK/src/sprite_eng.c:120
-0000f7f2 T SPR_init	D:\apps\SGDK/src/sprite_eng.c:155
-0000f800 T SPR_defragVRAM	D:\apps\SGDK/src/sprite_eng.c:542
-0000f8b0 T SPR_setPosition	D:\apps\SGDK/src/sprite_eng.c:803
-0000f902 T SPR_setHFlip	D:\apps\SGDK/src/sprite_eng.c:830
-0000f964 T SPR_setPriority	D:\apps\SGDK/src/sprite_eng.c:924
-0000f9a6 T SPR_setDepth	D:\apps\SGDK/src/sprite_eng.c:983
-0000fa38 T SPR_setAnimAndFrame	D:\apps\SGDK/src/sprite_eng.c:1020
-0000fae4 T SPR_addSpriteEx	D:\apps\SGDK/src/sprite_eng.c:329
+0000b466 T check_and_update_highscore	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_logic.c:502
+0000b544 t route_session_end	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_logic.c:22
+0000b592 T tryRotate	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_logic.c:531
+0000b620 T clearLinesAtOrigin	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_logic.c:553
+0000b80c T clearLines	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_logic.c:628
+0000b81e T play_game_over_animation	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_logic.c:632
+0000b9b2 t add_garbage_line_to_context	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_logic.c:1032
+0000bae0 T spawnPiece	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_logic.c:698
+0000bf8a T lockPiece	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_logic.c:458
+0000c0c0 T update_blinking_animation	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_logic.c:808
+0000c134 T finishLineClear	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_logic.c:849
+0000c3ae T handle_board_collapse	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_logic.c:931
+0000c4b2 T update_shadows	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_logic.c:974
+0000c4d4 T performHold	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_logic.c:982
+0000c616 T addGarbageLine	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_logic.c:1075
+0000c62e T addGarbageLineForContext	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_logic.c:1080
+0000c63e T reset_game_logic	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_logic.c:1105
+0000c850 T update_board_animations	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_logic.c:1243
+0000ca16 t draw_panel_line	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_view.c:35
+0000ca86 T load_background	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_view.c:247
+0000cb30 T view_init_cache	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_view.c:265
+0000cb52 T view_draw_board_for_context	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_view.c:275
+0000ce1c T drawPreview	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_view.c:372
+0000ceb2 T view_draw_debug_memory	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_view.c:385
+0000d208 T view_update_ui	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_view.c:427
+0000ddb2 T drawBoard	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_view.c:532
+0000de50 T view_fade_in_frame	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_view.c:556
+0000dede T quest_is_tutorial_level	F:\Projekte\tetris\tetris-sgdk/src/states/game/quests.c:18
+0000deea T quest_on_action	F:\Projekte\tetris\tetris-sgdk/src/states/game/quests.c:23
+0000e022 T quest_get_stage_line	F:\Projekte\tetris\tetris-sgdk/src/states/game/quests.c:62
+0000e06c t ai_get_rotation_count_for_player	F:\Projekte\tetris\tetris-sgdk/src/states/vs/brain.c:20
+0000e0a8 t ai_bit_collide	F:\Projekte\tetris\tetris-sgdk/src/states/vs/brain.c:45
+0000e134 t ai_bit_clear_lines	F:\Projekte\tetris\tetris-sgdk/src/states/vs/brain.c:55
+0000e18a t ai_evaluate	F:\Projekte\tetris\tetris-sgdk/src/states/vs/brain.c:92
+0000e2a6 t ai_get_human_delay	F:\Projekte\tetris\tetris-sgdk/src/states/vs/brain.c:67
+0000e336 T vs_brain_think_split	F:\Projekte\tetris\tetris-sgdk/src/states/vs/brain.c:135
+0000e75a T vs_brain_update_player	F:\Projekte\tetris\tetris-sgdk/src/states/vs/brain.c:215
+0000e960 T vs_brain_reset	F:\Projekte\tetris\tetris-sgdk/src/states/vs/brain.c:259
+0000e98c T SRAM_readLong
+0000e9a2 T SRAM_writeLong
+0000e9bc T TSK_init
+0000e9e2 t .loop
+0000e9ea T TSK_superPost
+0000ea00 t no_task
+0000ea02 T TSK_userYield
+0000ea0a t userYield
+0000ea34 T _trap_0
+0000ea58 T BMP_doVBlankProcess	D:\apps\SGDK/src/bmp.c:1214
+0000ea62 T DMA_getMaxTransferSize	D:\apps\SGDK/src/dma.c:130
+0000ea74 T DMA_setMaxTransferSize	D:\apps\SGDK/src/dma.c:135
+0000ea84 T DMA_setMaxTransferSizeToDefault	D:\apps\SGDK/src/dma.c:141
+0000eaa8 T DMA_clearQueue	D:\apps\SGDK/src/dma.c:183
+0000eac6 T DMA_setBufferSize	D:\apps\SGDK/src/dma.c:151
+0000eb20 T DMA_setBufferSizeToDefault	D:\apps\SGDK/src/dma.c:167
+0000eb34 T DMA_initEx	D:\apps\SGDK/src/dma.c:52
+0000ebe4 T DMA_init	D:\apps\SGDK/src/dma.c:47
+0000ebfa T DMA_flushQueue	D:\apps\SGDK/src/dma.c:194
+0000ec6e T DMA_getQueueTransferSize	D:\apps\SGDK/src/dma.c:317
+0000ec76 T DMA_releaseTemp	D:\apps\SGDK/src/dma.c:368
+0000ec86 T DMA_allocateTemp	D:\apps\SGDK/src/dma.c:346
+0000ecf2 T DMA_queueDmaFast	D:\apps\SGDK/src/dma.c:454
+0000ee36 T DMA_allocateAndQueueDma	D:\apps\SGDK/src/dma.c:382
+0000ee92 T DMA_copyAndQueueDma	D:\apps\SGDK/src/dma.c:406
+0000ef06 T DMA_queueDma	D:\apps\SGDK/src/dma.c:432
+0000ef90 T DMA_doDmaFast	D:\apps\SGDK/src/dma.c:566
+0000f094 T DMA_doDma	D:\apps\SGDK/src/dma.c:545
+0000f118 T DMA_doCPUCopyDirect	D:\apps\SGDK/src/dma.c:663
+0000f1c4 T DMA_doCPUCopy	D:\apps\SGDK/src/dma.c:640
+0000f238 T DMA_transfer	D:\apps\SGDK/src/dma.c:322
+0000f304 T DMA_doVRamFill	D:\apps\SGDK/src/dma.c:704
+0000f3a8 t TH_CONTROL_PHASE	D:\apps\SGDK/src/joy.c:639
+0000f3c6 t THREELINE_HANDSHAKE	D:\apps\SGDK/src/joy.c:655
+0000f41a t externalIntCB	D:\apps\SGDK/src/joy.c:281
+0000f4e6 t read3Btn	D:\apps\SGDK/src/joy.c:675
+0000f536 t read6Btn	D:\apps\SGDK/src/joy.c:693
+0000f5b4 t start3lhs	D:\apps\SGDK/src/joy.c:722
+0000f6a6 t readMouse	D:\apps\SGDK/src/joy.c:773
+0000f8aa t readTrackball	D:\apps\SGDK/src/joy.c:1175
+0000fa00 t readTeamPlayer	D:\apps\SGDK/src/joy.c:844
 0000fb00 A WAV_005_size
-0000fcc0 T SPR_addSprite	D:\apps\SGDK/src/sprite_eng.c:443
-0000fce8 T SPR_setDefinition	D:\apps\SGDK/src/sprite_eng.c:702
 0000fd00 A WAV_094_size
-0000fe12 T SPR_setAnim	D:\apps\SGDK/src/sprite_eng.c:1065
-0000fe88 T SPR_setFrame	D:\apps\SGDK/src/sprite_eng.c:1101
-0000fef0 T SPR_nextFrame	D:\apps\SGDK/src/sprite_eng.c:1134
-0000ff3e T SPR_getAutoAnimation	D:\apps\SGDK/src/sprite_eng.c:1188
-0000ff62 t updateFrame	D:\apps\SGDK/src/sprite_eng.c:1918
-00010020 T SPR_update	D:\apps\SGDK/src/sprite_eng.c:1451
-0001040c T SRAM_enable	D:\apps\SGDK/src/sram.c:6
-00010416 T SRAM_disable	D:\apps\SGDK/src/sram.c:16
-00010420 T SRAM_readByte	D:\apps\SGDK/src/sram.c:22
-00010430 T SRAM_writeByte	D:\apps\SGDK/src/sram.c:27
-00010442 t uint16ToStr	D:\apps\SGDK/src/string.c:197
-00010522 T strlen	D:\apps\SGDK/src/string.c:42
-00010534 T strnlen	D:\apps\SGDK/src/string.c:52
-0001056c T strcmp	D:\apps\SGDK/src/string.c:62
-0001058c T strcpy	D:\apps\SGDK/src/string.c:78
-0001059e T strncpy	D:\apps\SGDK/src/string.c:90
-000105de T strcat	D:\apps\SGDK/src/string.c:121
-000105fa T intToHex	D:\apps\SGDK/src/string.c:237
-000106b4 T uintToStr	D:\apps\SGDK/src/string.c:175
-00010752 T intToStr	D:\apps\SGDK/src/string.c:159
-000107bc T vsprintf	D:\apps\SGDK/src/string.c:441
-00010cfe T sprintf	D:\apps\SGDK/src/string.c:707
-00010d1c T _int_callback	D:\apps\SGDK/src/sys.c:414
-00010d1e T _vblank_dummy_callback	D:\apps\SGDK/src/sys.c:421
-00010d20 T _vint_dummy_callback	D:\apps\SGDK/src/sys.c:427
-00010d22 T _hint_dummy_callback	D:\apps\SGDK/src/sys.c:433
-00010d24 T _extint_dummy_callback	D:\apps\SGDK/src/sys.c:439
-00010d26 t internal_reset	D:\apps\SGDK/src/sys.c:597
-00010e0e T SYS_disableInts	D:\apps\SGDK/src/sys.c:801
-00010e40 T SYS_enableInts	D:\apps\SGDK/src/sys.c:829
-00010e6e T SYS_setHIntCallback	D:\apps\SGDK/src/sys.c:869
-00010e84 T SYS_setExtIntCallback	D:\apps\SGDK/src/sys.c:875
-00010e9a T SYS_getShowFrameLoad	D:\apps\SGDK/src/sys.c:882
-00010ea6 T SYS_showFrameLoad	D:\apps\SGDK/src/sys.c:887
-00010f00 T SYS_isInVInt	D:\apps\SGDK/src/sys.c:917
-00010f0c T SYS_doVBlankProcessEx	D:\apps\SGDK/src/sys.c:660
-00011082 T SYS_doVBlankProcess	D:\apps\SGDK/src/sys.c:655
-00011090 T _start_entry	D:\apps\SGDK/src/sys.c:445
-00011144 T _reset_entry	D:\apps\SGDK/src/sys.c:587
-00011160 T addFrameLoad	D:\apps\SGDK/src/sys.c:977
-000111cc T SYS_getCPULoad	D:\apps\SGDK/src/sys.c:1006
-000111ec T getSubTickInternal	D:\apps\SGDK/src/timer.c:44
-00011246 T getSubTick	D:\apps\SGDK/src/timer.c:57
-0001127a T getTick	D:\apps\SGDK/src/timer.c:63
-000112a6 T waitSubTick	D:\apps\SGDK/src/timer.c:109
-0001132e T waitTick	D:\apps\SGDK/src/timer.c:159
-000113a2 T waitMs	D:\apps\SGDK/src/timer.c:194
-00011406 T setRandomSeed	D:\apps\SGDK/src/tools.c:30
-0001141e T random	D:\apps\SGDK/src/tools.c:37
-00011444 T KLog	D:\apps\SGDK/src/tools.c:73
-00011468 T kprintf	D:\apps\SGDK/src/tools.c:57
-000114a4 T KLog_U1	D:\apps\SGDK/src/tools.c:79
-000114f0 T KLog_U2	D:\apps\SGDK/src/tools.c:104
-0001155e T KLog_U2_	D:\apps\SGDK/src/tools.c:119
-000115d4 T KLog_U3_	D:\apps\SGDK/src/tools.c:153
-00011668 T allocateTileSet	D:\apps\SGDK/src/tools.c:901
-00011692 T allocateTileMap	D:\apps\SGDK/src/tools.c:924
-000116c2 T allocateMap	D:\apps\SGDK/src/tools.c:973
-0001175c T unpack	D:\apps\SGDK/src/tools.c:1132
-00011794 T unpackTileSet	D:\apps\SGDK/src/tools.c:1053
-00011808 T unpackTileMap	D:\apps\SGDK/src/tools.c:1080
-00011886 T VDP_getReg	D:\apps\SGDK/src/vdp.c:194
-000118a6 T VDP_setEnable	D:\apps\SGDK/src/vdp.c:328
-000118d8 T VDP_setScreenHeight224	D:\apps\SGDK/src/vdp.c:351
-00011900 T VDP_setScreenHeight240	D:\apps\SGDK/src/vdp.c:362
-00011934 T VDP_getScreenWidth	D:\apps\SGDK/src/vdp.c:376
-0001193c T VDP_getVerticalScrollingMode	D:\apps\SGDK/src/vdp.c:521
-0001194a T VDP_getHorizontalScrollingMode	D:\apps\SGDK/src/vdp.c:526
-00011956 T VDP_setScrollingMode	D:\apps\SGDK/src/vdp.c:531
-0001198e T VDP_getAutoInc	D:\apps\SGDK/src/vdp.c:559
-00011996 T VDP_setAutoInc	D:\apps\SGDK/src/vdp.c:564
-000119b0 T VDP_getHVLatching	D:\apps\SGDK/src/vdp.c:591
-000119bc T VDP_setHVLatching	D:\apps\SGDK/src/vdp.c:596
-000119ee T VDP_setHInterrupt	D:\apps\SGDK/src/vdp.c:618
-00011a20 T VDP_waitDMACompletion	D:\apps\SGDK/src/vdp.c:842
-00011a2e T VDP_resetScreen	D:\apps\SGDK/src/vdp.c:134
-00011bb8 T getAdjustedVCounterInternal	D:\apps\SGDK/src/vdp.c:965
-00011c1a T VDP_waitVBlank	D:\apps\SGDK/src/vdp.c:887
-00011cf6 T VDP_waitVSync	D:\apps\SGDK/src/vdp.c:953
-00011d04 T updateUserTileMaxIndex	D:\apps\SGDK/src/vdp.c:1026
-00011d1e t updateMapsAddress	D:\apps\SGDK/src/vdp.c:1032
-00011da0 T VDP_init	D:\apps\SGDK/src/vdp.c:65
-00011f02 T VDP_setReg	D:\apps\SGDK/src/vdp.c:200
-0001212a T VDP_setHorizontalScroll	D:\apps\SGDK/src/vdp_bg.c:34
-0001216c T VDP_setHorizontalScrollVSync	D:\apps\SGDK/src/vdp_bg.c:51
-000121b2 T VDP_setHorizontalScrollTile	D:\apps\SGDK/src/vdp_bg.c:68
-000121f8 T VDP_setHorizontalScrollLine	D:\apps\SGDK/src/vdp_bg.c:78
-0001223e T VDP_setVerticalScroll	D:\apps\SGDK/src/vdp_bg.c:88
-0001226c T VDP_setVerticalScrollVSync	D:\apps\SGDK/src/vdp_bg.c:105
-000122b2 T VDP_setVerticalScrollTile	D:\apps\SGDK/src/vdp_bg.c:122
-000122fa T VDP_doVBlankScrollProcess	D:\apps\SGDK/src/vdp_bg.c:132
-000123bc T VDP_clearPlane	D:\apps\SGDK/src/vdp_bg.c:177
-0001247e T VDP_setTextPlane	D:\apps\SGDK/src/vdp_bg.c:210
-00012488 T VDP_setTextPalette	D:\apps\SGDK/src/vdp_bg.c:215
-000124ac T VDP_setTextPriority	D:\apps\SGDK/src/vdp_bg.c:221
-000124cc T VDP_drawTextEx	D:\apps\SGDK/src/vdp_bg.c:227
-00012596 T VDP_drawTextBG	D:\apps\SGDK/src/vdp_bg.c:321
-000125c6 T VDP_clearTextBG	D:\apps\SGDK/src/vdp_bg.c:326
-0001264c T VDP_clearTextAreaBG	D:\apps\SGDK/src/vdp_bg.c:349
-000126ee T VDP_drawText	D:\apps\SGDK/src/vdp_bg.c:380
-00012714 T VDP_clearText	D:\apps\SGDK/src/vdp_bg.c:416
-0001273e T VDP_clearTextArea	D:\apps\SGDK/src/vdp_bg.c:421
-00012770 T VDP_drawImageEx	D:\apps\SGDK/src/vdp_bg.c:495
-00012818 T VDP_releaseAllSprites	D:\apps\SGDK/src/vdp_spr.c:35
-00012846 T VDP_clearSprites	D:\apps\SGDK/src/vdp_spr.c:151
-00012854 T VDP_resetSprites	D:\apps\SGDK/src/vdp_spr.c:27
-00012862 T VDP_updateSprites	D:\apps\SGDK/src/vdp_spr.c:224
-000128a2 t prepareTileMapDataRowEx	D:\apps\SGDK/src/vdp_tile.c:942
-00012938 t prepareTileMapDataColumnEx	D:\apps\SGDK/src/vdp_tile.c:968
-000129fc T VDP_loadTileData	D:\apps\SGDK/src/vdp_tile.c:28
-00012a2a T VDP_loadTileSet	D:\apps\SGDK/src/vdp_tile.c:38
-00012aa0 T VDP_loadFont	D:\apps\SGDK/src/vdp_tile.c:60
-00012ac4 T VDP_fillTileData	D:\apps\SGDK/src/vdp_tile.c:70
-00012b04 T VDP_getPlaneAddress	D:\apps\SGDK/src/vdp_tile.c:80
-00012bba t setTileMapDataRow	D:\apps\SGDK/src/vdp_tile.c:446
-00012bfc t setTileMapDataColumnEx	D:\apps\SGDK/src/vdp_tile.c:608
-00012dec T VDP_clearTileMap	D:\apps\SGDK/src/vdp_tile.c:97
-00012e2a T VDP_setTileMapDataEx	D:\apps\SGDK/src/vdp_tile.c:147
-00012ef4 t setTileMapDataRowEx	D:\apps\SGDK/src/vdp_tile.c:451
-00012fec T VDP_setTileMapXY	D:\apps\SGDK/src/vdp_tile.c:187
+0000fdac t readLightgun	D:\apps\SGDK/src/joy.c:1027
+00010152 T JOY_setSupport	D:\apps\SGDK/src/joy.c:316
+000105ce T JOY_reset	D:\apps\SGDK/src/joy.c:59
+0001099c T JOY_init	D:\apps\SGDK/src/joy.c:50
+000109aa T JOY_readJoypad	D:\apps\SGDK/src/joy.c:530
+000109fa T JOY_update	D:\apps\SGDK/src/joy.c:1248
+00010cf0 t prepareMapDataColumn	D:\apps\SGDK/src/map.c:499
+00010d78 t prepareMapDataRow	D:\apps\SGDK/src/map.c:520
+00010dfc t prepareMapDataColumn_MTI8_BI8	D:\apps\SGDK/src/map.c:542
+00010efa t prepareMapDataColumn_MTI8_BI16	D:\apps\SGDK/src/map.c:603
+00010ffc t prepareMapDataColumn_MTI16_BI8	D:\apps\SGDK/src/map.c:664
+0001110a t prepareMapDataColumn_MTI16_BI16	D:\apps\SGDK/src/map.c:725
+0001121c t prepareMapDataColumnEx_MTI8_BI8	D:\apps\SGDK/src/map.c:786
+00011334 t prepareMapDataColumnEx_MTI8_BI16	D:\apps\SGDK/src/map.c:850
+00011450 t prepareMapDataColumnEx_MTI16_BI8	D:\apps\SGDK/src/map.c:914
+00011576 t prepareMapDataColumnEx_MTI16_BI16	D:\apps\SGDK/src/map.c:978
+000116a0 t prepareMapDataRow_MTI8_BI8	D:\apps\SGDK/src/map.c:1042
+00011794 t prepareMapDataRow_MTI8_BI16	D:\apps\SGDK/src/map.c:1098
+0001188a t prepareMapDataRow_MTI16_BI8	D:\apps\SGDK/src/map.c:1154
+00011982 t prepareMapDataRow_MTI16_BI16	D:\apps\SGDK/src/map.c:1210
+00011a7e t prepareMapDataRowEx_MTI8_BI8	D:\apps\SGDK/src/map.c:1266
+00011b88 t prepareMapDataRowEx_MTI8_BI16	D:\apps\SGDK/src/map.c:1325
+00011c98 t prepareMapDataRowEx_MTI16_BI8	D:\apps\SGDK/src/map.c:1384
+00011dac t prepareMapDataRowEx_MTI16_BI16	D:\apps\SGDK/src/map.c:1443
+00011ec4 t getMetaTile_MTI8_BI8	D:\apps\SGDK/src/map.c:1570
+00011f2e t getMetaTile_MTI8_BI16	D:\apps\SGDK/src/map.c:1584
+00011f98 t getMetaTile_MTI16_BI8	D:\apps\SGDK/src/map.c:1598
+00012004 t getMetaTile_MTI16_BI16	D:\apps\SGDK/src/map.c:1612
+00012070 t getMetaTilemapRect_MTI8_BI8	D:\apps\SGDK/src/map.c:1626
+0001219e t getMetaTilemapRect_MTI8_BI16	D:\apps\SGDK/src/map.c:1684
+000122ce t getMetaTilemapRect_MTI16_BI8	D:\apps\SGDK/src/map.c:1742
+000123f2 t getMetaTilemapRect_MTI16_BI16	D:\apps\SGDK/src/map.c:1800
+00012516 t setMapColumn	D:\apps\SGDK/src/map.c:383
+0001265a t setMapRow	D:\apps\SGDK/src/map.c:442
+000127a0 T MAP_create	D:\apps\SGDK/src/map.c:62
+000129b0 T MAP_release	D:\apps\SGDK/src/map.c:207
+000129be T MAP_scrollToEx	D:\apps\SGDK/src/map.c:213
+00012cde T MAP_scrollTo	D:\apps\SGDK/src/map.c:281
+00012cf8 T mulu	D:\apps\SGDK/src/maths.c:76
+00012d12 T divu	D:\apps\SGDK/src/maths.c:106
+00012d1e T divs	D:\apps\SGDK/src/maths.c:116
+00012d2a T getNextPow2	D:\apps\SGDK/src/maths.c:210
+00012d54 T F16_toInt	D:\apps\SGDK/src/maths.c:286
+00012d5c T F16_mul	D:\apps\SGDK/src/maths.c:332
+00012d74 T F16_div	D:\apps\SGDK/src/maths.c:337
+00012d84 T sinFix16	D:\apps\SGDK/src/maths.c:500
+00012e0e T cosFix16	D:\apps\SGDK/src/maths.c:506
+00012eb4 T F32_toInt	D:\apps\SGDK/src/maths.c:522
+00012ebe T MEM_init	D:\apps\SGDK/src/memory.c:155
+00012ee6 T MEM_getFree	D:\apps\SGDK/src/memory.c:186
+00012f12 T MEM_getLargestFreeBlock	D:\apps\SGDK/src/memory.c:208
+00012f48 T MEM_alloc	D:\apps\SGDK/src/memory.c:259
 00013000 A WAV_004_size
-0001303e T VDP_fillTileMapRect	D:\apps\SGDK/src/vdp_tile.c:209
-00013124 T VDP_setTileMapDataRectEx	D:\apps\SGDK/src/vdp_tile.c:364
-00013314 T VDP_setTileMapDataRow	D:\apps\SGDK/src/vdp_tile.c:491
-000133bc T VDP_setTileMapDataRowEx	D:\apps\SGDK/src/vdp_tile.c:510
-0001347c T VDP_setTileMapEx	D:\apps\SGDK/src/vdp_tile.c:782
-0001355a T VRAM_releaseRegion	D:\apps\SGDK/src/vram.c:34
-00013574 T VRAM_clearRegion	D:\apps\SGDK/src/vram.c:41
-0001359e T VRAM_createRegion	D:\apps\SGDK/src/vram.c:23
-000135da T VRAM_getFree	D:\apps\SGDK/src/vram.c:54
-0001360e T VRAM_getLargestFreeBlock	D:\apps\SGDK/src/vram.c:79
-00013648 T VRAM_alloc	D:\apps\SGDK/src/vram.c:135
-0001375e T VRAM_free	D:\apps\SGDK/src/vram.c:203
-00013782 T Z80_isBusTaken	D:\apps\SGDK/src/z80_ctrl.c:60
-00013794 T Z80_requestBus	D:\apps\SGDK/src/z80_ctrl.c:69
-000137ba T Z80_getAndRequestBus	D:\apps\SGDK/src/z80_ctrl.c:89
-000137f6 T Z80_releaseBus	D:\apps\SGDK/src/z80_ctrl.c:114
-00013800 T Z80_startReset	D:\apps\SGDK/src/z80_ctrl.c:123
-0001380a T Z80_endReset	D:\apps\SGDK/src/z80_ctrl.c:131
-00013814 T Z80_setBank	D:\apps\SGDK/src/z80_ctrl.c:140
-00013828 T Z80_clear	D:\apps\SGDK/src/z80_ctrl.c:167
-00013870 T Z80_upload	D:\apps\SGDK/src/z80_ctrl.c:183
-000138d8 T Z80_unloadDriver	D:\apps\SGDK/src/z80_ctrl.c:223
-00013934 T Z80_loadDriverInternal	D:\apps\SGDK/src/z80_ctrl.c:253
-0001399a T Z80_loadDriver	D:\apps\SGDK/src/z80_ctrl.c:285
-00013a40 T Z80_init	D:\apps\SGDK/src/z80_ctrl.c:43
-00013a76 T Z80_isDriverReady	D:\apps\SGDK/src/z80_ctrl.c:324
-00013aac T Z80_useBusProtection	D:\apps\SGDK/src/z80_ctrl.c:343
-00013ab6 T Z80_setBusProtection	D:\apps\SGDK/src/z80_ctrl.c:348
-00013b0a T Z80_enableBusProtection	D:\apps\SGDK/src/z80_ctrl.c:367
-00013b18 T Z80_disableBusProtection	D:\apps\SGDK/src/z80_ctrl.c:372
-00013b24 T Z80_getForceDelayDMA	D:\apps\SGDK/src/z80_ctrl.c:377
-00013b30 T SND_NULL_loadDriver	D:\apps\SGDK/src/snd/sound.c:19
-00013b8c t setNextXFrame	D:\apps\SGDK/src/snd/xgm.c:605
-00013be6 T XGM_unloadDriver	D:\apps\SGDK/src/snd/xgm.c:94
-00013c02 T XGM_stopPlay	D:\apps\SGDK/src/snd/xgm.c:199
-00013c92 T XGM_setMusicTempo	D:\apps\SGDK/src/snd/xgm.c:493
-00013cb4 T XGM_loadDriver	D:\apps\SGDK/src/snd/xgm.c:54
-00013d98 T XGM_doVBlankProcess	D:\apps\SGDK/src/snd/xgm.c:662
-00013dee t releaseAccess	D:\apps\SGDK/src/snd/xgm2.c:1057
-00013e04 t getAccess	D:\apps\SGDK/src/snd/xgm2.c:1029
-00013e70 t setLoopNumber	D:\apps\SGDK/src/snd/xgm2.c:747
-00013e9a t setFMVolume	D:\apps\SGDK/src/snd/xgm2.c:828
-00013ef2 t setPSGVolume	D:\apps\SGDK/src/snd/xgm2.c:846
-00013f4a t setMusicTempo	D:\apps\SGDK/src/snd/xgm2.c:773
-00013faa T XGM2_loadDriver	D:\apps\SGDK/src/snd/xgm2.c:211
-0001406a T XGM2_unloadDriver	D:\apps\SGDK/src/snd/xgm2.c:242
-00014076 T XGM2_stop	D:\apps\SGDK/src/snd/xgm2.c:421
-000140d4 T XGM2_pause	D:\apps\SGDK/src/snd/xgm2.c:446
-00014120 T XGM2_playPCMEx	D:\apps\SGDK/src/snd/xgm2.c:565
-00014310 T XGM2_playPCM	D:\apps\SGDK/src/snd/xgm2.c:631
-00014330 T XGM2_doVBlankFadeProcess	D:\apps\SGDK/src/snd/xgm2.c:701
-000143d4 T SND_DPCM2_loadDriver	D:\apps\SGDK/src/snd/pcm/snd_dpcm2.c:23
-0001445c T SND_DPCM2_unloadDriver	D:\apps\SGDK/src/snd/pcm/snd_dpcm2.c:53
-0001445e T SND_PCM_loadDriver	D:\apps\SGDK/src/snd/pcm/snd_pcm.c:22
-000144e6 T SND_PCM_unloadDriver	D:\apps\SGDK/src/snd/pcm/snd_pcm.c:52
-000144e8 T SND_PCM4_loadDriver	D:\apps\SGDK/src/snd/pcm/snd_pcm4.c:24
-00014584 T SND_PCM4_unloadDriver	D:\apps\SGDK/src/snd/pcm/snd_pcm4.c:58
-00014586 T flushQueue
-0001459a t .fq_loop
-000145a8 t .fq_end
-000145aa T KDebug_Alert
-000145c6 T memset_
-0001463e T memsetU16
-0001469c T memcpy_
-00014740 T SYS_getInterruptMaskLevel
-0001474a T SYS_setInterruptMaskLevel
-00014762 T SYS_getAndSetInterruptMaskLevel
-0001477c T aplib_unpack
-00014782 t aplib_decrunch
-00014796 t .copy_byte
-00014798 t .next_sequence_init
-0001479a t .next_sequence
-000147aa t .get_3_bits
-000147ba t .write_byte
-000147be t .short_match
-000147cc t .code_pair
-000147d8 t .normal_code_pair
-000147e6 t .compare_1280
-000147ea t .compare_128
-000147ee t .domatch_with_2inc
-000147f0 t .domatch_with_inc
-000147f2 t .domatch_new_lastpos
-000147f4 t .copy_code_pair
-000147fa t .loop_do_copy
-00014804 t .get_bit
-0001480c t .still_bits_left
-0001480e t .decode_gamma
-00014810 t .get_more_gamma
-0001481a t .end_decrunch
-00014824 T lz4w_unpack
-0001482a t lz4w_unpack_a
-00014844 t .jump_table
-00014d42 t .lmr_len_01
-00014e56 t .lmr_len_00
-00015068 t .lm_len_00
-0001506e t .next
-0001507e t .litE_mat0
-00015080 t .litC_mat0
-00015082 t .litA_mat0
-00015084 t .lit8_mat0
-00015086 t .lit6_mat0
-00015088 t .lit4_mat0
-0001508a t .lit2_mat0
-00015090 t .long_match_1
-000150a2 t .litF_mat0
-000150a4 t .litD_mat0
-000150a6 t .litB_mat0
-000150a8 t .lit9_mat0
-000150aa t .lit7_mat0
-000150ac t .lit5_mat0
-000150ae t .lit3_mat0
-000150b0 t .lit1_mat0
-000150b6 t .long_match_2
-000150c8 t .lit0_mat0
-000150cc t .long_match_3
-000150de t .lm_rom
-000150ea t .done
-000150f0 t .no_byte
-000150fa t .lmr_jump_table
+0001308c T MEM_free	D:\apps\SGDK/src/memory.c:386
+000130bc T MEM_pack	D:\apps\SGDK/src/memory.c:409
+0001312c T memset	D:\apps\SGDK/src/memory.c:694
+0001314c T memcpy	D:\apps\SGDK/src/memory.c:701
+00013168 T PAL_getColor	D:\apps\SGDK/src/pal.c:204
+00013190 T PAL_getColors	D:\apps\SGDK/src/pal.c:213
+00013280 T PAL_setColor	D:\apps\SGDK/src/pal.c:266
+000132a4 T PAL_setColors	D:\apps\SGDK/src/pal.c:274
+000132d2 T PAL_setPaletteColors	D:\apps\SGDK/src/pal.c:279
+000132f8 T PAL_setPalette	D:\apps\SGDK/src/pal.c:284
+0001331a T PAL_initFade	D:\apps\SGDK/src/pal.c:290
+000134a2 T PAL_doFadeStep	D:\apps\SGDK/src/pal.c:342
+00013562 T PAL_fade	D:\apps\SGDK/src/pal.c:389
+000135ce T PAL_fadeTo	D:\apps\SGDK/src/pal.c:407
+0001363a T PAL_fadeOut	D:\apps\SGDK/src/pal.c:420
+0001366c T PAL_fadeIn	D:\apps\SGDK/src/pal.c:425
+000136a2 T PAL_fadeInPalette	D:\apps\SGDK/src/pal.c:446
+000136dc T PAL_isDoingFade	D:\apps\SGDK/src/pal.c:473
+000136e8 t updateVisibility	D:\apps\SGDK/src/sprite_eng.c:1729
+0001390e t moveAfter	D:\apps\SGDK/src/sprite_eng.c:2071
+000139c0 t checkSpriteValid	D:\apps\SGDK/src/sprite_eng.c:321
+000139e2 t releaseSprite	D:\apps\SGDK/src/sprite_eng.c:270
+00013a58 T SPR_end	D:\apps\SGDK/src/sprite_eng.c:160
+00013ab8 T SPR_isInitialized	D:\apps\SGDK/src/sprite_eng.c:190
+00013ac4 T SPR_reset	D:\apps\SGDK/src/sprite_eng.c:195
+00013b00 T SPR_initEx	D:\apps\SGDK/src/sprite_eng.c:120
+00013b6c T SPR_init	D:\apps\SGDK/src/sprite_eng.c:155
+00013b7a T SPR_defragVRAM	D:\apps\SGDK/src/sprite_eng.c:542
+00013c2a T SPR_setPosition	D:\apps\SGDK/src/sprite_eng.c:803
+00013c7c T SPR_setHFlip	D:\apps\SGDK/src/sprite_eng.c:830
+00013cde T SPR_setPriority	D:\apps\SGDK/src/sprite_eng.c:924
+00013d20 T SPR_setDepth	D:\apps\SGDK/src/sprite_eng.c:983
+00013db2 T SPR_setAnimAndFrame	D:\apps\SGDK/src/sprite_eng.c:1020
+00013e5e T SPR_addSpriteEx	D:\apps\SGDK/src/sprite_eng.c:329
+0001403a T SPR_addSprite	D:\apps\SGDK/src/sprite_eng.c:443
+00014062 T SPR_setDefinition	D:\apps\SGDK/src/sprite_eng.c:702
+0001418c T SPR_setAnim	D:\apps\SGDK/src/sprite_eng.c:1065
+00014202 T SPR_setFrame	D:\apps\SGDK/src/sprite_eng.c:1101
+0001426a T SPR_nextFrame	D:\apps\SGDK/src/sprite_eng.c:1134
+000142b8 T SPR_getAutoAnimation	D:\apps\SGDK/src/sprite_eng.c:1188
+000142dc t updateFrame	D:\apps\SGDK/src/sprite_eng.c:1918
+0001439a T SPR_update	D:\apps\SGDK/src/sprite_eng.c:1451
+00014786 T SRAM_enable	D:\apps\SGDK/src/sram.c:6
+00014790 T SRAM_disable	D:\apps\SGDK/src/sram.c:16
+0001479a T SRAM_readByte	D:\apps\SGDK/src/sram.c:22
+000147aa T SRAM_writeByte	D:\apps\SGDK/src/sram.c:27
+000147bc t uint16ToStr	D:\apps\SGDK/src/string.c:197
+0001489c T strlen	D:\apps\SGDK/src/string.c:42
+000148ae T strnlen	D:\apps\SGDK/src/string.c:52
+000148e6 T strcmp	D:\apps\SGDK/src/string.c:62
+00014906 T strcpy	D:\apps\SGDK/src/string.c:78
+00014918 T strncpy	D:\apps\SGDK/src/string.c:90
+00014958 T strcat	D:\apps\SGDK/src/string.c:121
+00014974 T intToHex	D:\apps\SGDK/src/string.c:237
+00014a2e T uintToStr	D:\apps\SGDK/src/string.c:175
+00014acc T intToStr	D:\apps\SGDK/src/string.c:159
+00014b36 T vsprintf	D:\apps\SGDK/src/string.c:441
+00015078 T sprintf	D:\apps\SGDK/src/string.c:707
+00015096 T _int_callback	D:\apps\SGDK/src/sys.c:414
+00015098 T _vblank_dummy_callback	D:\apps\SGDK/src/sys.c:421
+0001509a T _vint_dummy_callback	D:\apps\SGDK/src/sys.c:427
+0001509c T _hint_dummy_callback	D:\apps\SGDK/src/sys.c:433
+0001509e T _extint_dummy_callback	D:\apps\SGDK/src/sys.c:439
+000150a0 t internal_reset	D:\apps\SGDK/src/sys.c:597
 00015100 A WAV_020_size
-000154fa t .litE_mat1
-000154fc t .litC_mat1
-000154fe t .litA_mat1
-00015500 t .lit8_mat1
-00015502 t .lit6_mat1
-00015504 t .lit4_mat1
-00015506 t .lit2_mat1
-00015508 t .lit0_mat1
-00015526 t .litF_mat1
-00015528 t .litD_mat1
-0001552a t .litB_mat1
-0001552c t .lit9_mat1
-0001552e t .lit7_mat1
-00015530 t .lit5_mat1
-00015532 t .lit3_mat1
-00015534 t .lit1_mat1
-00015554 t .litE_mat2
-00015556 t .litC_mat2
-00015558 t .litA_mat2
-0001555a t .lit8_mat2
-0001555c t .lit6_mat2
-0001555e t .lit4_mat2
-00015560 t .lit2_mat2
-00015562 t .lit0_mat2
-00015582 t .litF_mat2
-00015584 t .litD_mat2
-00015586 t .litB_mat2
-00015588 t .lit9_mat2
-0001558a t .lit7_mat2
-0001558c t .lit5_mat2
-0001558e t .lit3_mat2
-00015590 t .lit1_mat2
-000155b2 t .litE_mat3
-000155b4 t .litC_mat3
-000155b6 t .litA_mat3
-000155b8 t .lit8_mat3
-000155ba t .lit6_mat3
-000155bc t .lit4_mat3
-000155be t .lit2_mat3
-000155c0 t .lit0_mat3
-000155e2 t .litF_mat3
-000155e4 t .litD_mat3
-000155e6 t .litB_mat3
-000155e8 t .lit9_mat3
-000155ea t .lit7_mat3
-000155ec t .lit5_mat3
-000155ee t .lit3_mat3
-000155f0 t .lit1_mat3
-00015614 t .litE_mat4
-00015616 t .litC_mat4
-00015618 t .litA_mat4
-0001561a t .lit8_mat4
-0001561c t .lit6_mat4
-0001561e t .lit4_mat4
-00015620 t .lit2_mat4
-00015622 t .lit0_mat4
-00015646 t .litF_mat4
-00015648 t .litD_mat4
-0001564a t .litB_mat4
-0001564c t .lit9_mat4
-0001564e t .lit7_mat4
-00015650 t .lit5_mat4
-00015652 t .lit3_mat4
-00015654 t .lit1_mat4
-0001567a t .litE_mat5
-0001567c t .litC_mat5
-0001567e t .litA_mat5
-00015680 t .lit8_mat5
-00015682 t .lit6_mat5
-00015684 t .lit4_mat5
-00015686 t .lit2_mat5
-00015688 t .lit0_mat5
-000156ae t .litF_mat5
-000156b0 t .litD_mat5
-000156b2 t .litB_mat5
-000156b4 t .lit9_mat5
-000156b6 t .lit7_mat5
-000156b8 t .lit5_mat5
-000156ba t .lit3_mat5
-000156bc t .lit1_mat5
-000156e4 t .litE_mat6
-000156e6 t .litC_mat6
-000156e8 t .litA_mat6
-000156ea t .lit8_mat6
-000156ec t .lit6_mat6
-000156ee t .lit4_mat6
-000156f0 t .lit2_mat6
-000156f2 t .lit0_mat6
-0001571a t .litF_mat6
-0001571c t .litD_mat6
-0001571e t .litB_mat6
-00015720 t .lit9_mat6
-00015722 t .lit7_mat6
-00015724 t .lit5_mat6
-00015726 t .lit3_mat6
-00015728 t .lit1_mat6
-00015752 t .litE_mat7
-00015754 t .litC_mat7
-00015756 t .litA_mat7
-00015758 t .lit8_mat7
-0001575a t .lit6_mat7
-0001575c t .lit4_mat7
-0001575e t .lit2_mat7
-00015760 t .lit0_mat7
-0001578a t .litF_mat7
-0001578c t .litD_mat7
-0001578e t .litB_mat7
-00015790 t .lit9_mat7
-00015792 t .lit7_mat7
-00015794 t .lit5_mat7
-00015796 t .lit3_mat7
-00015798 t .lit1_mat7
-000157c4 t .litE_mat8
-000157c6 t .litC_mat8
-000157c8 t .litA_mat8
-000157ca t .lit8_mat8
-000157cc t .lit6_mat8
-000157ce t .lit4_mat8
-000157d0 t .lit2_mat8
-000157d2 t .lit0_mat8
-000157fe t .litF_mat8
-00015800 t .litD_mat8
-00015802 t .litB_mat8
-00015804 t .lit9_mat8
-00015806 t .lit7_mat8
-00015808 t .lit5_mat8
-0001580a t .lit3_mat8
-0001580c t .lit1_mat8
-0001583a t .litE_mat9
-0001583c t .litC_mat9
-0001583e t .litA_mat9
-00015840 t .lit8_mat9
-00015842 t .lit6_mat9
-00015844 t .lit4_mat9
-00015846 t .lit2_mat9
-00015848 t .lit0_mat9
-00015876 t .litF_mat9
-00015878 t .litD_mat9
-0001587a t .litB_mat9
-0001587c t .lit9_mat9
-0001587e t .lit7_mat9
-00015880 t .lit5_mat9
-00015882 t .lit3_mat9
-00015884 t .lit1_mat9
-000158b4 t .litE_matA
-000158b6 t .litC_matA
-000158b8 t .litA_matA
-000158ba t .lit8_matA
-000158bc t .lit6_matA
-000158be t .lit4_matA
-000158c0 t .lit2_matA
-000158c2 t .lit0_matA
-000158f2 t .litF_matA
-000158f4 t .litD_matA
-000158f6 t .litB_matA
-000158f8 t .lit9_matA
-000158fa t .lit7_matA
-000158fc t .lit5_matA
-000158fe t .lit3_matA
-00015900 t .lit1_matA
-00015932 t .litE_matB
-00015934 t .litC_matB
-00015936 t .litA_matB
-00015938 t .lit8_matB
-0001593a t .lit6_matB
-0001593c t .lit4_matB
-0001593e t .lit2_matB
-00015940 t .lit0_matB
-00015972 t .litF_matB
-00015974 t .litD_matB
-00015976 t .litB_matB
-00015978 t .lit9_matB
-0001597a t .lit7_matB
-0001597c t .lit5_matB
-0001597e t .lit3_matB
-00015980 t .lit1_matB
-000159b4 t .litE_matC
-000159b6 t .litC_matC
-000159b8 t .litA_matC
-000159ba t .lit8_matC
-000159bc t .lit6_matC
-000159be t .lit4_matC
-000159c0 t .lit2_matC
-000159c2 t .lit0_matC
-000159f6 t .litF_matC
-000159f8 t .litD_matC
-000159fa t .litB_matC
-000159fc t .lit9_matC
-000159fe t .lit7_matC
-00015a00 t .lit5_matC
-00015a02 t .lit3_matC
-00015a04 t .lit1_matC
-00015a3a t .litE_matD
-00015a3c t .litC_matD
-00015a3e t .litA_matD
-00015a40 t .lit8_matD
-00015a42 t .lit6_matD
-00015a44 t .lit4_matD
-00015a46 t .lit2_matD
-00015a48 t .lit0_matD
-00015a7e t .litF_matD
-00015a80 t .litD_matD
-00015a82 t .litB_matD
-00015a84 t .lit9_matD
-00015a86 t .lit7_matD
-00015a88 t .lit5_matD
-00015a8a t .lit3_matD
-00015a8c t .lit1_matD
-00015ac4 t .litE_matE
-00015ac6 t .litC_matE
-00015ac8 t .litA_matE
-00015aca t .lit8_matE
-00015acc t .lit6_matE
-00015ace t .lit4_matE
-00015ad0 t .lit2_matE
-00015ad2 t .lit0_matE
-00015b0a t .litF_matE
-00015b0c t .litD_matE
-00015b0e t .litB_matE
-00015b10 t .lit9_matE
-00015b12 t .lit7_matE
-00015b14 t .lit5_matE
-00015b16 t .lit3_matE
-00015b18 t .lit1_matE
-00015b52 t .litE_matF
-00015b54 t .litC_matF
-00015b56 t .litA_matF
-00015b58 t .lit8_matF
-00015b5a t .lit6_matF
-00015b5c t .lit4_matF
-00015b5e t .lit2_matF
-00015b60 t .lit0_matF
-00015b9a t .litF_matF
-00015b9c t .litD_matF
-00015b9e t .litB_matF
-00015ba0 t .lit9_matF
-00015ba2 t .lit7_matF
-00015ba4 t .lit5_matF
-00015ba6 t .lit3_matF
-00015ba8 t .lit1_matF
-00015be4 T POOL_reset	D:\apps\SGDK/src/pool.c:72
-00015c64 T POOL_create	D:\apps\SGDK/src/pool.c:10
-00015da4 T POOL_destroy	D:\apps\SGDK/src/pool.c:105
-00015df2 T POOL_allocate	D:\apps\SGDK/src/pool.c:136
-00015e22 T POOL_release	D:\apps\SGDK/src/pool.c:159
-00015ea8 T PSG_reset	D:\apps\SGDK/src/psg.c:9
-00015ee0 T getZeroU8	D:\apps\SGDK/src/types.c:4
-00015ee4 T YM2612_write	D:\apps\SGDK/src/ym2612.c:118
-00015f14 t writeSlotReg	D:\apps\SGDK/src/ym2612.c:11
-00015f62 t writeChannelReg	D:\apps\SGDK/src/ym2612.c:17
-00015fa6 T YM2612_reset	D:\apps\SGDK/src/ym2612.c:23
-00016164 t ai_evaluate
-0001641e t _setup_sprite
-000165fc t _setup_sprite.constprop.0
-0001661e T gfx_load_tiles
-00016802 T UI_init_fonts_and_palettes
-000168bc T SOUND_init
-000168cc T SOUND_play
-00016910 T SOUND_playMusic
-00016912 T sprites_init
-00016a50 T sprites_trigger_dust
-00016ad8 T sprites_trigger_dust_at_board_origin
-00016b88 T sprites_trigger_line_clear_explosions_at_origin
-00016d40 T sprites_trigger_explosion_at_board_cell_at_origin
-00016eca T sprites_trigger_explosion_at_board_cell
-00016ef0 T sprites_sync_vs_effect
-000170b6 T sprites_update
-00017442 T sprites_set_visible
-00017488 T sprites_cleanup
-0001748e T game_conditions_set_from_select
-000179a4 T game_conditions_set_for_challenge_level
-00017be2 T game_conditions_update_progress_from_score
-00017cb0 T game_conditions_is_success
-00017d52 T game_conditions_on_lines_cleared
-0001816c T load_background
-0001820c T view_init_cache
-0001822c T view_draw_board_for_context
-0001884e T view_update_ui
-0001a60e T drawBoard
-0001adfc T view_animate_grayscale
-0001b03c T view_fade_in_frame
-0001b0e2 T view_fade_out_frame
-0001b11a T quest_on_action
-0001b262 T vs_brain_update_player
+00015188 T SYS_disableInts	D:\apps\SGDK/src/sys.c:801
+000151ba T SYS_enableInts	D:\apps\SGDK/src/sys.c:829
+000151e8 T SYS_setHIntCallback	D:\apps\SGDK/src/sys.c:869
+000151fe T SYS_setExtIntCallback	D:\apps\SGDK/src/sys.c:875
+00015214 T SYS_getShowFrameLoad	D:\apps\SGDK/src/sys.c:882
+00015220 T SYS_showFrameLoad	D:\apps\SGDK/src/sys.c:887
+0001527a T SYS_isInVInt	D:\apps\SGDK/src/sys.c:917
+00015286 T SYS_doVBlankProcessEx	D:\apps\SGDK/src/sys.c:660
+000153fc T SYS_doVBlankProcess	D:\apps\SGDK/src/sys.c:655
+0001540a T _start_entry	D:\apps\SGDK/src/sys.c:445
+000154be T _reset_entry	D:\apps\SGDK/src/sys.c:587
+000154da T addFrameLoad	D:\apps\SGDK/src/sys.c:977
+00015546 T SYS_getCPULoad	D:\apps\SGDK/src/sys.c:1006
+00015566 T getSubTickInternal	D:\apps\SGDK/src/timer.c:44
+000155c0 T getSubTick	D:\apps\SGDK/src/timer.c:57
+000155f4 T getTick	D:\apps\SGDK/src/timer.c:63
+00015620 T waitSubTick	D:\apps\SGDK/src/timer.c:109
+000156a8 T waitTick	D:\apps\SGDK/src/timer.c:159
+0001571c T waitMs	D:\apps\SGDK/src/timer.c:194
+00015780 T setRandomSeed	D:\apps\SGDK/src/tools.c:30
+00015798 T random	D:\apps\SGDK/src/tools.c:37
+000157be T KLog	D:\apps\SGDK/src/tools.c:73
+000157e2 T kprintf	D:\apps\SGDK/src/tools.c:57
+0001581e T KLog_U1	D:\apps\SGDK/src/tools.c:79
+0001586a T KLog_U2	D:\apps\SGDK/src/tools.c:104
+000158d8 T KLog_U2_	D:\apps\SGDK/src/tools.c:119
+0001594e T KLog_U3_	D:\apps\SGDK/src/tools.c:153
+000159e2 T allocateTileSet	D:\apps\SGDK/src/tools.c:901
+00015a0c T allocateTileMap	D:\apps\SGDK/src/tools.c:924
+00015a3c T allocateMap	D:\apps\SGDK/src/tools.c:973
+00015ad6 T unpack	D:\apps\SGDK/src/tools.c:1132
+00015b0e T unpackTileSet	D:\apps\SGDK/src/tools.c:1053
+00015b82 T unpackTileMap	D:\apps\SGDK/src/tools.c:1080
+00015c00 T VDP_getReg	D:\apps\SGDK/src/vdp.c:194
+00015c20 T VDP_setEnable	D:\apps\SGDK/src/vdp.c:328
+00015c52 T VDP_setScreenHeight224	D:\apps\SGDK/src/vdp.c:351
+00015c7a T VDP_setScreenHeight240	D:\apps\SGDK/src/vdp.c:362
+00015cae T VDP_getScreenWidth	D:\apps\SGDK/src/vdp.c:376
+00015cb6 T VDP_getVerticalScrollingMode	D:\apps\SGDK/src/vdp.c:521
+00015cc4 T VDP_getHorizontalScrollingMode	D:\apps\SGDK/src/vdp.c:526
+00015cd0 T VDP_setScrollingMode	D:\apps\SGDK/src/vdp.c:531
+00015d08 T VDP_getAutoInc	D:\apps\SGDK/src/vdp.c:559
+00015d10 T VDP_setAutoInc	D:\apps\SGDK/src/vdp.c:564
+00015d2a T VDP_getHVLatching	D:\apps\SGDK/src/vdp.c:591
+00015d36 T VDP_setHVLatching	D:\apps\SGDK/src/vdp.c:596
+00015d68 T VDP_setHInterrupt	D:\apps\SGDK/src/vdp.c:618
+00015d9a T VDP_waitDMACompletion	D:\apps\SGDK/src/vdp.c:842
+00015da8 T VDP_resetScreen	D:\apps\SGDK/src/vdp.c:134
+00015f32 T getAdjustedVCounterInternal	D:\apps\SGDK/src/vdp.c:965
+00015f94 T VDP_waitVBlank	D:\apps\SGDK/src/vdp.c:887
+00016070 T VDP_waitVSync	D:\apps\SGDK/src/vdp.c:953
+0001607e T updateUserTileMaxIndex	D:\apps\SGDK/src/vdp.c:1026
+00016098 t updateMapsAddress	D:\apps\SGDK/src/vdp.c:1032
+0001611a T VDP_init	D:\apps\SGDK/src/vdp.c:65
+0001627c T VDP_setReg	D:\apps\SGDK/src/vdp.c:200
+000164a4 T VDP_setHorizontalScroll	D:\apps\SGDK/src/vdp_bg.c:34
+000164e6 T VDP_setHorizontalScrollVSync	D:\apps\SGDK/src/vdp_bg.c:51
+0001652c T VDP_setHorizontalScrollTile	D:\apps\SGDK/src/vdp_bg.c:68
+00016572 T VDP_setHorizontalScrollLine	D:\apps\SGDK/src/vdp_bg.c:78
+000165b8 T VDP_setVerticalScroll	D:\apps\SGDK/src/vdp_bg.c:88
+000165e6 T VDP_setVerticalScrollVSync	D:\apps\SGDK/src/vdp_bg.c:105
+0001662c T VDP_setVerticalScrollTile	D:\apps\SGDK/src/vdp_bg.c:122
+00016674 T VDP_doVBlankScrollProcess	D:\apps\SGDK/src/vdp_bg.c:132
+00016736 T VDP_clearPlane	D:\apps\SGDK/src/vdp_bg.c:177
+000167f8 T VDP_setTextPlane	D:\apps\SGDK/src/vdp_bg.c:210
+00016802 T VDP_setTextPalette	D:\apps\SGDK/src/vdp_bg.c:215
+00016826 T VDP_setTextPriority	D:\apps\SGDK/src/vdp_bg.c:221
+00016846 T VDP_drawTextEx	D:\apps\SGDK/src/vdp_bg.c:227
+00016910 T VDP_drawTextBG	D:\apps\SGDK/src/vdp_bg.c:321
+00016940 T VDP_clearTextBG	D:\apps\SGDK/src/vdp_bg.c:326
+000169c6 T VDP_clearTextAreaBG	D:\apps\SGDK/src/vdp_bg.c:349
+00016a68 T VDP_drawText	D:\apps\SGDK/src/vdp_bg.c:380
+00016a8e T VDP_clearText	D:\apps\SGDK/src/vdp_bg.c:416
+00016ab8 T VDP_clearTextArea	D:\apps\SGDK/src/vdp_bg.c:421
+00016aea T VDP_drawImageEx	D:\apps\SGDK/src/vdp_bg.c:495
+00016b92 T VDP_releaseAllSprites	D:\apps\SGDK/src/vdp_spr.c:35
+00016bc0 T VDP_clearSprites	D:\apps\SGDK/src/vdp_spr.c:151
+00016bce T VDP_resetSprites	D:\apps\SGDK/src/vdp_spr.c:27
+00016bdc T VDP_updateSprites	D:\apps\SGDK/src/vdp_spr.c:224
+00016c1c t prepareTileMapDataRowEx	D:\apps\SGDK/src/vdp_tile.c:942
+00016cb2 t prepareTileMapDataColumnEx	D:\apps\SGDK/src/vdp_tile.c:968
+00016d76 T VDP_loadTileData	D:\apps\SGDK/src/vdp_tile.c:28
+00016da4 T VDP_loadTileSet	D:\apps\SGDK/src/vdp_tile.c:38
+00016e1a T VDP_loadFont	D:\apps\SGDK/src/vdp_tile.c:60
+00016e3e T VDP_fillTileData	D:\apps\SGDK/src/vdp_tile.c:70
+00016e7e T VDP_getPlaneAddress	D:\apps\SGDK/src/vdp_tile.c:80
+00016f34 t setTileMapDataRow	D:\apps\SGDK/src/vdp_tile.c:446
+00016f76 t setTileMapDataColumnEx	D:\apps\SGDK/src/vdp_tile.c:608
+00017166 T VDP_clearTileMap	D:\apps\SGDK/src/vdp_tile.c:97
+000171a4 T VDP_setTileMapDataEx	D:\apps\SGDK/src/vdp_tile.c:147
+0001726e t setTileMapDataRowEx	D:\apps\SGDK/src/vdp_tile.c:451
+00017366 T VDP_setTileMapXY	D:\apps\SGDK/src/vdp_tile.c:187
+000173b8 T VDP_fillTileMapRect	D:\apps\SGDK/src/vdp_tile.c:209
+0001749e T VDP_setTileMapDataRectEx	D:\apps\SGDK/src/vdp_tile.c:364
+0001768e T VDP_setTileMapDataRow	D:\apps\SGDK/src/vdp_tile.c:491
+00017736 T VDP_setTileMapDataRowEx	D:\apps\SGDK/src/vdp_tile.c:510
+000177f6 T VDP_setTileMapEx	D:\apps\SGDK/src/vdp_tile.c:782
+000178d4 T VRAM_releaseRegion	D:\apps\SGDK/src/vram.c:34
+000178ee T VRAM_clearRegion	D:\apps\SGDK/src/vram.c:41
+00017918 T VRAM_createRegion	D:\apps\SGDK/src/vram.c:23
+00017954 T VRAM_getFree	D:\apps\SGDK/src/vram.c:54
+00017988 T VRAM_getLargestFreeBlock	D:\apps\SGDK/src/vram.c:79
+000179c2 T VRAM_alloc	D:\apps\SGDK/src/vram.c:135
+00017ad8 T VRAM_free	D:\apps\SGDK/src/vram.c:203
+00017afc T Z80_isBusTaken	D:\apps\SGDK/src/z80_ctrl.c:60
+00017b0e T Z80_requestBus	D:\apps\SGDK/src/z80_ctrl.c:69
+00017b34 T Z80_getAndRequestBus	D:\apps\SGDK/src/z80_ctrl.c:89
+00017b70 T Z80_releaseBus	D:\apps\SGDK/src/z80_ctrl.c:114
+00017b7a T Z80_startReset	D:\apps\SGDK/src/z80_ctrl.c:123
+00017b84 T Z80_endReset	D:\apps\SGDK/src/z80_ctrl.c:131
+00017b8e T Z80_setBank	D:\apps\SGDK/src/z80_ctrl.c:140
+00017ba2 T Z80_clear	D:\apps\SGDK/src/z80_ctrl.c:167
+00017bea T Z80_upload	D:\apps\SGDK/src/z80_ctrl.c:183
+00017c52 T Z80_unloadDriver	D:\apps\SGDK/src/z80_ctrl.c:223
+00017cae T Z80_loadDriverInternal	D:\apps\SGDK/src/z80_ctrl.c:253
+00017d14 T Z80_loadDriver	D:\apps\SGDK/src/z80_ctrl.c:285
+00017dba T Z80_init	D:\apps\SGDK/src/z80_ctrl.c:43
+00017df0 T Z80_isDriverReady	D:\apps\SGDK/src/z80_ctrl.c:324
+00017e26 T Z80_useBusProtection	D:\apps\SGDK/src/z80_ctrl.c:343
+00017e30 T Z80_setBusProtection	D:\apps\SGDK/src/z80_ctrl.c:348
+00017e84 T Z80_enableBusProtection	D:\apps\SGDK/src/z80_ctrl.c:367
+00017e92 T Z80_disableBusProtection	D:\apps\SGDK/src/z80_ctrl.c:372
+00017e9e T Z80_getForceDelayDMA	D:\apps\SGDK/src/z80_ctrl.c:377
+00017eaa T SND_NULL_loadDriver	D:\apps\SGDK/src/snd/sound.c:19
+00017f06 t setNextXFrame	D:\apps\SGDK/src/snd/xgm.c:605
+00017f60 T XGM_unloadDriver	D:\apps\SGDK/src/snd/xgm.c:94
+00017f7c T XGM_stopPlay	D:\apps\SGDK/src/snd/xgm.c:199
+0001800c T XGM_setMusicTempo	D:\apps\SGDK/src/snd/xgm.c:493
+0001802e T XGM_loadDriver	D:\apps\SGDK/src/snd/xgm.c:54
+00018112 T XGM_doVBlankProcess	D:\apps\SGDK/src/snd/xgm.c:662
+00018168 t releaseAccess	D:\apps\SGDK/src/snd/xgm2.c:1057
+0001817e t getAccess	D:\apps\SGDK/src/snd/xgm2.c:1029
+000181ea t setLoopNumber	D:\apps\SGDK/src/snd/xgm2.c:747
+00018214 t setFMVolume	D:\apps\SGDK/src/snd/xgm2.c:828
+0001826c t setPSGVolume	D:\apps\SGDK/src/snd/xgm2.c:846
+000182c4 t setMusicTempo	D:\apps\SGDK/src/snd/xgm2.c:773
+00018324 T XGM2_loadDriver	D:\apps\SGDK/src/snd/xgm2.c:211
+000183e4 T XGM2_unloadDriver	D:\apps\SGDK/src/snd/xgm2.c:242
+000183f0 T XGM2_stop	D:\apps\SGDK/src/snd/xgm2.c:421
+0001844e T XGM2_pause	D:\apps\SGDK/src/snd/xgm2.c:446
+0001849a T XGM2_playPCMEx	D:\apps\SGDK/src/snd/xgm2.c:565
+0001868a T XGM2_playPCM	D:\apps\SGDK/src/snd/xgm2.c:631
+000186aa T XGM2_doVBlankFadeProcess	D:\apps\SGDK/src/snd/xgm2.c:701
+0001874e T SND_DPCM2_loadDriver	D:\apps\SGDK/src/snd/pcm/snd_dpcm2.c:23
+000187d6 T SND_DPCM2_unloadDriver	D:\apps\SGDK/src/snd/pcm/snd_dpcm2.c:53
+000187d8 T SND_PCM_loadDriver	D:\apps\SGDK/src/snd/pcm/snd_pcm.c:22
+00018860 T SND_PCM_unloadDriver	D:\apps\SGDK/src/snd/pcm/snd_pcm.c:52
+00018862 T SND_PCM4_loadDriver	D:\apps\SGDK/src/snd/pcm/snd_pcm4.c:24
+000188fe T SND_PCM4_unloadDriver	D:\apps\SGDK/src/snd/pcm/snd_pcm4.c:58
+00018900 T flushQueue
+00018914 t .fq_loop
+00018922 t .fq_end
+00018924 T KDebug_Alert
+00018940 T memset_
+000189b8 T memsetU16
+00018a16 T memcpy_
+00018aba T SYS_getInterruptMaskLevel
+00018ac4 T SYS_setInterruptMaskLevel
+00018adc T SYS_getAndSetInterruptMaskLevel
+00018af6 T aplib_unpack
+00018afc t aplib_decrunch
+00018b10 t .copy_byte
+00018b12 t .next_sequence_init
+00018b14 t .next_sequence
+00018b24 t .get_3_bits
+00018b34 t .write_byte
+00018b38 t .short_match
+00018b46 t .code_pair
+00018b52 t .normal_code_pair
+00018b60 t .compare_1280
+00018b64 t .compare_128
+00018b68 t .domatch_with_2inc
+00018b6a t .domatch_with_inc
+00018b6c t .domatch_new_lastpos
+00018b6e t .copy_code_pair
+00018b74 t .loop_do_copy
+00018b7e t .get_bit
+00018b86 t .still_bits_left
+00018b88 t .decode_gamma
+00018b8a t .get_more_gamma
+00018b94 t .end_decrunch
+00018b9e T lz4w_unpack
+00018ba4 t lz4w_unpack_a
+00018bbe t .jump_table
+000190bc t .lmr_len_01
+000191d0 t .lmr_len_00
+000193e2 t .lm_len_00
+000193e8 t .next
+000193f8 t .litE_mat0
+000193fa t .litC_mat0
+000193fc t .litA_mat0
+000193fe t .lit8_mat0
+00019400 t .lit6_mat0
+00019402 t .lit4_mat0
+00019404 t .lit2_mat0
+0001940a t .long_match_1
+0001941c t .litF_mat0
+0001941e t .litD_mat0
+00019420 t .litB_mat0
+00019422 t .lit9_mat0
+00019424 t .lit7_mat0
+00019426 t .lit5_mat0
+00019428 t .lit3_mat0
+0001942a t .lit1_mat0
+00019430 t .long_match_2
+00019442 t .lit0_mat0
+00019446 t .long_match_3
+00019458 t .lm_rom
+00019464 t .done
+0001946a t .no_byte
+00019474 t .lmr_jump_table
+00019874 t .litE_mat1
+00019876 t .litC_mat1
+00019878 t .litA_mat1
+0001987a t .lit8_mat1
+0001987c t .lit6_mat1
+0001987e t .lit4_mat1
+00019880 t .lit2_mat1
+00019882 t .lit0_mat1
+000198a0 t .litF_mat1
+000198a2 t .litD_mat1
+000198a4 t .litB_mat1
+000198a6 t .lit9_mat1
+000198a8 t .lit7_mat1
+000198aa t .lit5_mat1
+000198ac t .lit3_mat1
+000198ae t .lit1_mat1
+000198ce t .litE_mat2
+000198d0 t .litC_mat2
+000198d2 t .litA_mat2
+000198d4 t .lit8_mat2
+000198d6 t .lit6_mat2
+000198d8 t .lit4_mat2
+000198da t .lit2_mat2
+000198dc t .lit0_mat2
+000198fc t .litF_mat2
+000198fe t .litD_mat2
+00019900 t .litB_mat2
+00019902 t .lit9_mat2
+00019904 t .lit7_mat2
+00019906 t .lit5_mat2
+00019908 t .lit3_mat2
+0001990a t .lit1_mat2
+0001992c t .litE_mat3
+0001992e t .litC_mat3
+00019930 t .litA_mat3
+00019932 t .lit8_mat3
+00019934 t .lit6_mat3
+00019936 t .lit4_mat3
+00019938 t .lit2_mat3
+0001993a t .lit0_mat3
+0001995c t .litF_mat3
+0001995e t .litD_mat3
+00019960 t .litB_mat3
+00019962 t .lit9_mat3
+00019964 t .lit7_mat3
+00019966 t .lit5_mat3
+00019968 t .lit3_mat3
+0001996a t .lit1_mat3
+0001998e t .litE_mat4
+00019990 t .litC_mat4
+00019992 t .litA_mat4
+00019994 t .lit8_mat4
+00019996 t .lit6_mat4
+00019998 t .lit4_mat4
+0001999a t .lit2_mat4
+0001999c t .lit0_mat4
+000199c0 t .litF_mat4
+000199c2 t .litD_mat4
+000199c4 t .litB_mat4
+000199c6 t .lit9_mat4
+000199c8 t .lit7_mat4
+000199ca t .lit5_mat4
+000199cc t .lit3_mat4
+000199ce t .lit1_mat4
+000199f4 t .litE_mat5
+000199f6 t .litC_mat5
+000199f8 t .litA_mat5
+000199fa t .lit8_mat5
+000199fc t .lit6_mat5
+000199fe t .lit4_mat5
+00019a00 t .lit2_mat5
+00019a02 t .lit0_mat5
+00019a28 t .litF_mat5
+00019a2a t .litD_mat5
+00019a2c t .litB_mat5
+00019a2e t .lit9_mat5
+00019a30 t .lit7_mat5
+00019a32 t .lit5_mat5
+00019a34 t .lit3_mat5
+00019a36 t .lit1_mat5
+00019a5e t .litE_mat6
+00019a60 t .litC_mat6
+00019a62 t .litA_mat6
+00019a64 t .lit8_mat6
+00019a66 t .lit6_mat6
+00019a68 t .lit4_mat6
+00019a6a t .lit2_mat6
+00019a6c t .lit0_mat6
+00019a94 t .litF_mat6
+00019a96 t .litD_mat6
+00019a98 t .litB_mat6
+00019a9a t .lit9_mat6
+00019a9c t .lit7_mat6
+00019a9e t .lit5_mat6
+00019aa0 t .lit3_mat6
+00019aa2 t .lit1_mat6
+00019acc t .litE_mat7
+00019ace t .litC_mat7
+00019ad0 t .litA_mat7
+00019ad2 t .lit8_mat7
+00019ad4 t .lit6_mat7
+00019ad6 t .lit4_mat7
+00019ad8 t .lit2_mat7
+00019ada t .lit0_mat7
+00019b04 t .litF_mat7
+00019b06 t .litD_mat7
+00019b08 t .litB_mat7
+00019b0a t .lit9_mat7
+00019b0c t .lit7_mat7
+00019b0e t .lit5_mat7
+00019b10 t .lit3_mat7
+00019b12 t .lit1_mat7
+00019b3e t .litE_mat8
+00019b40 t .litC_mat8
+00019b42 t .litA_mat8
+00019b44 t .lit8_mat8
+00019b46 t .lit6_mat8
+00019b48 t .lit4_mat8
+00019b4a t .lit2_mat8
+00019b4c t .lit0_mat8
+00019b78 t .litF_mat8
+00019b7a t .litD_mat8
+00019b7c t .litB_mat8
+00019b7e t .lit9_mat8
+00019b80 t .lit7_mat8
+00019b82 t .lit5_mat8
+00019b84 t .lit3_mat8
+00019b86 t .lit1_mat8
+00019bb4 t .litE_mat9
+00019bb6 t .litC_mat9
+00019bb8 t .litA_mat9
+00019bba t .lit8_mat9
+00019bbc t .lit6_mat9
+00019bbe t .lit4_mat9
+00019bc0 t .lit2_mat9
+00019bc2 t .lit0_mat9
+00019bf0 t .litF_mat9
+00019bf2 t .litD_mat9
+00019bf4 t .litB_mat9
+00019bf6 t .lit9_mat9
+00019bf8 t .lit7_mat9
+00019bfa t .lit5_mat9
+00019bfc t .lit3_mat9
+00019bfe t .lit1_mat9
+00019c2e t .litE_matA
+00019c30 t .litC_matA
+00019c32 t .litA_matA
+00019c34 t .lit8_matA
+00019c36 t .lit6_matA
+00019c38 t .lit4_matA
+00019c3a t .lit2_matA
+00019c3c t .lit0_matA
+00019c6c t .litF_matA
+00019c6e t .litD_matA
+00019c70 t .litB_matA
+00019c72 t .lit9_matA
+00019c74 t .lit7_matA
+00019c76 t .lit5_matA
+00019c78 t .lit3_matA
+00019c7a t .lit1_matA
+00019cac t .litE_matB
+00019cae t .litC_matB
+00019cb0 t .litA_matB
+00019cb2 t .lit8_matB
+00019cb4 t .lit6_matB
+00019cb6 t .lit4_matB
+00019cb8 t .lit2_matB
+00019cba t .lit0_matB
+00019cec t .litF_matB
+00019cee t .litD_matB
+00019cf0 t .litB_matB
+00019cf2 t .lit9_matB
+00019cf4 t .lit7_matB
+00019cf6 t .lit5_matB
+00019cf8 t .lit3_matB
+00019cfa t .lit1_matB
+00019d2e t .litE_matC
+00019d30 t .litC_matC
+00019d32 t .litA_matC
+00019d34 t .lit8_matC
+00019d36 t .lit6_matC
+00019d38 t .lit4_matC
+00019d3a t .lit2_matC
+00019d3c t .lit0_matC
+00019d70 t .litF_matC
+00019d72 t .litD_matC
+00019d74 t .litB_matC
+00019d76 t .lit9_matC
+00019d78 t .lit7_matC
+00019d7a t .lit5_matC
+00019d7c t .lit3_matC
+00019d7e t .lit1_matC
+00019db4 t .litE_matD
+00019db6 t .litC_matD
+00019db8 t .litA_matD
+00019dba t .lit8_matD
+00019dbc t .lit6_matD
+00019dbe t .lit4_matD
+00019dc0 t .lit2_matD
+00019dc2 t .lit0_matD
+00019df8 t .litF_matD
+00019dfa t .litD_matD
+00019dfc t .litB_matD
+00019dfe t .lit9_matD
+00019e00 t .lit7_matD
+00019e02 t .lit5_matD
+00019e04 t .lit3_matD
+00019e06 t .lit1_matD
+00019e3e t .litE_matE
+00019e40 t .litC_matE
+00019e42 t .litA_matE
+00019e44 t .lit8_matE
+00019e46 t .lit6_matE
+00019e48 t .lit4_matE
+00019e4a t .lit2_matE
+00019e4c t .lit0_matE
+00019e84 t .litF_matE
+00019e86 t .litD_matE
+00019e88 t .litB_matE
+00019e8a t .lit9_matE
+00019e8c t .lit7_matE
+00019e8e t .lit5_matE
+00019e90 t .lit3_matE
+00019e92 t .lit1_matE
+00019ecc t .litE_matF
+00019ece t .litC_matF
+00019ed0 t .litA_matF
+00019ed2 t .lit8_matF
+00019ed4 t .lit6_matF
+00019ed6 t .lit4_matF
+00019ed8 t .lit2_matF
+00019eda t .lit0_matF
+00019f14 t .litF_matF
+00019f16 t .litD_matF
+00019f18 t .litB_matF
+00019f1a t .lit9_matF
+00019f1c t .lit7_matF
+00019f1e t .lit5_matF
+00019f20 t .lit3_matF
+00019f22 t .lit1_matF
+00019f5e T POOL_reset	D:\apps\SGDK/src/pool.c:72
+00019fde T POOL_create	D:\apps\SGDK/src/pool.c:10
+0001a11e T POOL_destroy	D:\apps\SGDK/src/pool.c:105
+0001a16c T POOL_allocate	D:\apps\SGDK/src/pool.c:136
+0001a19c T POOL_release	D:\apps\SGDK/src/pool.c:159
+0001a222 T PSG_reset	D:\apps\SGDK/src/psg.c:9
+0001a25a T getZeroU8	D:\apps\SGDK/src/types.c:4
+0001a25e T YM2612_write	D:\apps\SGDK/src/ym2612.c:118
+0001a28e t writeSlotReg	D:\apps\SGDK/src/ym2612.c:11
+0001a2dc t writeChannelReg	D:\apps\SGDK/src/ym2612.c:17
+0001a320 T YM2612_reset	D:\apps\SGDK/src/ym2612.c:23
+0001a4e0 T MDDBG__SymbolDataPtr
+0001a4e4 t __ErrorHandler
+0001a4e4 t MDDBG__ErrorHandler
+0001a60c t MDDBG__Error_IdleLoop
+0001a626 t MDDBG__Error_InitConsole
+0001a632 t MDDBG__Error_MaskStackBoundaries
+0001a69c t MDDBG__Error_DrawOffsetLocation
+0001a6a0 t MDDBG__Error_DrawOffsetLocation2
+0001a6a6 t MDDBG__Error_DrawOffsetLocation__inj
+0001a734 t MDDBG__ErrorHandler_SetupVDP
+0001a76a t MDDBG__ErrorHandler_VDPConfig
+0001a780 t MDDBG__ErrorHandler_VDPConfig_Nametables
+0001a7bc t MDDBG__ErrorHandler_ConsoleConfig_Initial
+0001a7c0 t MDDBG__ErrorHandler_ConsoleConfig_Shared
+0001a7f0 t MDDBG__Str_OffsetLocation_24bit
+0001a7f9 t MDDBG__Str_OffsetLocation_32bit
+0001a834 t MDDBG__Art1bpp_Font
+0001ab2e t MDDBG__GetSymbolByOffset
+0001ae48 t MDDBG__FormatString
+0001af22 t MDDBG__Console_Init
+0001af60 t MDDBG__Console_Reset
+0001af62 t MDDBG__Console_InitShared
+0001afac t MDDBG__Console_SetPosAsXY_Stack
+0001afb2 t MDDBG__Console_SetPosAsXY
+0001afe6 t MDDBG__Console_GetPosAsXY
+0001b00c t MDDBG__Console_StartNewLine
+0001b03a t MDDBG__Console_SetBasePattern
+0001b056 t MDDBG__Console_SetWidth
+0001b074 t MDDBG__Console_WriteLine_WithPattern
+0001b076 t MDDBG__Console_WriteLine
+0001b07a t MDDBG__Console_Write
+0001b140 t MDDBG__Console_WriteLine_Formatted
+0001b144 t MDDBG__Console_Write_Formatted
+0001b174 t MDDBG__Decomp1bpp
+0001b190 t MDDBG__KDebug_WriteLine_Formatted
+0001b194 t MDDBG__KDebug_Write_Formatted
+0001b1e8 t MDDBG__KDebug_FlushLine
+0001b1f2 t MDDBG__KDebug_WriteLine
+0001b1f6 t MDDBG__KDebug_Write
+0001b224 t MDDBG__ErrorHandler_ConsoleOnly
+0001b24a t MDDBG__ErrorHandler_ClearConsole
+0001b274 t MDDBG__ErrorHandler_PauseConsole
+0001b2ae t MDDBG__ErrorHandler_PagesController
+0001b30e t MDDBG__VSync
+0001b348 t MDDBG__ErrorHandler_ExtraDebuggerList
+0001b354 t MDDBG__Debugger_AddressRegisters
+0001b3a0 t MDDBG__Debugger_Backtrace
+0001b43e T _Bus_Error
+0001b43e t MDDBG__BusError
+0001b452 T _Address_Error
+0001b452 t MDDBG__AddressError
+0001b46a T _Illegal_Instruction
+0001b46a t MDDBG__IllegalInstr
+0001b488 T _Zero_Divide
+0001b488 t MDDBG__ZeroDivide
+0001b49e T _Chk_Instruction
+0001b49e t MDDBG__ChkInstr
+0001b4b8 T _Trapv_Instruction
+0001b4b8 t MDDBG__TrapvInstr
+0001b4d4 T _Privilege_Violation
+0001b4d4 t MDDBG__PrivilegeViol
+0001b4f2 T _Trace
+0001b4f2 t MDDBG__Trace
+0001b502 T _Line_1010_Emulation
+0001b502 t MDDBG__Line1010Emu
+0001b51e T _Line_1111_Emulation
+0001b51e t MDDBG__Line1111Emu
+0001b53a T _Error_Exception
+0001b53a t MDDBG__ErrorExcept
+0001b600 T smp_null
+0001b700 T smp_null_dpcm
+0001b780 T __mulsi3	/home/runner/work/m68k-elf-gcc/m68k-elf-gcc/.build/HOST-i686-w64-mingw32/m68k-elf/src/gcc/libgcc/config/m68k/lb1sf68.S:442
+0001b780 T __mulsi3_internal	/home/runner/work/m68k-elf-gcc/m68k-elf-gcc/.build/HOST-i686-w64-mingw32/m68k-elf/src/gcc/libgcc/config/m68k/lb1sf68.S:442
+0001b7a4 T __udivsi3	/home/runner/work/m68k-elf-gcc/m68k-elf-gcc/.build/HOST-i686-w64-mingw32/m68k-elf/src/gcc/libgcc/config/m68k/lb1sf68.S:469
+0001b7a4 T __udivsi3_internal	/home/runner/work/m68k-elf-gcc/m68k-elf-gcc/.build/HOST-i686-w64-mingw32/m68k-elf/src/gcc/libgcc/config/m68k/lb1sf68.S:469
+0001b7cc t L3	/home/runner/work/m68k-elf-gcc/m68k-elf-gcc/.build/HOST-i686-w64-mingw32/m68k-elf/src/gcc/libgcc/config/m68k/lb1sf68.S:486
+0001b7ce t L4	/home/runner/work/m68k-elf-gcc/m68k-elf-gcc/.build/HOST-i686-w64-mingw32/m68k-elf/src/gcc/libgcc/config/m68k/lb1sf68.S:487
+0001b7fa t L5	/home/runner/work/m68k-elf-gcc/m68k-elf-gcc/.build/HOST-i686-w64-mingw32/m68k-elf/src/gcc/libgcc/config/m68k/lb1sf68.S:508
+0001b7fc t L6	/home/runner/work/m68k-elf-gcc/m68k-elf-gcc/.build/HOST-i686-w64-mingw32/m68k-elf/src/gcc/libgcc/config/m68k/lb1sf68.S:510
+0001b800 T __divsi3	/home/runner/work/m68k-elf-gcc/m68k-elf-gcc/.build/HOST-i686-w64-mingw32/m68k-elf/src/gcc/libgcc/config/m68k/lb1sf68.S:547
+0001b800 T __divsi3_internal	/home/runner/work/m68k-elf-gcc/m68k-elf-gcc/.build/HOST-i686-w64-mingw32/m68k-elf/src/gcc/libgcc/config/m68k/lb1sf68.S:547
+0001b80e t L1	/home/runner/work/m68k-elf-gcc/m68k-elf-gcc/.build/HOST-i686-w64-mingw32/m68k-elf/src/gcc/libgcc/config/m68k/lb1sf68.S:558
+0001b818 t L2	/home/runner/work/m68k-elf-gcc/m68k-elf-gcc/.build/HOST-i686-w64-mingw32/m68k-elf/src/gcc/libgcc/config/m68k/lb1sf68.S:567
+0001b82a t L3	/home/runner/work/m68k-elf-gcc/m68k-elf-gcc/.build/HOST-i686-w64-mingw32/m68k-elf/src/gcc/libgcc/config/m68k/lb1sf68.S:576
+0001b830 T __umodsi3	/home/runner/work/m68k-elf-gcc/m68k-elf-gcc/.build/HOST-i686-w64-mingw32/m68k-elf/src/gcc/libgcc/config/m68k/lb1sf68.S:585
+0001b860 T __modsi3	/home/runner/work/m68k-elf-gcc/m68k-elf-gcc/.build/HOST-i686-w64-mingw32/m68k-elf/src/gcc/libgcc/config/m68k/lb1sf68.S:611
+0001b890 T __CTOR_LIST__
+0001b898 T __CTOR_END__
+0001b898 T __DTOR_LIST__
+0001b8a0 T __DTOR_END__
+0001b8a0 t game_bg_tileset
+0001b8a8 t game_bg_tilemap
+0001b8b2 t game_bg_palette
+0001b8b8 T game_bg
+0001b8c4 T riistar_bg_tileset
+0001b8cc T riistar_bg_tilemap
+0001b8d6 T riistar_bg_palette
+0001b8dc T club_bg_tileset
+0001b8e4 T club_bg_map
+0001b900 T club_bg_palette
+0001b906 T TS_FONT_CLEAR
+0001b90e T TS_FONT_SOLID
+0001b916 T PAL_FONT_CLEAR
+0001b91c T PAL_FONT_SOLID
+0001b922 t anim_norotate_palette
+0001b928 t anim_norotate_animation0_frame0_tileset
+0001b930 t anim_norotate_animation0_frame0
+0001b940 t anim_norotate_animation0_frame1_tileset
+0001b948 t anim_norotate_animation0_frame1
+0001b958 t anim_norotate_animation0_frame2_tileset
+0001b960 t anim_norotate_animation0_frame2
+0001b970 t anim_norotate_animation0_frame3_tileset
+0001b978 t anim_norotate_animation0_frame3
+0001b988 t anim_norotate_animation0_frames
+0001b998 t anim_norotate_animation0
+0001b99e t anim_norotate_animation1_frame0_tileset
+0001b9a6 t anim_norotate_animation1_frame0
+0001b9b6 t anim_norotate_animation1_frame1_tileset
+0001b9be t anim_norotate_animation1_frame1
+0001b9ce t anim_norotate_animation1_frame2_tileset
+0001b9d6 t anim_norotate_animation1_frame2
+0001b9e6 t anim_norotate_animation1_frame3_tileset
+0001b9ee t anim_norotate_animation1_frame3
+0001b9fe t anim_norotate_animation1_frames
+0001ba0e t anim_norotate_animation1
+0001ba14 t anim_norotate_animations
+0001ba1c T anim_norotate
+0001ba2e t anim_skull_animation0_frame0_tileset
+0001ba36 t anim_skull_animation0_frame0
+0001ba46 t anim_skull_animation0_frame1_tileset
+0001ba4e t anim_skull_animation0_frame1
+0001ba5e t anim_skull_animation0_frame2_tileset
+0001ba66 t anim_skull_animation0_frame2
+0001ba76 t anim_skull_animation0_frame3_tileset
+0001ba7e t anim_skull_animation0_frame3
+0001ba8e t anim_skull_animation0_frame4_tileset
+0001ba96 t anim_skull_animation0_frame4
+0001baa6 t anim_skull_animation0_frame5_tileset
+0001baae t anim_skull_animation0_frame5
+0001babe t anim_skull_animation0_frame6_tileset
+0001bac6 t anim_skull_animation0_frame6
+0001bad6 t anim_skull_animation0_frame7_tileset
+0001bade t anim_skull_animation0_frame7
+0001baee t anim_skull_animation0_frames
+0001bb0e t anim_skull_animation0
+0001bb14 t anim_skull_animations
+0001bb18 T anim_skull
+0001bb2a t anim_spiral_animation0_frame0_tileset
+0001bb32 t anim_spiral_animation0_frame0
+0001bb42 t anim_spiral_animation0_frame1_tileset
+0001bb4a t anim_spiral_animation0_frame1
+0001bb5a t anim_spiral_animation0_frame2_tileset
+0001bb62 t anim_spiral_animation0_frame2
+0001bb72 t anim_spiral_animation0_frame3_tileset
+0001bb7a t anim_spiral_animation0_frame3
+0001bb8a t anim_spiral_animation0_frames
+0001bb9a t anim_spiral_animation0
+0001bba0 t anim_spiral_animations
+0001bba4 T anim_spiral
+0001bbb6 t anim_speed_animation0_frame0_tileset
+0001bbbe t anim_speed_animation0_frame0
+0001bbce t anim_speed_animation0_frame1_tileset
+0001bbd6 t anim_speed_animation0_frame1
+0001bbe6 t anim_speed_animation0_frame2_tileset
+0001bbee t anim_speed_animation0_frame2
+0001bbfe t anim_speed_animation0_frame3_tileset
+0001bc06 t anim_speed_animation0_frame3
+0001bc16 t anim_speed_animation0_frames
+0001bc26 t anim_speed_animation0
+0001bc2c t anim_speed_animations
+0001bc30 T anim_speed
+0001bc42 t anim_dust_animation0_frame0_tileset
+0001bc4a t anim_dust_animation0_frame0
+0001bc5a t anim_dust_animation0_frame1_tileset
+0001bc62 t anim_dust_animation0_frame1
+0001bc72 t anim_dust_animation0_frame2_tileset
+0001bc7a t anim_dust_animation0_frame2
+0001bc8a t anim_dust_animation0_frame3_tileset
+0001bc92 t anim_dust_animation0_frame3
+0001bca2 t anim_dust_animation0_frame4_tileset
+0001bcaa t anim_dust_animation0_frame4
+0001bcba t anim_dust_animation0_frame5_tileset
+0001bcc2 t anim_dust_animation0_frame5
+0001bcd2 t anim_dust_animation0_frame6_tileset
+0001bcda t anim_dust_animation0_frame6
+0001bcea t anim_dust_animation0_frame7_tileset
+0001bcf2 t anim_dust_animation0_frame7
+0001bd02 t anim_dust_animation0_frame8_tileset
+0001bd0a t anim_dust_animation0_frame8
+0001bd1a t anim_dust_animation0_frame9_tileset
+0001bd22 t anim_dust_animation0_frame9
+0001bd32 t anim_dust_animation0_frame10_tileset
+0001bd3a t anim_dust_animation0_frame10
+0001bd4a t anim_dust_animation0_frame11_tileset
+0001bd52 t anim_dust_animation0_frame11
+0001bd62 t anim_dust_animation0_frame12_tileset
+0001bd6a t anim_dust_animation0_frame12
+0001bd7a t anim_dust_animation0_frame13_tileset
+0001bd82 t anim_dust_animation0_frame13
+0001bd92 t anim_dust_animation0_frame14_tileset
+0001bd9a t anim_dust_animation0_frame14
+0001bdaa t anim_dust_animation0_frame15_tileset
+0001bdb2 t anim_dust_animation0_frame15
+0001bdc2 t anim_dust_animation0_frames
+0001be02 t anim_dust_animation0
+0001be08 t anim_dust_animations
+0001be0c T anim_dust
+0001be1e t anim_explosion_animation0_frame0_tileset
+0001be26 t anim_explosion_animation0_frame0
+0001be36 t anim_explosion_animation0_frame1_tileset
+0001be3e t anim_explosion_animation0_frame1
+0001be4e t anim_explosion_animation0_frame2_tileset
+0001be56 t anim_explosion_animation0_frame2
+0001be66 t anim_explosion_animation0_frame3_tileset
+0001be6e t anim_explosion_animation0_frame3
+0001be7e t anim_explosion_animation0_frame4_tileset
+0001be86 t anim_explosion_animation0_frame4
+0001be96 t anim_explosion_animation0_frame5_tileset
+0001be9e t anim_explosion_animation0_frame5
+0001beae t anim_explosion_animation0_frame6_tileset
+0001beb6 t anim_explosion_animation0_frame6
+0001bec6 t anim_explosion_animation0_frame7_tileset
+0001bece t anim_explosion_animation0_frame7
+0001bede t anim_explosion_animation0_frame8_tileset
+0001bee6 t anim_explosion_animation0_frame8
+0001bef6 t anim_explosion_animation0_frame9_tileset
+0001befe t anim_explosion_animation0_frame9
+0001bf0e t anim_explosion_animation0_frame10_tileset
+0001bf16 t anim_explosion_animation0_frame10
+0001bf26 t anim_explosion_animation0_frame11_tileset
+0001bf2e t anim_explosion_animation0_frame11
+0001bf3e t anim_explosion_animation0_frames
+0001bf6e t anim_explosion_animation0
+0001bf74 t anim_explosion_animations
+0001bf78 T anim_explosion
+0001bf8a t alpha_16_palette
+0001bf90 t alpha_16_animation0_frame0_tileset
+0001bf98 t alpha_16_animation0_frame0
+0001bfae t alpha_16_animation0_frame1_tileset
+0001bfb6 t alpha_16_animation0_frame1
+0001bfcc t alpha_16_animation0_frame2_tileset
+0001bfd4 t alpha_16_animation0_frame2
+0001bfe4 t alpha_16_animation0_frames
+0001bff0 t alpha_16_animation0
+0001bff6 t alpha_16_animations
+0001bffa T alpha_16
+0001c00c t alpha_32_animation0_frame0_tileset
+0001c014 t alpha_32_animation0_frame0
+0001c02a t alpha_32_animation0_frame1_tileset
+0001c032 t alpha_32_animation0_frame1
+0001c048 t alpha_32_animation0_frame2_tileset
+0001c050 t alpha_32_animation0_frame2
+0001c066 t alpha_32_animation0_frame3_tileset
+0001c06e t alpha_32_animation0_frame3
+0001c084 t alpha_32_animation0_frame4_tileset
+0001c08c t alpha_32_animation0_frame4
+0001c0a2 t alpha_32_animation0_frame5_tileset
+0001c0aa t alpha_32_animation0_frame5
+0001c0c0 t alpha_32_animation0_frame6_tileset
+0001c0c8 t alpha_32_animation0_frame6
+0001c0de t alpha_32_animation0_frame7_tileset
+0001c0e6 t alpha_32_animation0_frame7
+0001c0fc t alpha_32_animation0_frame8_tileset
 0001c100 A WAV_017_size
-0001c2a0 T vs_brain_reset
-0001c2cc T MDDBG__SymbolDataPtr
-0001c2d0 t __ErrorHandler
-0001c2d0 t MDDBG__ErrorHandler
-0001c3f8 t MDDBG__Error_IdleLoop
-0001c412 t MDDBG__Error_InitConsole
-0001c41e t MDDBG__Error_MaskStackBoundaries
-0001c488 t MDDBG__Error_DrawOffsetLocation
-0001c48c t MDDBG__Error_DrawOffsetLocation2
-0001c492 t MDDBG__Error_DrawOffsetLocation__inj
-0001c520 t MDDBG__ErrorHandler_SetupVDP
-0001c556 t MDDBG__ErrorHandler_VDPConfig
-0001c56c t MDDBG__ErrorHandler_VDPConfig_Nametables
-0001c5a8 t MDDBG__ErrorHandler_ConsoleConfig_Initial
-0001c5ac t MDDBG__ErrorHandler_ConsoleConfig_Shared
-0001c5dc t MDDBG__Str_OffsetLocation_24bit
-0001c5e5 t MDDBG__Str_OffsetLocation_32bit
-0001c620 t MDDBG__Art1bpp_Font
-0001c91a t MDDBG__GetSymbolByOffset
-0001cc34 t MDDBG__FormatString
-0001cd0e t MDDBG__Console_Init
-0001cd4c t MDDBG__Console_Reset
-0001cd4e t MDDBG__Console_InitShared
-0001cd98 t MDDBG__Console_SetPosAsXY_Stack
-0001cd9e t MDDBG__Console_SetPosAsXY
-0001cdd2 t MDDBG__Console_GetPosAsXY
-0001cdf8 t MDDBG__Console_StartNewLine
-0001ce26 t MDDBG__Console_SetBasePattern
-0001ce42 t MDDBG__Console_SetWidth
-0001ce60 t MDDBG__Console_WriteLine_WithPattern
-0001ce62 t MDDBG__Console_WriteLine
-0001ce66 t MDDBG__Console_Write
-0001cf2c t MDDBG__Console_WriteLine_Formatted
-0001cf30 t MDDBG__Console_Write_Formatted
-0001cf60 t MDDBG__Decomp1bpp
-0001cf7c t MDDBG__KDebug_WriteLine_Formatted
-0001cf80 t MDDBG__KDebug_Write_Formatted
-0001cfd4 t MDDBG__KDebug_FlushLine
-0001cfde t MDDBG__KDebug_WriteLine
-0001cfe2 t MDDBG__KDebug_Write
-0001d010 t MDDBG__ErrorHandler_ConsoleOnly
-0001d036 t MDDBG__ErrorHandler_ClearConsole
-0001d060 t MDDBG__ErrorHandler_PauseConsole
-0001d09a t MDDBG__ErrorHandler_PagesController
-0001d0fa t MDDBG__VSync
-0001d134 t MDDBG__ErrorHandler_ExtraDebuggerList
-0001d140 t MDDBG__Debugger_AddressRegisters
-0001d18c t MDDBG__Debugger_Backtrace
-0001d22a T _Bus_Error
-0001d22a t MDDBG__BusError
-0001d23e T _Address_Error
-0001d23e t MDDBG__AddressError
-0001d256 T _Illegal_Instruction
-0001d256 t MDDBG__IllegalInstr
-0001d274 T _Zero_Divide
-0001d274 t MDDBG__ZeroDivide
-0001d28a T _Chk_Instruction
-0001d28a t MDDBG__ChkInstr
-0001d2a4 T _Trapv_Instruction
-0001d2a4 t MDDBG__TrapvInstr
-0001d2c0 T _Privilege_Violation
-0001d2c0 t MDDBG__PrivilegeViol
-0001d2de T _Trace
-0001d2de t MDDBG__Trace
-0001d2ee T _Line_1010_Emulation
-0001d2ee t MDDBG__Line1010Emu
-0001d30a T _Line_1111_Emulation
-0001d30a t MDDBG__Line1111Emu
-0001d326 T _Error_Exception
-0001d326 t MDDBG__ErrorExcept
-0001d400 T smp_null
-0001d500 T smp_null_dpcm
-0001d580 T __mulsi3	/home/runner/work/m68k-elf-gcc/m68k-elf-gcc/.build/HOST-i686-w64-mingw32/m68k-elf/src/gcc/libgcc/config/m68k/lb1sf68.S:442
-0001d580 T __mulsi3_internal	/home/runner/work/m68k-elf-gcc/m68k-elf-gcc/.build/HOST-i686-w64-mingw32/m68k-elf/src/gcc/libgcc/config/m68k/lb1sf68.S:442
-0001d5a4 T __udivsi3	/home/runner/work/m68k-elf-gcc/m68k-elf-gcc/.build/HOST-i686-w64-mingw32/m68k-elf/src/gcc/libgcc/config/m68k/lb1sf68.S:469
-0001d5a4 T __udivsi3_internal	/home/runner/work/m68k-elf-gcc/m68k-elf-gcc/.build/HOST-i686-w64-mingw32/m68k-elf/src/gcc/libgcc/config/m68k/lb1sf68.S:469
-0001d5cc t L3	/home/runner/work/m68k-elf-gcc/m68k-elf-gcc/.build/HOST-i686-w64-mingw32/m68k-elf/src/gcc/libgcc/config/m68k/lb1sf68.S:486
-0001d5ce t L4	/home/runner/work/m68k-elf-gcc/m68k-elf-gcc/.build/HOST-i686-w64-mingw32/m68k-elf/src/gcc/libgcc/config/m68k/lb1sf68.S:487
-0001d5fa t L5	/home/runner/work/m68k-elf-gcc/m68k-elf-gcc/.build/HOST-i686-w64-mingw32/m68k-elf/src/gcc/libgcc/config/m68k/lb1sf68.S:508
-0001d5fc t L6	/home/runner/work/m68k-elf-gcc/m68k-elf-gcc/.build/HOST-i686-w64-mingw32/m68k-elf/src/gcc/libgcc/config/m68k/lb1sf68.S:510
-0001d600 T __divsi3	/home/runner/work/m68k-elf-gcc/m68k-elf-gcc/.build/HOST-i686-w64-mingw32/m68k-elf/src/gcc/libgcc/config/m68k/lb1sf68.S:547
-0001d600 T __divsi3_internal	/home/runner/work/m68k-elf-gcc/m68k-elf-gcc/.build/HOST-i686-w64-mingw32/m68k-elf/src/gcc/libgcc/config/m68k/lb1sf68.S:547
-0001d60e t L1	/home/runner/work/m68k-elf-gcc/m68k-elf-gcc/.build/HOST-i686-w64-mingw32/m68k-elf/src/gcc/libgcc/config/m68k/lb1sf68.S:558
-0001d618 t L2	/home/runner/work/m68k-elf-gcc/m68k-elf-gcc/.build/HOST-i686-w64-mingw32/m68k-elf/src/gcc/libgcc/config/m68k/lb1sf68.S:567
-0001d62a t L3	/home/runner/work/m68k-elf-gcc/m68k-elf-gcc/.build/HOST-i686-w64-mingw32/m68k-elf/src/gcc/libgcc/config/m68k/lb1sf68.S:576
-0001d630 T __umodsi3	/home/runner/work/m68k-elf-gcc/m68k-elf-gcc/.build/HOST-i686-w64-mingw32/m68k-elf/src/gcc/libgcc/config/m68k/lb1sf68.S:585
-0001d660 T __modsi3	/home/runner/work/m68k-elf-gcc/m68k-elf-gcc/.build/HOST-i686-w64-mingw32/m68k-elf/src/gcc/libgcc/config/m68k/lb1sf68.S:611
-0001d690 T __CTOR_LIST__
-0001d698 T __CTOR_END__
-0001d698 T __DTOR_LIST__
-0001d6a0 T __DTOR_END__
-0001d6a0 t game_bg_tileset
-0001d6a8 t game_bg_tilemap
-0001d6b2 t game_bg_palette
-0001d6b8 T game_bg
-0001d6c4 T riistar_bg_tileset
-0001d6cc T riistar_bg_tilemap
-0001d6d6 T riistar_bg_palette
-0001d6dc T club_bg_tileset
-0001d6e4 T club_bg_map
-0001d700 T club_bg_palette
-0001d706 T TS_FONT_CLEAR
-0001d70e T TS_FONT_SOLID
-0001d716 T PAL_FONT_CLEAR
-0001d71c T PAL_FONT_SOLID
-0001d722 t anim_norotate_palette
-0001d728 t anim_norotate_animation0_frame0_tileset
-0001d730 t anim_norotate_animation0_frame0
-0001d740 t anim_norotate_animation0_frame1_tileset
-0001d748 t anim_norotate_animation0_frame1
-0001d758 t anim_norotate_animation0_frame2_tileset
-0001d760 t anim_norotate_animation0_frame2
-0001d770 t anim_norotate_animation0_frame3_tileset
-0001d778 t anim_norotate_animation0_frame3
-0001d788 t anim_norotate_animation0_frames
-0001d798 t anim_norotate_animation0
-0001d79e t anim_norotate_animation1_frame0_tileset
-0001d7a6 t anim_norotate_animation1_frame0
-0001d7b6 t anim_norotate_animation1_frame1_tileset
-0001d7be t anim_norotate_animation1_frame1
-0001d7ce t anim_norotate_animation1_frame2_tileset
-0001d7d6 t anim_norotate_animation1_frame2
-0001d7e6 t anim_norotate_animation1_frame3_tileset
-0001d7ee t anim_norotate_animation1_frame3
-0001d7fe t anim_norotate_animation1_frames
-0001d80e t anim_norotate_animation1
-0001d814 t anim_norotate_animations
-0001d81c T anim_norotate
-0001d82e t anim_skull_animation0_frame0_tileset
-0001d836 t anim_skull_animation0_frame0
-0001d846 t anim_skull_animation0_frame1_tileset
-0001d84e t anim_skull_animation0_frame1
-0001d85e t anim_skull_animation0_frame2_tileset
-0001d866 t anim_skull_animation0_frame2
-0001d876 t anim_skull_animation0_frame3_tileset
-0001d87e t anim_skull_animation0_frame3
-0001d88e t anim_skull_animation0_frame4_tileset
-0001d896 t anim_skull_animation0_frame4
-0001d8a6 t anim_skull_animation0_frame5_tileset
-0001d8ae t anim_skull_animation0_frame5
-0001d8be t anim_skull_animation0_frame6_tileset
-0001d8c6 t anim_skull_animation0_frame6
-0001d8d6 t anim_skull_animation0_frame7_tileset
-0001d8de t anim_skull_animation0_frame7
-0001d8ee t anim_skull_animation0_frames
-0001d90e t anim_skull_animation0
-0001d914 t anim_skull_animations
-0001d918 T anim_skull
-0001d92a t anim_spiral_animation0_frame0_tileset
-0001d932 t anim_spiral_animation0_frame0
-0001d942 t anim_spiral_animation0_frame1_tileset
-0001d94a t anim_spiral_animation0_frame1
-0001d95a t anim_spiral_animation0_frame2_tileset
-0001d962 t anim_spiral_animation0_frame2
-0001d972 t anim_spiral_animation0_frame3_tileset
-0001d97a t anim_spiral_animation0_frame3
-0001d98a t anim_spiral_animation0_frames
-0001d99a t anim_spiral_animation0
-0001d9a0 t anim_spiral_animations
-0001d9a4 T anim_spiral
-0001d9b6 t anim_speed_animation0_frame0_tileset
-0001d9be t anim_speed_animation0_frame0
-0001d9ce t anim_speed_animation0_frame1_tileset
-0001d9d6 t anim_speed_animation0_frame1
-0001d9e6 t anim_speed_animation0_frame2_tileset
-0001d9ee t anim_speed_animation0_frame2
-0001d9fe t anim_speed_animation0_frame3_tileset
-0001da06 t anim_speed_animation0_frame3
-0001da16 t anim_speed_animation0_frames
-0001da26 t anim_speed_animation0
-0001da2c t anim_speed_animations
-0001da30 T anim_speed
-0001da42 t anim_dust_animation0_frame0_tileset
-0001da4a t anim_dust_animation0_frame0
-0001da5a t anim_dust_animation0_frame1_tileset
-0001da62 t anim_dust_animation0_frame1
-0001da72 t anim_dust_animation0_frame2_tileset
-0001da7a t anim_dust_animation0_frame2
-0001da8a t anim_dust_animation0_frame3_tileset
-0001da92 t anim_dust_animation0_frame3
-0001daa2 t anim_dust_animation0_frame4_tileset
-0001daaa t anim_dust_animation0_frame4
-0001daba t anim_dust_animation0_frame5_tileset
-0001dac2 t anim_dust_animation0_frame5
-0001dad2 t anim_dust_animation0_frame6_tileset
-0001dada t anim_dust_animation0_frame6
-0001daea t anim_dust_animation0_frame7_tileset
-0001daf2 t anim_dust_animation0_frame7
-0001db02 t anim_dust_animation0_frame8_tileset
-0001db0a t anim_dust_animation0_frame8
-0001db1a t anim_dust_animation0_frame9_tileset
-0001db22 t anim_dust_animation0_frame9
-0001db32 t anim_dust_animation0_frame10_tileset
-0001db3a t anim_dust_animation0_frame10
-0001db4a t anim_dust_animation0_frame11_tileset
-0001db52 t anim_dust_animation0_frame11
-0001db62 t anim_dust_animation0_frame12_tileset
-0001db6a t anim_dust_animation0_frame12
-0001db7a t anim_dust_animation0_frame13_tileset
-0001db82 t anim_dust_animation0_frame13
-0001db92 t anim_dust_animation0_frame14_tileset
-0001db9a t anim_dust_animation0_frame14
-0001dbaa t anim_dust_animation0_frame15_tileset
-0001dbb2 t anim_dust_animation0_frame15
-0001dbc2 t anim_dust_animation0_frames
-0001dc02 t anim_dust_animation0
-0001dc08 t anim_dust_animations
-0001dc0c T anim_dust
-0001dc1e t anim_explosion_animation0_frame0_tileset
-0001dc26 t anim_explosion_animation0_frame0
-0001dc36 t anim_explosion_animation0_frame1_tileset
-0001dc3e t anim_explosion_animation0_frame1
-0001dc4e t anim_explosion_animation0_frame2_tileset
-0001dc56 t anim_explosion_animation0_frame2
-0001dc66 t anim_explosion_animation0_frame3_tileset
-0001dc6e t anim_explosion_animation0_frame3
-0001dc7e t anim_explosion_animation0_frame4_tileset
-0001dc86 t anim_explosion_animation0_frame4
-0001dc96 t anim_explosion_animation0_frame5_tileset
-0001dc9e t anim_explosion_animation0_frame5
-0001dcae t anim_explosion_animation0_frame6_tileset
-0001dcb6 t anim_explosion_animation0_frame6
-0001dcc6 t anim_explosion_animation0_frame7_tileset
-0001dcce t anim_explosion_animation0_frame7
-0001dcde t anim_explosion_animation0_frame8_tileset
-0001dce6 t anim_explosion_animation0_frame8
-0001dcf6 t anim_explosion_animation0_frame9_tileset
-0001dcfe t anim_explosion_animation0_frame9
-0001dd0e t anim_explosion_animation0_frame10_tileset
-0001dd16 t anim_explosion_animation0_frame10
-0001dd26 t anim_explosion_animation0_frame11_tileset
-0001dd2e t anim_explosion_animation0_frame11
-0001dd3e t anim_explosion_animation0_frames
-0001dd6e t anim_explosion_animation0
-0001dd74 t anim_explosion_animations
-0001dd78 T anim_explosion
-0001df4a t questStageLines
-0001dfaa T tile_heart
-0001dfca T tile_skull
-0001dfea t sfx_bank
-0001e458 t target_palette	F:\Projekte\tetris\tetris-sgdk/src/menu_bg.c:11
-0001e47a t riistar_group_speeds	F:\Projekte\tetris\tetris-sgdk/src/menubg/riistar_mode.c:7
-0001e484 t riistar_group_sizes	F:\Projekte\tetris\tetris-sgdk/src/menubg/riistar_mode.c:6
-0001ebf4 t challenge_level_names	F:\Projekte\tetris\tetris-sgdk/src/states/challenge.c:15
-0001efbc T GARBAGE_INTERVALS	F:\Projekte\tetris\tetris-sgdk/src/states/game.c:22
-000201bb T PIECES	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_logic.c:38
-0002034e t xlt_all.0	D:\apps\SGDK/src/joy.c:846
-0002035e t xlt.1	D:\apps\SGDK/src/joy.c:970
-000203dc T trigtab_f16	D:\apps\SGDK/src/maths.c:11
-00020548 T palette_black	D:\apps\SGDK/src/pal.c:185
-0002054c T palette_blue	D:\apps\SGDK/src/pal.c:163
-0002056c T palette_green	D:\apps\SGDK/src/pal.c:142
-0002058c T palette_red	D:\apps\SGDK/src/pal.c:121
-000205ac T palette_grey	D:\apps\SGDK/src/pal.c:100
-000205cc T palette_black_all	D:\apps\SGDK/src/pal.c:25
-00020ad8 t visibilityMask.0	D:\apps\SGDK/src/sprite_eng.c:1534
-00020b01 t digits	D:\apps\SGDK/src/string.c:26
-00020bca t lowercase_hexchars	D:\apps\SGDK/src/string.c:24
-00020bdb t uppercase_hexchars	D:\apps\SGDK/src/string.c:23
-00020dc7 T psgVolTable	D:\apps\SGDK/src/snd/xgm2.c:148
-00020e2b T fmVolTable	D:\apps\SGDK/src/snd/xgm2.c:133
-00020e8f T tab_vol	D:\apps\SGDK/src/snd/pcm/tab_vol.c:4
-00021e90 t sgdk_logo_palette
-00021e96 T sgdk_logo
-00021ea4 T font_default
-00021eac T font_pal_default
-00021eb2 T drv_null
-00021eec T drv_xgm
+0001c104 t alpha_32_animation0_frame8
+0001c11a t alpha_32_animation0_frame9_tileset
+0001c122 t alpha_32_animation0_frame9
+0001c138 t alpha_32_animation0_frame10_tileset
+0001c140 t alpha_32_animation0_frame10
+0001c156 t alpha_32_animation0_frame11_tileset
+0001c15e t alpha_32_animation0_frame11
+0001c174 t alpha_32_animation0_frame12_tileset
+0001c17c t alpha_32_animation0_frame12
+0001c192 t alpha_32_animation0_frame13_tileset
+0001c19a t alpha_32_animation0_frame13
+0001c1b0 t alpha_32_animation0_frame14_tileset
+0001c1b8 t alpha_32_animation0_frame14
+0001c1d4 t alpha_32_animation0_frame15_tileset
+0001c1dc t alpha_32_animation0_frame15
+0001c1f2 t alpha_32_animation0_frame16_tileset
+0001c1fa t alpha_32_animation0_frame16
+0001c210 t alpha_32_animation0_frame17_tileset
+0001c218 t alpha_32_animation0_frame17
+0001c22e t alpha_32_animation0_frame18_tileset
+0001c236 t alpha_32_animation0_frame18
+0001c24c t alpha_32_animation0_frame19_tileset
+0001c254 t alpha_32_animation0_frame19
+0001c26a t alpha_32_animation0_frame20_tileset
+0001c272 t alpha_32_animation0_frame20
+0001c288 t alpha_32_animation0_frame21_tileset
+0001c290 t alpha_32_animation0_frame21
+0001c2a6 t alpha_32_animation0_frame22_tileset
+0001c2ae t alpha_32_animation0_frame22
+0001c2c4 t alpha_32_animation0_frame23_tileset
+0001c2cc t alpha_32_animation0_frame23
+0001c2e2 t alpha_32_animation0_frame24_tileset
+0001c2ea t alpha_32_animation0_frame24
+0001c300 t alpha_32_animation0_frame25_tileset
+0001c308 t alpha_32_animation0_frame25
+0001c31e t alpha_32_animation0_frame26_tileset
+0001c326 t alpha_32_animation0_frame26
+0001c33c t alpha_32_animation0_frame27_tileset
+0001c344 t alpha_32_animation0_frame27
+0001c35a t alpha_32_animation0_frame28_tileset
+0001c362 t alpha_32_animation0_frame28
+0001c378 t alpha_32_animation0_frame29_tileset
+0001c380 t alpha_32_animation0_frame29
+0001c396 t alpha_32_animation0_frame30_tileset
+0001c39e t alpha_32_animation0_frame30
+0001c3b4 t alpha_32_animation0_frame31_tileset
+0001c3bc t alpha_32_animation0_frame31
+0001c3d2 t alpha_32_animation0_frame32_tileset
+0001c3da t alpha_32_animation0_frame32
+0001c3f0 t alpha_32_animation0_frames
+0001c474 t alpha_32_animation0
+0001c47a t alpha_32_animations
+0001c47e T alpha_32
+0001c490 t alpha_48_animation0_frame0_tileset
+0001c498 t alpha_48_animation0_frame0
+0001c4ba t alpha_48_animation0_frame1_tileset
+0001c4c2 t alpha_48_animation0_frame1
+0001c4e4 t alpha_48_animation0_frames
+0001c4ec t alpha_48_animation0
+0001c4f2 t alpha_48_animations
+0001c4f6 T alpha_48
+0001c508 T tile_heart	F:\Projekte\tetris\tetris-sgdk/src/gfx.c:14
+0001c528 T tile_skull	F:\Projekte\tetris\tetris-sgdk/src/gfx.c:3
+0001c696 t target_palette	F:\Projekte\tetris\tetris-sgdk/src/menu_bg.c:11
+0001c6a6 t sfx_bank	F:\Projekte\tetris\tetris-sgdk/src/sound_manager.c:11
+0001c9d8 t titleWords	F:\Projekte\tetris\tetris-sgdk/src/text_manager.c:53
+0001c9f6 t riistar_group_speeds	F:\Projekte\tetris\tetris-sgdk/src/menubg/riistar_mode.c:7
+0001ca00 t riistar_group_sizes	F:\Projekte\tetris\tetris-sgdk/src/menubg/riistar_mode.c:6
+0001d170 t challenge_level_names	F:\Projekte\tetris\tetris-sgdk/src/states/challenge.c:15
+0001d538 T GARBAGE_INTERVALS	F:\Projekte\tetris\tetris-sgdk/src/states/game.c:22
+0001e70b T PIECES	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_logic.c:38
+0001e9de t questStageLines	F:\Projekte\tetris\tetris-sgdk/src/states/game/quests.c:9
+0001eaf2 t xlt_all.0	D:\apps\SGDK/src/joy.c:846
+0001eb02 t xlt.1	D:\apps\SGDK/src/joy.c:970
+0001eb80 T trigtab_f16	D:\apps\SGDK/src/maths.c:11
+0001ecec T palette_black	D:\apps\SGDK/src/pal.c:185
+0001ecf0 T palette_blue	D:\apps\SGDK/src/pal.c:163
+0001ed10 T palette_green	D:\apps\SGDK/src/pal.c:142
+0001ed30 T palette_red	D:\apps\SGDK/src/pal.c:121
+0001ed50 T palette_grey	D:\apps\SGDK/src/pal.c:100
+0001ed70 T palette_black_all	D:\apps\SGDK/src/pal.c:25
+0001f27c t visibilityMask.0	D:\apps\SGDK/src/sprite_eng.c:1534
+0001f2a5 t digits	D:\apps\SGDK/src/string.c:26
+0001f36e t lowercase_hexchars	D:\apps\SGDK/src/string.c:24
+0001f37f t uppercase_hexchars	D:\apps\SGDK/src/string.c:23
+0001f56b T psgVolTable	D:\apps\SGDK/src/snd/xgm2.c:148
+0001f5cf T fmVolTable	D:\apps\SGDK/src/snd/xgm2.c:133
+0001f633 T tab_vol	D:\apps\SGDK/src/snd/pcm/tab_vol.c:4
+00020634 t sgdk_logo_palette
+0002063a T sgdk_logo
+00020648 T font_default
+00020650 T font_pal_default
+00020656 T drv_null
+00020690 T drv_xgm
+00021d90 T drv_dpcm2
+00022b90 T drv_pcm
 00023000 A WAV_095_size
-000235ec T drv_dpcm2
-000243ec T drv_pcm
-00024f1c T drv_pcm4
-0002598a T drv_xgm2
+000236c0 T drv_pcm4
+0002412e T drv_xgm2
+000262c4 T __INIT_SECTION__
+000262c6 T __FINI_SECTION__
+000262c8 T _etext
+000262c8 t game_bg_palette_data
+00026348 t riistar_bg_palette_data
+000263c8 t club_bg_palette_data
+00026448 t PAL_FONT_CLEAR_data
+00026500 T WAV_001
 00026e00 A WAV_029_size
-00027b20 T __INIT_SECTION__
-00027b22 T __FINI_SECTION__
-00027b24 T _etext
-00027b24 t game_bg_palette_data
-00027ba4 t riistar_bg_palette_data
-00027c24 t club_bg_palette_data
-00027ca4 t PAL_FONT_CLEAR_data
-00027e00 T WAV_001
-00029b00 T WAV_002
-00029f00 T WAV_003
-0002aa00 T WAV_004
+00028200 T WAV_002
+00028600 T WAV_003
+00029100 T WAV_004
 00030600 A WAV_096_size
-0003da00 T WAV_005
-0004d500 T WAV_006
-0004f900 T WAV_007
-00051b00 T WAV_008
-00054e00 T WAV_009
-00060100 T WAV_010
-00063700 T WAV_011
+0003c100 T WAV_005
+0004bc00 T WAV_006
+0004e000 T WAV_007
+00050200 T WAV_008
+00053500 T WAV_009
+0005e800 T WAV_010
+00061e00 T WAV_011
 00064000 A WAV_081_size
-00067f00 T WAV_012
-0006aa00 T WAV_013
-0006cd00 T WAV_014
-00071100 T WAV_015
-00071f00 T WAV_016
-00074c00 T WAV_017
-00090d00 T WAV_018
-00093400 T WAV_019
-00096c00 T WAV_020
-000abd00 T WAV_021
-000ace00 T WAV_022
-000add00 T WAV_023
-000afb00 T WAV_024
-000b1a00 T WAV_025
-000b4700 T WAV_026
-000b7400 T WAV_027
-000b8200 T WAV_028
-000bb800 T WAV_029
-000e2600 T WAV_030
-000e8700 T WAV_031
-000ee000 T WAV_032
-000ef500 T WAV_033
-000eff00 T WAV_034
-000f0900 T WAV_035
-000f3300 T WAV_036
-000f9d00 T WAV_037
-000fdd00 T WAV_038
-00100e00 T WAV_039
-00104900 T WAV_040
-0010a900 T WAV_041
-0010cf00 T WAV_042
-0010e700 T WAV_043
-00114600 T WAV_044
-00115900 T WAV_045
-00118400 T WAV_046
-0011ac00 T WAV_047
-0011bc00 T WAV_048
-0011cc00 T WAV_049
-0011ea00 T WAV_050
-0011fa00 T WAV_051
-00124000 T WAV_052
-00125b00 T WAV_053
-00129a00 T WAV_054
-0012de00 T WAV_055
-00131f00 T WAV_056
-00135e00 T WAV_057
-00139c00 T WAV_058
-0013dd00 T WAV_059
-00141c00 T WAV_060
-00144500 T WAV_061
-00145300 T WAV_062
-00149e00 T WAV_063
-0014af00 T WAV_064
-00150d00 T WAV_065
-00151b00 T WAV_066
-00155200 T WAV_067
-00159400 T WAV_068
-0015d900 T WAV_069
-0015f900 T WAV_070
-00160500 T WAV_071
-00167b00 T WAV_072
-00169000 T WAV_073
-0016b300 T WAV_074
-0016d700 T WAV_075
-0016e700 T WAV_076
-00170100 T WAV_077
-00171b00 T WAV_078
-00175c00 T WAV_079
-00179400 T WAV_080
-0017b600 T WAV_081
-001df600 T WAV_082
-001e4700 T WAV_083
-001e9600 T WAV_084
-001ebf00 T WAV_085
-001f0e00 T WAV_086
-001f4900 T WAV_087
-001f7b00 T WAV_088
-001faf00 T WAV_089
-001fdd00 T WAV_090
-00200900 T WAV_091
-00204000 T WAV_092
-00204e00 T WAV_093
-00205900 T WAV_094
-00215600 T WAV_095
-00238600 T WAV_096
-00268c00 T WAV_097
-0026df00 T WAV_098
-00276600 T WAV_099
-0027a200 t anim_norotate_palette_data
-0027a220 t sgdk_logo_palette_data
-0027a240 t font_pal_default_data
-0027a260 T stop_xgm
-0027a30c t font_default_data
-0027a56e t sgdk_logo_data
-0027a9a8 t game_bg_tilemap_data
-0027aa78 t riistar_bg_tilemap_data
-0027ae46 t game_bg_tileset_data
-0027b048 t riistar_bg_tileset_data
-0027be3c t club_bg_tileset_data
-0027c8c6 t club_bg_map_metatiles
-0027cbda t club_bg_map_mapBlockIndexes
-0027cbf2 t club_bg_map_mapBlockRowOffsets
-0027cbf6 t club_bg_map_mapBlocks
-0027ce00 t TS_FONT_CLEAR_data
-0027da00 t TS_FONT_SOLID_data
-0027e600 t anim_norotate_animation0_frame0_tileset_data
-0027e6e6 t anim_norotate_animation0_frame1_tileset_data
-0027e7cc t anim_norotate_animation0_frame2_tileset_data
-0027e8b6 t anim_norotate_animation0_frame3_tileset_data
-0027e994 t anim_norotate_animation1_frame0_tileset_data
-0027eabe t anim_norotate_animation1_frame1_tileset_data
-0027ebce t anim_norotate_animation1_frame2_tileset_data
-0027ecc2 t anim_norotate_animation1_frame3_tileset_data
-0027edba t anim_skull_animation0_frame0_tileset_data
-0027ee72 t anim_skull_animation0_frame1_tileset_data
-0027ef2e t anim_skull_animation0_frame2_tileset_data
-0027effc t anim_skull_animation0_frame3_tileset_data
-0027f0de t anim_skull_animation0_frame4_tileset_data
-0027f1d6 t anim_skull_animation0_frame5_tileset_data
-0027f2be t anim_skull_animation0_frame6_tileset_data
-0027f3c2 t anim_skull_animation0_frame7_tileset_data
-0027f4d2 t anim_spiral_animation0_frame0_tileset_data
-0027f5a4 t anim_spiral_animation0_frame1_tileset_data
-0027f686 t anim_spiral_animation0_frame2_tileset_data
-0027f744 t anim_spiral_animation0_frame3_tileset_data
-0027f812 t anim_speed_animation0_frame0_tileset_data
-0027f8e4 t anim_speed_animation0_frame1_tileset_data
-0027f9c6 t anim_speed_animation0_frame2_tileset_data
-0027fa74 t anim_speed_animation0_frame3_tileset_data
-0027fb10 t anim_dust_animation0_frame0_tileset_data
-0027fb4a t anim_dust_animation0_frame1_tileset_data
-0027fbca t anim_dust_animation0_frame2_tileset_data
-0027fc4a t anim_dust_animation0_frame3_tileset_data
-0027fcba t anim_dust_animation0_frame4_tileset_data
-0027fd3e t anim_dust_animation0_frame5_tileset_data
-0027fdd2 t anim_dust_animation0_frame6_tileset_data
-0027fe7c t anim_dust_animation0_frame7_tileset_data
-0027ff42 t anim_dust_animation0_frame8_tileset_data
-00280006 t anim_dust_animation0_frame9_tileset_data
-002800ae t anim_dust_animation0_frame10_tileset_data
-0028014e t anim_dust_animation0_frame11_tileset_data
-002801d0 t anim_dust_animation0_frame12_tileset_data
-00280234 t anim_dust_animation0_frame13_tileset_data
-0028027a t anim_dust_animation0_frame14_tileset_data
-002802a6 t anim_dust_animation0_frame15_tileset_data
-002802cc t anim_explosion_animation0_frame0_tileset_data
-0028030c t anim_explosion_animation0_frame1_tileset_data
-0028038c t anim_explosion_animation0_frame2_tileset_data
-0028040c t anim_explosion_animation0_frame3_tileset_data
-0028048c t anim_explosion_animation0_frame4_tileset_data
-0028050c t anim_explosion_animation0_frame5_tileset_data
-0028058c t anim_explosion_animation0_frame6_tileset_data
-0028060c t anim_explosion_animation0_frame7_tileset_data
-0028068c t anim_explosion_animation0_frame8_tileset_data
-0028070c t anim_explosion_animation0_frame9_tileset_data
-00280746 t anim_explosion_animation0_frame10_tileset_data
-0028076e t anim_explosion_animation0_frame11_tileset_data
-002807ae A _stext
-e0ff0000 d goalPanelLastFlags
-e0ff0004 d goalPanelLastScore
-e0ff0008 d goalPanelLastTetrisCount
-e0ff000a d goalPanelLastDoubleCount
-e0ff000c d goalPanelLastClearCount
-e0ff000e d questPanelLastProgress
-e0ff0010 D config	F:\Projekte\tetris\tetris-sgdk/src/main.c:174
-e0ff00ba D currentState	F:\Projekte\tetris\tetris-sgdk/src/main.c:29
-e0ff00be d menuBg	F:\Projekte\tetris\tetris-sgdk/src/menu_bg.c:22
-e0ff0310 d optsDigits	F:\Projekte\tetris\tetris-sgdk/src/states/game_select.c:13
-e0ff0338 d winnerDrawCache	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:51
-e0ff033a d vsHeartTileIdx	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:41
-e0ff033c d vsSkullTileIdx	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:40
-e0ff033e d vsTileStart	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:39
-e0ff0340 D task_sr
-e0ff0342 D task_pc
-e0ff0346 D task_regs
-e0ff0382 D task_lock
-e0ff0384 d randbase	D:\apps\SGDK/src/tools.c:25
-e0ff0386 D _edata
-e0ff0386 B _start
-e0ff0388 B gameConditions
-e0ff03b8 B dustParticles
-e0ff0548 b bb.0
-e0ff0570 b goalPanelLastMode
-e0ff0572 b questPanelLastSuccess
-e0ff0573 b questPanelLastActive
-e0ff0574 b stageClearBlinkTick
-e0ff0576 b nextPreviewWasHidden
-e0ff0577 b nextPreviewStateInit
-e0ff0578 b tileCache
-e0ff0708 b HEART_TILE_IDX
-e0ff070a b SKULL_TILE_IDX
-e0ff070c b GAME_TILE_START
-e0ff0710 b gameSprites
-e0ff0778 B states	F:\Projekte\tetris\tetris-sgdk/src/main.c:197
-e0ff0868 b bgPaletteFreezeByUiFade	F:\Projekte\tetris\tetris-sgdk/src/main.c:39
-e0ff086a b fullFadeTarget	F:\Projekte\tetris\tetris-sgdk/src/main.c:38
-e0ff08ea b stateFadeDest	F:\Projekte\tetris\tetris-sgdk/src/main.c:37
-e0ff094a b stateFadeSource	F:\Projekte\tetris\tetris-sgdk/src/main.c:36
-e0ff09aa b stateFadeTarget	F:\Projekte\tetris\tetris-sgdk/src/main.c:35
-e0ff0a0a B sctx	F:\Projekte\tetris\tetris-sgdk/src/main.c:34
-e0ff0a0e B lastJoyState	F:\Projekte\tetris\tetris-sgdk/src/main.c:32
-e0ff0a10 B joyState	F:\Projekte\tetris\tetris-sgdk/src/main.c:31
-e0ff0a12 B lastState	F:\Projekte\tetris\tetris-sgdk/src/main.c:30
-e0ff0a16 b hscrollClearLines	F:\Projekte\tetris\tetris-sgdk/src/menubg/club_mode.c:4
-e0ff0bf6 b challenge_translation_ready	F:\Projekte\tetris\tetris-sgdk/src/states/challenge.c:13
-e0ff0bf7 b grid_to_challenge_level	F:\Projekte\tetris\tetris-sgdk/src/states/challenge.c:12
-e0ff0c78 b ctx	F:\Projekte\tetris\tetris-sgdk/src/states/challenge.c:11
-e0ff0c7c b stageClearEffectTriggered	F:\Projekte\tetris\tetris-sgdk/src/states/game.c:20
-e0ff0c7e B ctx	F:\Projekte\tetris\tetris-sgdk/src/states/game.c:19
-e0ff0c82 b ctx	F:\Projekte\tetris\tetris-sgdk/src/states/game_select.c:12
-e0ff0c86 b gfx_tile_start	F:\Projekte\tetris\tetris-sgdk/src/states/gfxtest.c:11
-e0ff0c88 b ctx	F:\Projekte\tetris\tetris-sgdk/src/states/gfxtest.c:10
-e0ff0c8c b ctx	F:\Projekte\tetris\tetris-sgdk/src/states/highscore.c:10
-e0ff0c90 b ctx	F:\Projekte\tetris\tetris-sgdk/src/states/options.c:10
-e0ff0c94 b ctx	F:\Projekte\tetris\tetris-sgdk/src/states/sound_test.c:8
-e0ff0c98 b ctx	F:\Projekte\tetris\tetris-sgdk/src/states/title.c:9
-e0ff0c9c b winnerModeCache	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:52
-e0ff0c9d b rightEventDrawCache	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:50
-e0ff0cac b leftEventDrawCache	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:49
-e0ff0cbc b debugOverlayTimer	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:48
-e0ff0cbe b rightSortBuffer	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:47
-e0ff0d86 b leftSortBuffer	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:46
-e0ff0e4e b rightCache	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:45
-e0ff0fde b leftCache	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:44
-e0ff116e b vctx	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:38
-e0ff1172 b sortBuffer	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_logic.c:49
-e0ff123a b highscoreUpdated	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_logic.c:13
-e0ff123c b phase	D:\apps\SGDK/src/bmp.c:68
-e0ff123e b queueTransferSize	D:\apps\SGDK/src/dma.c:41
-e0ff1240 b queueIndexLimit	D:\apps\SGDK/src/dma.c:40
-e0ff1242 b queueIndex	D:\apps\SGDK/src/dma.c:39
-e0ff1244 b dataBufferSize	D:\apps\SGDK/src/dma.c:36
-e0ff1246 b flag	D:\apps\SGDK/src/dma.c:33
-e0ff1248 b maxTransferPerFrame	D:\apps\SGDK/src/dma.c:32
-e0ff124a b queueSize	D:\apps\SGDK/src/dma.c:31
-e0ff124c b nextDataBuffer	D:\apps\SGDK/src/dma.c:28
-e0ff1250 B dmaDataBuffer	D:\apps\SGDK/src/dma.c:27
-e0ff1254 B dmaQueues	D:\apps\SGDK/src/dma.c:24
-e0ff1258 b joyEventCB	D:\apps\SGDK/src/joy.c:47
-e0ff125c b gport	D:\apps\SGDK/src/joy.c:44
-e0ff125e b extSet	D:\apps\SGDK/src/joy.c:43
-e0ff125f b gun	D:\apps\SGDK/src/joy.c:42
-e0ff1260 b phase	D:\apps\SGDK/src/joy.c:40
-e0ff1261 b retry	D:\apps\SGDK/src/joy.c:39
-e0ff1262 b portType	D:\apps\SGDK/src/joy.c:37
-e0ff1264 b portSupport	D:\apps\SGDK/src/joy.c:36
-e0ff1266 b joyAxisY	D:\apps\SGDK/src/joy.c:34
-e0ff1276 b joyAxisX	D:\apps\SGDK/src/joy.c:33
-e0ff1286 b joyState	D:\apps\SGDK/src/joy.c:32
-e0ff1296 b joyType	D:\apps\SGDK/src/joy.c:31
-e0ff129e b heap	D:\apps\SGDK/src/memory.c:153
-e0ff12a2 b free	D:\apps\SGDK/src/memory.c:152
-e0ff12a6 b fadeCounter	D:\apps\SGDK/src/pal.c:201
-e0ff12a8 b fadeSize	D:\apps\SGDK/src/pal.c:200
-e0ff12aa b fadeInd	D:\apps\SGDK/src/pal.c:199
-e0ff12ac b fadeSB	D:\apps\SGDK/src/pal.c:197
-e0ff132c b fadeSG	D:\apps\SGDK/src/pal.c:196
-e0ff13ac b fadeSR	D:\apps\SGDK/src/pal.c:195
-e0ff142c b fadeB	D:\apps\SGDK/src/pal.c:194
-e0ff14ac b fadeG	D:\apps\SGDK/src/pal.c:193
-e0ff152c b fadeR	D:\apps\SGDK/src/pal.c:192
-e0ff15ac B fadeEndPal	D:\apps\SGDK/src/pal.c:190
-e0ff162c B fadeCurrentPal	D:\apps\SGDK/src/pal.c:189
-e0ff16ac B spriteVramSize	D:\apps\SGDK/src/sprite_eng.c:90
-e0ff16ae b vram	D:\apps\SGDK/src/sprite_eng.c:87
-e0ff16ba B lastSprite	D:\apps\SGDK/src/sprite_eng.c:84
-e0ff16be B firstSprite	D:\apps\SGDK/src/sprite_eng.c:83
-e0ff16c2 B spritesPool	D:\apps\SGDK/src/sprite_eng.c:80
-e0ff16c6 b usedVDPSprite	D:\apps\SGDK/src/sprite_eng.c:77
-e0ff16c8 b lastVTimer.0	D:\apps\SGDK/src/sys.c:979
-e0ff16ca b lastSubTick	D:\apps\SGDK/src/sys.c:122
-e0ff16ce b frameCnt	D:\apps\SGDK/src/sys.c:121
-e0ff16d2 b cpuFrameLoad	D:\apps\SGDK/src/sys.c:120
-e0ff16d4 b frameLoadIndex	D:\apps\SGDK/src/sys.c:119
-e0ff16d6 b frameLoads	D:\apps\SGDK/src/sys.c:118
-e0ff16e6 b flags	D:\apps\SGDK/src/sys.c:115
-e0ff16e8 b disableIntStack	D:\apps\SGDK/src/sys.c:114
-e0ff16ea B intLevelSave	D:\apps\SGDK/src/sys.c:113
-e0ff16ec B intTrace	D:\apps\SGDK/src/sys.c:110
-e0ff16ee B VBlankProcess	D:\apps\SGDK/src/sys.c:109
-e0ff16f0 B vblankCB	D:\apps\SGDK/src/sys.c:107
-e0ff16f4 B intCB	D:\apps\SGDK/src/sys.c:104
-e0ff16f8 B eintCB	D:\apps\SGDK/src/sys.c:103
-e0ff16fc B hintCaller	D:\apps\SGDK/src/sys.c:102
-e0ff1702 B vintCB	D:\apps\SGDK/src/sys.c:101
-e0ff1706 b lastTick	D:\apps\SGDK/src/timer.c:39
-e0ff170a B vtimer	D:\apps\SGDK/src/timer.c:36
-e0ff170e B randomSeedSet	D:\apps\SGDK/src/tools.c:27
-e0ff1710 B lastVCnt	D:\apps\SGDK/src/vdp.c:62
-e0ff1712 B windowWidthSft	D:\apps\SGDK/src/vdp.c:60
-e0ff1714 B planeHeightSft	D:\apps\SGDK/src/vdp.c:59
-e0ff1716 B planeWidthSft	D:\apps\SGDK/src/vdp.c:58
-e0ff1718 B windowWidth	D:\apps\SGDK/src/vdp.c:57
-e0ff171a B planeHeight	D:\apps\SGDK/src/vdp.c:56
-e0ff171c B planeWidth	D:\apps\SGDK/src/vdp.c:55
-e0ff171e B screenHeight	D:\apps\SGDK/src/vdp.c:54
-e0ff1720 B screenWidth	D:\apps\SGDK/src/vdp.c:53
-e0ff1722 B userTileMaxIndex	D:\apps\SGDK/src/vdp.c:51
-e0ff1724 B maps_addr	D:\apps\SGDK/src/vdp.c:49
-e0ff1726 B slist_addr	D:\apps\SGDK/src/vdp.c:48
-e0ff1728 B hscrl_addr	D:\apps\SGDK/src/vdp.c:47
-e0ff172a B bgb_addr	D:\apps\SGDK/src/vdp.c:46
-e0ff172c B bga_addr	D:\apps\SGDK/src/vdp.c:45
-e0ff172e B window_addr	D:\apps\SGDK/src/vdp.c:44
-e0ff1730 b regValues	D:\apps\SGDK/src/vdp.c:42
-e0ff1743 b vscroll_update	D:\apps\SGDK/src/vdp_bg.c:31
-e0ff1744 b hscroll_update	D:\apps\SGDK/src/vdp_bg.c:30
-e0ff1746 b vscroll	D:\apps\SGDK/src/vdp_bg.c:29
-e0ff174a b hscroll	D:\apps\SGDK/src/vdp_bg.c:28
-e0ff174e B curTileInd	D:\apps\SGDK/src/vdp_bg.c:26
-e0ff1750 b text_basetile	D:\apps\SGDK/src/vdp_bg.c:23
-e0ff1752 b text_plan	D:\apps\SGDK/src/vdp_bg.c:22
-e0ff1756 b free	D:\apps\SGDK/src/vdp_spr.c:24
-e0ff175a b allocStack	D:\apps\SGDK/src/vdp_spr.c:22
-e0ff189a B highestVDPSpriteIndex	D:\apps\SGDK/src/vdp_spr.c:19
-e0ff189c B vdpSpriteCache	D:\apps\SGDK/src/vdp_spr.c:14
-e0ff1b9c B busProtectSignalAddress	D:\apps\SGDK/src/z80_ctrl.c:24
-e0ff1b9e B driverFlags	D:\apps\SGDK/src/z80_ctrl.c:23
-e0ff1ba0 B currentDriver	D:\apps\SGDK/src/z80_ctrl.c:22
-e0ff1ba2 b xgmWaitMean	D:\apps\SGDK/src/snd/xgm.c:41
-e0ff1ba4 b xgmIdleMean	D:\apps\SGDK/src/snd/xgm.c:40
-e0ff1ba6 b xgmTabInd	D:\apps\SGDK/src/snd/xgm.c:39
-e0ff1ba8 b xgmWaitTab	D:\apps\SGDK/src/snd/xgm.c:38
-e0ff1be8 b xgmIdleTab	D:\apps\SGDK/src/snd/xgm.c:37
-e0ff1c28 B xgmTempoCnt	D:\apps\SGDK/src/snd/xgm.c:34
-e0ff1c2a b xgmTempoDef	D:\apps\SGDK/src/snd/xgm.c:32
-e0ff1c2c b xgmTempo	D:\apps\SGDK/src/snd/xgm.c:31
-e0ff1c2e b xgm2WaitMean	D:\apps\SGDK/src/snd/xgm2.c:191
-e0ff1c30 b xgm2IdleMean	D:\apps\SGDK/src/snd/xgm2.c:190
-e0ff1c32 b xgm2WaitTabInd	D:\apps\SGDK/src/snd/xgm2.c:189
-e0ff1c34 b xgm2IdleTabInd	D:\apps\SGDK/src/snd/xgm2.c:188
-e0ff1c36 b xgm2WaitTab	D:\apps\SGDK/src/snd/xgm2.c:187
-e0ff1c3e b xgm2IdleTab	D:\apps\SGDK/src/snd/xgm2.c:186
-e0ff1c46 b fadeEndProcess	D:\apps\SGDK/src/snd/xgm2.c:183
-e0ff1c4a b fadeCount	D:\apps\SGDK/src/snd/xgm2.c:182
-e0ff1c4c b fadePSGVolStep	D:\apps\SGDK/src/snd/xgm2.c:181
-e0ff1c4e b fadeFMVolStep	D:\apps\SGDK/src/snd/xgm2.c:180
-e0ff1c50 b fadePSGVol	D:\apps\SGDK/src/snd/xgm2.c:179
-e0ff1c52 b fadeFMVol	D:\apps\SGDK/src/snd/xgm2.c:178
-e0ff1c54 b restoreVolume	D:\apps\SGDK/src/snd/xgm2.c:175
-e0ff1c56 b psgVol	D:\apps\SGDK/src/snd/xgm2.c:174
-e0ff1c58 b fmVol	D:\apps\SGDK/src/snd/xgm2.c:173
-e0ff1c5a b xgm2Tempo	D:\apps\SGDK/src/snd/xgm2.c:170
-e0ff1c5c B _bend
+00066600 T WAV_012
+00069100 T WAV_013
+0006b400 T WAV_014
+0006f800 T WAV_015
+00070600 T WAV_016
+00073300 T WAV_017
+0008f400 T WAV_018
+00091b00 T WAV_019
+00095300 T WAV_020
+000aa400 T WAV_021
+000ab500 T WAV_022
+000ac400 T WAV_023
+000ae200 T WAV_024
+000b0100 T WAV_025
+000b2e00 T WAV_026
+000b5b00 T WAV_027
+000b6900 T WAV_028
+000b9f00 T WAV_029
+000e0d00 T WAV_030
+000e6e00 T WAV_031
+000ec700 T WAV_032
+000edc00 T WAV_033
+000ee600 T WAV_034
+000ef000 T WAV_035
+000f1a00 T WAV_036
+000f8400 T WAV_037
+000fc400 T WAV_038
+000ff500 T WAV_039
+00103000 T WAV_040
+00109000 T WAV_041
+0010b600 T WAV_042
+0010ce00 T WAV_043
+00112d00 T WAV_044
+00114000 T WAV_045
+00116b00 T WAV_046
+00119300 T WAV_047
+0011a300 T WAV_048
+0011b300 T WAV_049
+0011d100 T WAV_050
+0011e100 T WAV_051
+00122700 T WAV_052
+00124200 T WAV_053
+00128100 T WAV_054
+0012c500 T WAV_055
+00130600 T WAV_056
+00134500 T WAV_057
+00138300 T WAV_058
+0013c400 T WAV_059
+00140300 T WAV_060
+00142c00 T WAV_061
+00143a00 T WAV_062
+00148500 T WAV_063
+00149600 T WAV_064
+0014f400 T WAV_065
+00150200 T WAV_066
+00153900 T WAV_067
+00157b00 T WAV_068
+0015c000 T WAV_069
+0015e000 T WAV_070
+0015ec00 T WAV_071
+00166200 T WAV_072
+00167700 T WAV_073
+00169a00 T WAV_074
+0016be00 T WAV_075
+0016ce00 T WAV_076
+0016e800 T WAV_077
+00170200 T WAV_078
+00174300 T WAV_079
+00177b00 T WAV_080
+00179d00 T WAV_081
+001ddd00 T WAV_082
+001e2e00 T WAV_083
+001e7d00 T WAV_084
+001ea600 T WAV_085
+001ef500 T WAV_086
+001f3000 T WAV_087
+001f6200 T WAV_088
+001f9600 T WAV_089
+001fc400 T WAV_090
+001ff000 T WAV_091
+00202700 T WAV_092
+00203500 T WAV_093
+00204000 T WAV_094
+00213d00 T WAV_095
+00236d00 T WAV_096
+00267300 T WAV_097
+0026c600 T WAV_098
+00274d00 T WAV_099
+00278900 t anim_norotate_palette_data
+00278920 t alpha_16_palette_data
+00278940 t sgdk_logo_palette_data
+00278960 t font_pal_default_data
+00278980 T stop_xgm
+00278a2c t font_default_data
+00278c8e t sgdk_logo_data
+002790c8 t game_bg_tilemap_data
+00279198 t riistar_bg_tilemap_data
+00279566 t game_bg_tileset_data
+00279768 t riistar_bg_tileset_data
+0027a55c t club_bg_tileset_data
+0027afe6 t club_bg_map_metatiles
+0027b2fa t club_bg_map_mapBlockIndexes
+0027b312 t club_bg_map_mapBlockRowOffsets
+0027b316 t club_bg_map_mapBlocks
+0027b520 t TS_FONT_CLEAR_data
+0027c120 t TS_FONT_SOLID_data
+0027cd20 t anim_norotate_animation0_frame0_tileset_data
+0027ce06 t anim_norotate_animation0_frame1_tileset_data
+0027ceec t anim_norotate_animation0_frame2_tileset_data
+0027cfd6 t anim_norotate_animation0_frame3_tileset_data
+0027d0b4 t anim_norotate_animation1_frame0_tileset_data
+0027d1de t anim_norotate_animation1_frame1_tileset_data
+0027d2ee t anim_norotate_animation1_frame2_tileset_data
+0027d3e2 t anim_norotate_animation1_frame3_tileset_data
+0027d4da t anim_skull_animation0_frame0_tileset_data
+0027d592 t anim_skull_animation0_frame1_tileset_data
+0027d64e t anim_skull_animation0_frame2_tileset_data
+0027d71c t anim_skull_animation0_frame3_tileset_data
+0027d7fe t anim_skull_animation0_frame4_tileset_data
+0027d8f6 t anim_skull_animation0_frame5_tileset_data
+0027d9de t anim_skull_animation0_frame6_tileset_data
+0027dae2 t anim_skull_animation0_frame7_tileset_data
+0027dbf2 t anim_spiral_animation0_frame0_tileset_data
+0027dcc4 t anim_spiral_animation0_frame1_tileset_data
+0027dda6 t anim_spiral_animation0_frame2_tileset_data
+0027de64 t anim_spiral_animation0_frame3_tileset_data
+0027df32 t anim_speed_animation0_frame0_tileset_data
+0027e004 t anim_speed_animation0_frame1_tileset_data
+0027e0e6 t anim_speed_animation0_frame2_tileset_data
+0027e194 t anim_speed_animation0_frame3_tileset_data
+0027e230 t anim_dust_animation0_frame0_tileset_data
+0027e26a t anim_dust_animation0_frame1_tileset_data
+0027e2ea t anim_dust_animation0_frame2_tileset_data
+0027e36a t anim_dust_animation0_frame3_tileset_data
+0027e3da t anim_dust_animation0_frame4_tileset_data
+0027e45e t anim_dust_animation0_frame5_tileset_data
+0027e4f2 t anim_dust_animation0_frame6_tileset_data
+0027e59c t anim_dust_animation0_frame7_tileset_data
+0027e662 t anim_dust_animation0_frame8_tileset_data
+0027e726 t anim_dust_animation0_frame9_tileset_data
+0027e7ce t anim_dust_animation0_frame10_tileset_data
+0027e86e t anim_dust_animation0_frame11_tileset_data
+0027e8f0 t anim_dust_animation0_frame12_tileset_data
+0027e954 t anim_dust_animation0_frame13_tileset_data
+0027e99a t anim_dust_animation0_frame14_tileset_data
+0027e9c6 t anim_dust_animation0_frame15_tileset_data
+0027e9ec t anim_explosion_animation0_frame0_tileset_data
+0027ea2c t anim_explosion_animation0_frame1_tileset_data
+0027eaac t anim_explosion_animation0_frame2_tileset_data
+0027eb2c t anim_explosion_animation0_frame3_tileset_data
+0027ebac t anim_explosion_animation0_frame4_tileset_data
+0027ec2c t anim_explosion_animation0_frame5_tileset_data
+0027ecac t anim_explosion_animation0_frame6_tileset_data
+0027ed2c t anim_explosion_animation0_frame7_tileset_data
+0027edac t anim_explosion_animation0_frame8_tileset_data
+0027ee2c t anim_explosion_animation0_frame9_tileset_data
+0027ee66 t anim_explosion_animation0_frame10_tileset_data
+0027ee8e t anim_explosion_animation0_frame11_tileset_data
+0027eece t alpha_16_animation0_frame0_tileset_data
+0027ef48 t alpha_16_animation0_frame1_tileset_data
+0027eff4 t alpha_16_animation0_frame2_tileset_data
+0027f02a t alpha_32_animation0_frame0_tileset_data
+0027f14e t alpha_32_animation0_frame1_tileset_data
+0027f25a t alpha_32_animation0_frame2_tileset_data
+0027f398 t alpha_32_animation0_frame3_tileset_data
+0027f4d2 t alpha_32_animation0_frame4_tileset_data
+0027f5f8 t alpha_32_animation0_frame5_tileset_data
+0027f71a t alpha_32_animation0_frame6_tileset_data
+0027f82c t alpha_32_animation0_frame7_tileset_data
+0027f91e t alpha_32_animation0_frame8_tileset_data
+0027fa04 t alpha_32_animation0_frame9_tileset_data
+0027fb0e t alpha_32_animation0_frame10_tileset_data
+0027fbf8 t alpha_32_animation0_frame11_tileset_data
+0027fd10 t alpha_32_animation0_frame12_tileset_data
+0027fe14 t alpha_32_animation0_frame13_tileset_data
+0027fef4 t alpha_32_animation0_frame14_tileset_data
+00280004 t alpha_32_animation0_frame15_tileset_data
+002800fa t alpha_32_animation0_frame16_tileset_data
+00280228 t alpha_32_animation0_frame17_tileset_data
+002802c8 t alpha_32_animation0_frame18_tileset_data
+002803c8 t alpha_32_animation0_frame19_tileset_data
+002804d0 t alpha_32_animation0_frame20_tileset_data
+0028062e t alpha_32_animation0_frame21_tileset_data
+00280732 t alpha_32_animation0_frame22_tileset_data
+00280804 t alpha_32_animation0_frame23_tileset_data
+00280898 t alpha_32_animation0_frame24_tileset_data
+002809aa t alpha_32_animation0_frame25_tileset_data
+00280ad8 t alpha_32_animation0_frame26_tileset_data
+00280bbe t alpha_32_animation0_frame27_tileset_data
+00280cde t alpha_32_animation0_frame28_tileset_data
+00280de2 t alpha_32_animation0_frame29_tileset_data
+00280ed4 t alpha_32_animation0_frame30_tileset_data
+00280fee t alpha_32_animation0_frame31_tileset_data
+00281108 t alpha_32_animation0_frame32_tileset_data
+00281226 t alpha_48_animation0_frame0_tileset_data
+00281330 t alpha_48_animation0_frame1_tileset_data
+0028149e A _stext
+e0ff0000 D config	F:\Projekte\tetris\tetris-sgdk/src/main.c:174
+e0ff00aa D currentState	F:\Projekte\tetris\tetris-sgdk/src/main.c:29
+e0ff00ae d menuBg	F:\Projekte\tetris\tetris-sgdk/src/menu_bg.c:22
+e0ff0300 d screenH	F:\Projekte\tetris\tetris-sgdk/src/text_manager.c:66
+e0ff0302 d optsDigits	F:\Projekte\tetris\tetris-sgdk/src/states/game_select.c:13
+e0ff032a d winnerDrawCache	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:51
+e0ff032c d vsHeartTileIdx	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:41
+e0ff032e d vsSkullTileIdx	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:40
+e0ff0330 d vsTileStart	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:39
+e0ff0332 d goalPanelLastFlags	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_view.c:29
+e0ff0336 d goalPanelLastScore	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_view.c:28
+e0ff033a d goalPanelLastTetrisCount	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_view.c:27
+e0ff033c d goalPanelLastDoubleCount	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_view.c:26
+e0ff033e d goalPanelLastClearCount	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_view.c:25
+e0ff0340 d questPanelLastProgress	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_view.c:22
+e0ff0344 D task_sr
+e0ff0346 D task_pc
+e0ff034a D task_regs
+e0ff0386 D task_lock
+e0ff0388 d randbase	D:\apps\SGDK/src/tools.c:25
+e0ff038a D _edata
+e0ff038a B _start
+e0ff038a B states	F:\Projekte\tetris\tetris-sgdk/src/main.c:197
+e0ff047a b bgPaletteFreezeByUiFade	F:\Projekte\tetris\tetris-sgdk/src/main.c:39
+e0ff047c b fullFadeTarget	F:\Projekte\tetris\tetris-sgdk/src/main.c:38
+e0ff04fc b stateFadeDest	F:\Projekte\tetris\tetris-sgdk/src/main.c:37
+e0ff055c b stateFadeSource	F:\Projekte\tetris\tetris-sgdk/src/main.c:36
+e0ff05bc b stateFadeTarget	F:\Projekte\tetris\tetris-sgdk/src/main.c:35
+e0ff061c B sctx	F:\Projekte\tetris\tetris-sgdk/src/main.c:34
+e0ff0620 B lastJoyState	F:\Projekte\tetris\tetris-sgdk/src/main.c:32
+e0ff0622 B joyState	F:\Projekte\tetris\tetris-sgdk/src/main.c:31
+e0ff0624 B lastState	F:\Projekte\tetris\tetris-sgdk/src/main.c:30
+e0ff0628 b titleTextEnabled	F:\Projekte\tetris\tetris-sgdk/src/sprite.c:28
+e0ff0629 b titleTextLength	F:\Projekte\tetris\tetris-sgdk/src/sprite.c:27
+e0ff062a b titleTextSprites	F:\Projekte\tetris\tetris-sgdk/src/sprite.c:26
+e0ff07aa B dustParticles	F:\Projekte\tetris\tetris-sgdk/src/sprite.c:15
+e0ff093a B gameSprites	F:\Projekte\tetris\tetris-sgdk/src/sprite.c:12
+e0ff09a2 b allHoldTimer	F:\Projekte\tetris\tetris-sgdk/src/text_manager.c:65
+e0ff09a4 b finaleStarted	F:\Projekte\tetris\tetris-sgdk/src/text_manager.c:64
+e0ff09a5 b wordInitialized	F:\Projekte\tetris\tetris-sgdk/src/text_manager.c:63
+e0ff09a6 b wordEnabled	F:\Projekte\tetris\tetris-sgdk/src/text_manager.c:62
+e0ff09a7 b totalSlots	F:\Projekte\tetris\tetris-sgdk/src/text_manager.c:61
+e0ff09a8 b falling	F:\Projekte\tetris\tetris-sgdk/src/text_manager.c:60
+e0ff0ac8 b words	F:\Projekte\tetris\tetris-sgdk/src/text_manager.c:59
+e0ff0b0a b hscrollClearLines	F:\Projekte\tetris\tetris-sgdk/src/menubg/club_mode.c:4
+e0ff0cea b challenge_translation_ready	F:\Projekte\tetris\tetris-sgdk/src/states/challenge.c:13
+e0ff0ceb b grid_to_challenge_level	F:\Projekte\tetris\tetris-sgdk/src/states/challenge.c:12
+e0ff0d6c b ctx	F:\Projekte\tetris\tetris-sgdk/src/states/challenge.c:11
+e0ff0d70 b stageClearEffectTriggered	F:\Projekte\tetris\tetris-sgdk/src/states/game.c:20
+e0ff0d72 B ctx	F:\Projekte\tetris\tetris-sgdk/src/states/game.c:19
+e0ff0d76 b ctx	F:\Projekte\tetris\tetris-sgdk/src/states/game_select.c:12
+e0ff0d7a b gfx_tile_start	F:\Projekte\tetris\tetris-sgdk/src/states/gfxtest.c:11
+e0ff0d7c b ctx	F:\Projekte\tetris\tetris-sgdk/src/states/gfxtest.c:10
+e0ff0d80 b ctx	F:\Projekte\tetris\tetris-sgdk/src/states/highscore.c:10
+e0ff0d84 b ctx	F:\Projekte\tetris\tetris-sgdk/src/states/options.c:10
+e0ff0d88 b ctx	F:\Projekte\tetris\tetris-sgdk/src/states/sound_test.c:8
+e0ff0d8c b ctx	F:\Projekte\tetris\tetris-sgdk/src/states/title.c:10
+e0ff0d90 b winnerModeCache	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:52
+e0ff0d91 b rightEventDrawCache	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:50
+e0ff0da0 b leftEventDrawCache	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:49
+e0ff0db0 b debugOverlayTimer	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:48
+e0ff0db2 b rightSortBuffer	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:47
+e0ff0e7a b leftSortBuffer	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:46
+e0ff0f42 b rightCache	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:45
+e0ff10d2 b leftCache	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:44
+e0ff1262 b vctx	F:\Projekte\tetris\tetris-sgdk/src/states/vs_state.c:38
+e0ff1266 B gameConditions	F:\Projekte\tetris\tetris-sgdk/src/states/game/conditions.c:8
+e0ff1296 b sortBuffer	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_logic.c:49
+e0ff135e b highscoreUpdated	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_logic.c:13
+e0ff1360 b goalPanelLastMode	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_view.c:30
+e0ff1362 b questPanelLastSuccess	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_view.c:24
+e0ff1363 b questPanelLastActive	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_view.c:23
+e0ff1364 b nextPreviewWasHidden	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_view.c:21
+e0ff1365 b nextPreviewStateInit	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_view.c:20
+e0ff1366 b stageClearBlinkTick	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_view.c:19
+e0ff1368 b HEART_TILE_IDX	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_view.c:18
+e0ff136a b SKULL_TILE_IDX	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_view.c:17
+e0ff136c B GAME_TILE_START	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_view.c:16
+e0ff136e B BG_TILE_START	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_view.c:15
+e0ff1370 b tileCache	F:\Projekte\tetris\tetris-sgdk/src/states/game/game_view.c:14
+e0ff1500 b bb.0	F:\Projekte\tetris\tetris-sgdk/src/states/vs/brain.c:136
+e0ff1528 b phase	D:\apps\SGDK/src/bmp.c:68
+e0ff152a b queueTransferSize	D:\apps\SGDK/src/dma.c:41
+e0ff152c b queueIndexLimit	D:\apps\SGDK/src/dma.c:40
+e0ff152e b queueIndex	D:\apps\SGDK/src/dma.c:39
+e0ff1530 b dataBufferSize	D:\apps\SGDK/src/dma.c:36
+e0ff1532 b flag	D:\apps\SGDK/src/dma.c:33
+e0ff1534 b maxTransferPerFrame	D:\apps\SGDK/src/dma.c:32
+e0ff1536 b queueSize	D:\apps\SGDK/src/dma.c:31
+e0ff1538 b nextDataBuffer	D:\apps\SGDK/src/dma.c:28
+e0ff153c B dmaDataBuffer	D:\apps\SGDK/src/dma.c:27
+e0ff1540 B dmaQueues	D:\apps\SGDK/src/dma.c:24
+e0ff1544 b joyEventCB	D:\apps\SGDK/src/joy.c:47
+e0ff1548 b gport	D:\apps\SGDK/src/joy.c:44
+e0ff154a b extSet	D:\apps\SGDK/src/joy.c:43
+e0ff154b b gun	D:\apps\SGDK/src/joy.c:42
+e0ff154c b phase	D:\apps\SGDK/src/joy.c:40
+e0ff154d b retry	D:\apps\SGDK/src/joy.c:39
+e0ff154e b portType	D:\apps\SGDK/src/joy.c:37
+e0ff1550 b portSupport	D:\apps\SGDK/src/joy.c:36
+e0ff1552 b joyAxisY	D:\apps\SGDK/src/joy.c:34
+e0ff1562 b joyAxisX	D:\apps\SGDK/src/joy.c:33
+e0ff1572 b joyState	D:\apps\SGDK/src/joy.c:32
+e0ff1582 b joyType	D:\apps\SGDK/src/joy.c:31
+e0ff158a b heap	D:\apps\SGDK/src/memory.c:153
+e0ff158e b free	D:\apps\SGDK/src/memory.c:152
+e0ff1592 b fadeCounter	D:\apps\SGDK/src/pal.c:201
+e0ff1594 b fadeSize	D:\apps\SGDK/src/pal.c:200
+e0ff1596 b fadeInd	D:\apps\SGDK/src/pal.c:199
+e0ff1598 b fadeSB	D:\apps\SGDK/src/pal.c:197
+e0ff1618 b fadeSG	D:\apps\SGDK/src/pal.c:196
+e0ff1698 b fadeSR	D:\apps\SGDK/src/pal.c:195
+e0ff1718 b fadeB	D:\apps\SGDK/src/pal.c:194
+e0ff1798 b fadeG	D:\apps\SGDK/src/pal.c:193
+e0ff1818 b fadeR	D:\apps\SGDK/src/pal.c:192
+e0ff1898 B fadeEndPal	D:\apps\SGDK/src/pal.c:190
+e0ff1918 B fadeCurrentPal	D:\apps\SGDK/src/pal.c:189
+e0ff1998 B spriteVramSize	D:\apps\SGDK/src/sprite_eng.c:90
+e0ff199a b vram	D:\apps\SGDK/src/sprite_eng.c:87
+e0ff19a6 B lastSprite	D:\apps\SGDK/src/sprite_eng.c:84
+e0ff19aa B firstSprite	D:\apps\SGDK/src/sprite_eng.c:83
+e0ff19ae B spritesPool	D:\apps\SGDK/src/sprite_eng.c:80
+e0ff19b2 b usedVDPSprite	D:\apps\SGDK/src/sprite_eng.c:77
+e0ff19b4 b lastVTimer.0	D:\apps\SGDK/src/sys.c:979
+e0ff19b6 b lastSubTick	D:\apps\SGDK/src/sys.c:122
+e0ff19ba b frameCnt	D:\apps\SGDK/src/sys.c:121
+e0ff19be b cpuFrameLoad	D:\apps\SGDK/src/sys.c:120
+e0ff19c0 b frameLoadIndex	D:\apps\SGDK/src/sys.c:119
+e0ff19c2 b frameLoads	D:\apps\SGDK/src/sys.c:118
+e0ff19d2 b flags	D:\apps\SGDK/src/sys.c:115
+e0ff19d4 b disableIntStack	D:\apps\SGDK/src/sys.c:114
+e0ff19d6 B intLevelSave	D:\apps\SGDK/src/sys.c:113
+e0ff19d8 B intTrace	D:\apps\SGDK/src/sys.c:110
+e0ff19da B VBlankProcess	D:\apps\SGDK/src/sys.c:109
+e0ff19dc B vblankCB	D:\apps\SGDK/src/sys.c:107
+e0ff19e0 B intCB	D:\apps\SGDK/src/sys.c:104
+e0ff19e4 B eintCB	D:\apps\SGDK/src/sys.c:103
+e0ff19e8 B hintCaller	D:\apps\SGDK/src/sys.c:102
+e0ff19ee B vintCB	D:\apps\SGDK/src/sys.c:101
+e0ff19f2 b lastTick	D:\apps\SGDK/src/timer.c:39
+e0ff19f6 B vtimer	D:\apps\SGDK/src/timer.c:36
+e0ff19fa B randomSeedSet	D:\apps\SGDK/src/tools.c:27
+e0ff19fc B lastVCnt	D:\apps\SGDK/src/vdp.c:62
+e0ff19fe B windowWidthSft	D:\apps\SGDK/src/vdp.c:60
+e0ff1a00 B planeHeightSft	D:\apps\SGDK/src/vdp.c:59
+e0ff1a02 B planeWidthSft	D:\apps\SGDK/src/vdp.c:58
+e0ff1a04 B windowWidth	D:\apps\SGDK/src/vdp.c:57
+e0ff1a06 B planeHeight	D:\apps\SGDK/src/vdp.c:56
+e0ff1a08 B planeWidth	D:\apps\SGDK/src/vdp.c:55
+e0ff1a0a B screenHeight	D:\apps\SGDK/src/vdp.c:54
+e0ff1a0c B screenWidth	D:\apps\SGDK/src/vdp.c:53
+e0ff1a0e B userTileMaxIndex	D:\apps\SGDK/src/vdp.c:51
+e0ff1a10 B maps_addr	D:\apps\SGDK/src/vdp.c:49
+e0ff1a12 B slist_addr	D:\apps\SGDK/src/vdp.c:48
+e0ff1a14 B hscrl_addr	D:\apps\SGDK/src/vdp.c:47
+e0ff1a16 B bgb_addr	D:\apps\SGDK/src/vdp.c:46
+e0ff1a18 B bga_addr	D:\apps\SGDK/src/vdp.c:45
+e0ff1a1a B window_addr	D:\apps\SGDK/src/vdp.c:44
+e0ff1a1c b regValues	D:\apps\SGDK/src/vdp.c:42
+e0ff1a2f b vscroll_update	D:\apps\SGDK/src/vdp_bg.c:31
+e0ff1a30 b hscroll_update	D:\apps\SGDK/src/vdp_bg.c:30
+e0ff1a32 b vscroll	D:\apps\SGDK/src/vdp_bg.c:29
+e0ff1a36 b hscroll	D:\apps\SGDK/src/vdp_bg.c:28
+e0ff1a3a B curTileInd	D:\apps\SGDK/src/vdp_bg.c:26
+e0ff1a3c b text_basetile	D:\apps\SGDK/src/vdp_bg.c:23
+e0ff1a3e b text_plan	D:\apps\SGDK/src/vdp_bg.c:22
+e0ff1a42 b free	D:\apps\SGDK/src/vdp_spr.c:24
+e0ff1a46 b allocStack	D:\apps\SGDK/src/vdp_spr.c:22
+e0ff1b86 B highestVDPSpriteIndex	D:\apps\SGDK/src/vdp_spr.c:19
+e0ff1b88 B vdpSpriteCache	D:\apps\SGDK/src/vdp_spr.c:14
+e0ff1e88 B busProtectSignalAddress	D:\apps\SGDK/src/z80_ctrl.c:24
+e0ff1e8a B driverFlags	D:\apps\SGDK/src/z80_ctrl.c:23
+e0ff1e8c B currentDriver	D:\apps\SGDK/src/z80_ctrl.c:22
+e0ff1e8e b xgmWaitMean	D:\apps\SGDK/src/snd/xgm.c:41
+e0ff1e90 b xgmIdleMean	D:\apps\SGDK/src/snd/xgm.c:40
+e0ff1e92 b xgmTabInd	D:\apps\SGDK/src/snd/xgm.c:39
+e0ff1e94 b xgmWaitTab	D:\apps\SGDK/src/snd/xgm.c:38
+e0ff1ed4 b xgmIdleTab	D:\apps\SGDK/src/snd/xgm.c:37
+e0ff1f14 B xgmTempoCnt	D:\apps\SGDK/src/snd/xgm.c:34
+e0ff1f16 b xgmTempoDef	D:\apps\SGDK/src/snd/xgm.c:32
+e0ff1f18 b xgmTempo	D:\apps\SGDK/src/snd/xgm.c:31
+e0ff1f1a b xgm2WaitMean	D:\apps\SGDK/src/snd/xgm2.c:191
+e0ff1f1c b xgm2IdleMean	D:\apps\SGDK/src/snd/xgm2.c:190
+e0ff1f1e b xgm2WaitTabInd	D:\apps\SGDK/src/snd/xgm2.c:189
+e0ff1f20 b xgm2IdleTabInd	D:\apps\SGDK/src/snd/xgm2.c:188
+e0ff1f22 b xgm2WaitTab	D:\apps\SGDK/src/snd/xgm2.c:187
+e0ff1f2a b xgm2IdleTab	D:\apps\SGDK/src/snd/xgm2.c:186
+e0ff1f32 b fadeEndProcess	D:\apps\SGDK/src/snd/xgm2.c:183
+e0ff1f36 b fadeCount	D:\apps\SGDK/src/snd/xgm2.c:182
+e0ff1f38 b fadePSGVolStep	D:\apps\SGDK/src/snd/xgm2.c:181
+e0ff1f3a b fadeFMVolStep	D:\apps\SGDK/src/snd/xgm2.c:180
+e0ff1f3c b fadePSGVol	D:\apps\SGDK/src/snd/xgm2.c:179
+e0ff1f3e b fadeFMVol	D:\apps\SGDK/src/snd/xgm2.c:178
+e0ff1f40 b restoreVolume	D:\apps\SGDK/src/snd/xgm2.c:175
+e0ff1f42 b psgVol	D:\apps\SGDK/src/snd/xgm2.c:174
+e0ff1f44 b fmVol	D:\apps\SGDK/src/snd/xgm2.c:173
+e0ff1f46 b xgm2Tempo	D:\apps\SGDK/src/snd/xgm2.c:170
+e0ff1f48 B _bend
 e1000000 A __stack

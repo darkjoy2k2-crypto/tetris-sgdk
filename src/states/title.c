@@ -4,6 +4,7 @@
 #include "menu_bg.h"
 #include "sound_manager.h"
 #include "gfx.h"
+#include "text_manager.h"
 
 // Der lokale Proxy-Pointer (Brücke zur Union in states.h)
 static TitleContext* ctx = NULL;
@@ -43,41 +44,40 @@ void title_init() {
 void title_init_draw() {
     ctx = &sctx->title;
     if (ctx == NULL) return;
+
     UI_init_fonts_and_palettes();
     VDP_clearTextArea(0, 0, 40, 28);
-    
-    VDP_setTextPalette(PAL1);
-    VDP_drawText("TETRIS VIBE SGDK", 11, 6);
-    VDP_setTextPalette(PAL3);
-    VDP_drawText("SEE WHAT AI CAN DO FOR YOU", 7, 8);
+    text_manager_init();
 }
 
 void title_update() {
     if (ctx == NULL) return;
 
     if (ctx->phase == PHASE_BLINK) {
+        text_manager_set_enabled(TRUE);
+
         ctx->blinkTimer++;
         if (ctx->blinkTimer >= 30) {
             ctx->blinkTimer = 0;
             ctx->textVisible = !ctx->textVisible;
         }
 
-        if (joyState == 0) {
-            ctx->idleTimer++;
-            if (ctx->idleTimer >= 420) currentState = STATE_HIGHSCORE;
-        } else {
-            ctx->idleTimer = 0;
+        if (text_manager_is_finished()) {
+            currentState = STATE_HIGHSCORE;
         }
 
         if (joyState != 0 && lastJoyState == 0) {
             ctx->phase = PHASE_MENU;
             ctx->needsRedraw = true;
-            ctx->textVisible = false; 
+            ctx->textVisible = false;
+            text_manager_set_enabled(FALSE);
             SOUND_play(SND_MENU_SELECT);
             VDP_clearTextArea(10, 20, 20, 1);
         }
 
     } else {
+        text_manager_set_enabled(FALSE);
+
         if ((joyState & BUTTON_DOWN) && !(lastJoyState & BUTTON_DOWN)) {
             ctx->cursor = (ctx->cursor + 1) % 6;
             SOUND_play(SND_MOVE);
@@ -100,7 +100,7 @@ void title_update() {
                 case 5: currentState = STATE_GFXTEST; break;
             }
         }
-        
+
         if ((joyState & BUTTON_B) && !(lastJoyState & BUTTON_B)) {
             ctx->phase = PHASE_BLINK;
             ctx->needsRedraw = true;
@@ -108,6 +108,8 @@ void title_update() {
             VDP_clearTextArea(8, 18, 24, 10);
         }
     }
+
+    text_manager_update();
 }
 
 void title_draw() {
@@ -135,5 +137,6 @@ void title_draw() {
 }
 
 void title_cleanup() {
+    text_manager_cleanup();
     ctx = NULL;
 }

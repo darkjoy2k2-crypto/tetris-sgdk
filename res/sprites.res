@@ -4,3 +4,6 @@ SPRITE anim_spiral "sprites/spiral.png" 4 4 FAST 0 NONE
 SPRITE anim_speed "sprites/speed.png" 4 4 FAST 0 NONE
 SPRITE anim_dust "sprites/dust.png" 4 4 FAST 0 NONE
 SPRITE anim_explosion "sprites/explosion.png" 2 2 FAST 0 NONE
+SPRITE alpha_16 "sprites/alpha_1_I_!_..png" 2 6 FAST 0 NONE
+SPRITE alpha_32 "sprites/alpha_2_a_b_c_d_e_f_g_h_J_k_l_N_O_P_Q_R_S_T_U_V_X_Y_Z_1_2_3_4_5_6_7_8_9_0.png" 4 6 FAST 0 NONE
+SPRITE alpha_48 "sprites/alpha_3_m_w.png" 6 6 FAST 0 NONE

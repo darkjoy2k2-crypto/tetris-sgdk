@@ -58,6 +58,8 @@
 #define INDEX_NEXT           2
 #define INDEX_HOLD           3
 
+#define TITLE_TEXT_MAX_CHARS 24
+
 typedef struct {
     Sprite* vdpSprite;    
     s16 x, y;             
@@ -95,6 +97,7 @@ typedef struct {
 extern DustParticle dustParticles[DUST_SLOT_COUNT];
 
 void sprites_init();
+void sprites_init_text_only();
 void sprites_update();
 void sprites_sync_game(Vect2D_s16 piecePos, Vect2D_s16 shadowPos, u8 activeEffect);
 void sprites_sync_vs_effect(const GameContext* player, s16 boardOriginX, s16 boardOriginY);
@@ -105,6 +108,12 @@ void sprites_trigger_line_clear_explosions(u32 clearingLineMask);
 void sprites_trigger_line_clear_explosions_at_origin(u32 clearingLineMask, s16 boardOriginX, s16 boardOriginY);
 void sprites_trigger_explosion_at_board_cell(u16 boardX, u16 boardY, u8 delayMax);
 void sprites_trigger_explosion_at_board_cell_at_origin(u16 boardX, u16 boardY, u8 delayMax, s16 boardOriginX, s16 boardOriginY);
+void sprites_text_set_enabled(bool enabled);
+void sprites_text_set_string(const char* text);
+void sprites_text_set_position(u8 index, s16 x, s16 y);
+void sprites_text_set_glyph(u8 index, char c, s16 x, s16 y, bool visible);
+void sprites_text_clear(void);
+u8 sprites_text_get_length(void);
 void sprites_cleanup();
 
 #endif

@@ -6,93 +6,105 @@
 #include "menu_bg.h"
 #include "fonts.h"
 #include "gfx.h"
+#include "text_manager.h"
 
-static HighscoreContext* ctx = NULL;
+static HighscoreContext* highscoreCtx = NULL;
+
+static void highscore_finish_state(void) {
+    bool needsSave = FALSE;
+
+    for (u16 i = 0; i < 10; i++) {
+        if (config.highscores[i].isNew != 0) {
+            needsSave = TRUE;
+            break;
+        }
+    }
+
+    config.currentScore = 0;
+
+    if (needsSave) {
+        config.sramop = SRAM_SAVE;
+        config.preferredState = STATE_TITLE;
+        currentState = STATE_SAVE;
+    } else {
+        config.sramop = SRAM_NONE;
+        config.preferredState = STATE_NONE;
+        currentState = STATE_TITLE;
+    }
+}
 
 void highscore_init() {
-    ctx = &sctx->highscore;
-    ctx->displayTimer = 0;
-    
+    highscoreCtx = &sctx->highscore;
+    highscoreCtx->displayTimer = 0;
+    highscoreCtx->needsRefresh = TRUE;
+
     menu_bg_set_mode(BG_MODE_MENU);
 }
 
 void highscore_init_draw() {
-    if (ctx == NULL) return;
+    if (highscoreCtx == NULL) return;
 
     UI_init_fonts_and_palettes();
-    
     VDP_clearTextArea(0, 0, 40, 28);
 
-    VDP_setTextPalette(PAL2);
-    VDP_drawText("--- TOP 10 RANKING ---", 9, 4);
-    VDP_drawText("RANK   NAME  SCORE", 11, 8);
-    
-    char txtRank[4];
-    char txtScore[12];
-    for (u16 i = 0; i < 10; i++) {
-        sprintf(txtRank, "%2d.", i + 1);
-        sprintf(txtScore, "%6ld", config.highscores[i].score);
-        u16 y = 10 + i;
+    VDP_setTextPalette(PAL1);
+    VDP_drawText("--- TOP 10 RANKING ---", 9, 3);
+    VDP_setTextPalette(PAL3);
+    VDP_drawText("RANK   NAME  SCORE", 11, 7);
 
-        if (config.highscores[i].isNew != 0) {
-            VDP_setTextPalette(PAL1);
-        } else {
-            VDP_setTextPalette(PAL3);
+    {
+        char txtRank[4];
+        char txtScore[12];
+
+        for (u16 i = 0; i < 10; i++) {
+            sprintf(txtRank, "%2d.", i + 1);
+            sprintf(txtScore, "%6ld", config.highscores[i].score);
+
+            if (config.highscores[i].isNew != 0) VDP_setTextPalette(PAL1);
+            else VDP_setTextPalette(PAL3);
+
+            VDP_drawText(txtRank, 11, (u16)(9 + i));
+            VDP_drawText(config.highscores[i].name, 17, (u16)(9 + i));
+            VDP_drawText(txtScore, 23, (u16)(9 + i));
         }
-
-        VDP_drawText(txtRank, 11, y);
-        VDP_drawText(config.highscores[i].name, 17, y);
-        VDP_drawText(txtScore, 23, y);
     }
+
+    text_manager_init_highscore();
+    text_manager_glyphs_visible(TRUE);
 }
 
 void highscore_update() {
-    if (ctx == NULL) return;
+    bool input;
 
-    bool input = (joyState & (BUTTON_START | BUTTON_A | BUTTON_B | BUTTON_C)) && 
-                 !(lastJoyState & (BUTTON_START | BUTTON_A | BUTTON_B | BUTTON_C));
+    if (highscoreCtx == NULL) return;
 
-    if (input || ctx->displayTimer >= 420) {
-        // Prüfen ob ein neuer Eintrag markiert ist
-        bool needsSave = FALSE;
-        for (u16 i = 0; i < 10; i++) {
-            if (config.highscores[i].isNew != 0) {
-                needsSave = TRUE;
-                break;
-            }
-        }
+    input = (joyState & (BUTTON_START | BUTTON_A | BUTTON_B | BUTTON_C)) &&
+            !(lastJoyState & (BUTTON_START | BUTTON_A | BUTTON_B | BUTTON_C));
 
-        // RAM-Cleanup: Score nullen
-        config.currentScore = 0;
+    if (input || highscoreCtx->displayTimer >= 420) {
+        text_manager_request_exit();
+    }
 
-        if (needsSave) {
-            // Auftrag für den Save-Manager
-            config.sramop = SRAM_SAVE;
-            config.preferredState = STATE_TITLE; // Nach dem Save zum Titel
-            currentState = STATE_SAVE;
-            //currentState = STATE_TITLE;
+    text_manager_set_enabled(TRUE);
+    text_manager_update();
 
-        } else {
-            // Kein neuer Rekord, direkt zum Titel
-            config.sramop = SRAM_NONE;
-            config.preferredState = STATE_NONE;
-            currentState = STATE_TITLE;
-        }
+    if (text_manager_is_finished()) {
+        highscore_finish_state();
         return;
     }
 
-    ctx->displayTimer++;
+    highscoreCtx->displayTimer++;
 }
 
 void highscore_draw() {
 }
 
 void highscore_cleanup() {
-    // Alle isNew Markierungen löschen
     for (u16 i = 0; i < 10; i++) {
         config.highscores[i].isNew = 0;
     }
 
+    text_manager_cleanup();
     VDP_clearTextArea(0, 0, 40, 28);
-    ctx = NULL;
+    highscoreCtx = NULL;
 }

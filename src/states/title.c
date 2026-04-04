@@ -137,6 +137,7 @@ void title_draw() {
 }
 
 void title_cleanup() {
+    text_manager_glyphs_visible(FALSE);
     text_manager_cleanup();
     ctx = NULL;
 }

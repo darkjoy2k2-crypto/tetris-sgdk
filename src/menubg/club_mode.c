@@ -1,5 +1,6 @@
 #include "menubg/club_mode.h"
 #include "bg.h"
+#include "states/states.h"
 
 static s16 hscrollClearLines[240];
 
@@ -7,6 +8,11 @@ static void draw_club_debug_info(const MenuBgState* state) {
     char text[40];
     const u16 screenHeight = IS_PAL_SYSTEM ? 30 : 28;
     const u16 y = screenHeight - 1;
+
+    if (!GET_FLAG(config.flags, FLAG_DEBUG)) {
+        VDP_drawTextBG(BG_A, "                    ", 0, y);
+        return;
+    }
 
     sprintf(text, "X:%d W:%d MW:%ld", state->mode.club.debug_scroll_px, club_bg_map.w, ((s32)club_bg_map.w << 7));
     VDP_drawTextBG(BG_A, text, 0, y);

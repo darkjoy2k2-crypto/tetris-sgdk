@@ -13,16 +13,22 @@
 #include "sound_manager.h"
 #include "sounds.h"
 #include "sprite.h"
+#include "text_manager.h"
 
 #define VS_LEFT_X   5
 #define VS_RIGHT_X 25
 #define VS_BOARD_Y  4
-#define VS_EVENT_Y  25
-#define VS_EVENT_W  14
-#define VS_WINNER_NONE  0
-#define VS_WINNER_LEFT  1
-#define VS_WINNER_RIGHT 2
-#define VS_WINNER_DRAW  3
+#define VS_EVENT_Y   25
+#define VS_EVENT_W   14
+#define VS_PROMPT_X  2
+#define VS_PROMPT_Y  26
+#define VS_WINNER_NONE   0
+#define VS_WINNER_LEFT   1
+#define VS_WINNER_RIGHT  2
+#define VS_WINNER_DRAW   3
+#define VS_EXIT_NONE     0
+#define VS_EXIT_RESTART  1
+#define VS_EXIT_TITLE    2
 
 typedef enum VsItemMode {
     VS_ITEM_MODE_NONE = 0,
@@ -48,8 +54,6 @@ static u8 rightSortBuffer[200];
 static u16 debugOverlayTimer = 0;
 static char leftEventDrawCache[VS_EVENT_W + 1] = "";
 static char rightEventDrawCache[VS_EVENT_W + 1] = "";
-static u16 winnerDrawCache = 0xFFFF;
-static bool winnerModeCache = FALSE;
 
 static void bind_player(GameContext* player, u16 joyNow, u16 joyPrev, GameContext** savedCtx, u16* savedJoy, u16* savedLastJoy);
 static void unbind_player(GameContext* savedCtx, u16 savedJoy, u16 savedLastJoy);
@@ -717,32 +721,47 @@ static void vs_handle_match_end(void) {
     if (vctx->leftDead && vctx->rightDead) {
         vctx->matchOver = TRUE;
         vctx->winnerSide = VS_WINNER_DRAW;
+        vctx->matchExitAction = VS_EXIT_NONE;
+        vctx->matchPromptBlinkTimer = GET_TICKS(20);
+        vctx->matchPromptVisible = TRUE;
         vs_set_event_text(TRUE, "DRAW");
         vs_set_event_text(FALSE, "DRAW");
+        text_manager_init_vs_winner("DRAW");
+        text_manager_glyphs_visible(TRUE);
         return;
     }
 
     if (vctx->rightDead && !vctx->leftDead) {
         vctx->matchOver = TRUE;
         vctx->winnerSide = VS_WINNER_LEFT;
+        vctx->matchExitAction = VS_EXIT_NONE;
+        vctx->matchPromptBlinkTimer = GET_TICKS(20);
+        vctx->matchPromptVisible = TRUE;
         vctx->left.activeBadEffect = EFFECT_RAINBOW;
         vctx->left.sortingRow = 0;
         vctx->left.badEffectTimer = 0;
         vctx->left.boardFlags |= GF_NEEDS_DRAW;
         vctx->leftNeedsRedraw = TRUE;
         vs_set_event_text(TRUE, "WINNER");
+        text_manager_init_vs_winner("1P WINS");
+        text_manager_glyphs_visible(TRUE);
         return;
     }
 
     if (vctx->leftDead && !vctx->rightDead) {
         vctx->matchOver = TRUE;
         vctx->winnerSide = VS_WINNER_RIGHT;
+        vctx->matchExitAction = VS_EXIT_NONE;
+        vctx->matchPromptBlinkTimer = GET_TICKS(20);
+        vctx->matchPromptVisible = TRUE;
         vctx->right.activeBadEffect = EFFECT_RAINBOW;
         vctx->right.sortingRow = 0;
         vctx->right.badEffectTimer = 0;
         vctx->right.boardFlags |= GF_NEEDS_DRAW;
         vctx->rightNeedsRedraw = TRUE;
         vs_set_event_text(FALSE, "WINNER");
+        text_manager_init_vs_winner(vctx->rightAiEnabled ? "CPU WINS" : "2P WINS");
+        text_manager_glyphs_visible(TRUE);
     }
 }
 
@@ -963,7 +982,7 @@ bool vs_spawn_piece_for_player(GameContext* player) {
     }
 }
 
-static void vs_reset_player(GameContext* player) {
+static void vs_reset_player(GameContext* player, bool spawnInitialPiece) {
     GameContext* savedCtx;
     u16 savedJoy;
     u16 savedLastJoy;
@@ -995,7 +1014,9 @@ static void vs_reset_player(GameContext* player) {
     player->nextType = player->bag[player->bagIndex++];
     unbind_player(savedCtx, savedJoy, savedLastJoy);
 
-    vs_spawn_piece_for_player(player);
+    if (spawnInitialPiece) {
+        vs_spawn_piece_for_player(player);
+    }
 }
 
 // Draws one player's board using a tile cache  VDP only written when tile changes.
@@ -1003,7 +1024,7 @@ static void vs_reset_player(GameContext* player) {
 static void vs_draw_player_board(GameContext* player, u16 ox, u16 oy, bool isDead, u16* cache, bool* needsRedraw) {
     if (!(*needsRedraw)) return;
 
-    view_draw_board_for_context(player, ox, oy, vsTileStart, vsSkullTileIdx, vsHeartTileIdx, cache, !isDead, !isDead && GET_FLAG(config.flags, FLAG_SHADOW));
+    view_draw_board_for_context(player, ox, oy, vsTileStart, vsSkullTileIdx, vsHeartTileIdx, cache, !isDead && !vctx->introActive, !isDead && !vctx->introActive && GET_FLAG(config.flags, FLAG_SHADOW));
 
     player->boardFlags &= ~GF_NEEDS_DRAW;
     *needsRedraw = FALSE;
@@ -1218,12 +1239,16 @@ void vs_state_init() {
     vctx->leftGameOverAnimRow = -1;
     vctx->rightGameOverAnimRow = -1;
     vctx->winnerSide = VS_WINNER_NONE;
+    vctx->matchExitAction = VS_EXIT_NONE;
+    vctx->matchPromptBlinkTimer = GET_TICKS(20);
+    vctx->matchPromptVisible = TRUE;
+    vctx->introActive = TRUE;
     vs_brain_reset(vctx);
 
     menu_bg_set_mode_instant(BG_MODE_CLUB);
 
-    vs_reset_player(&vctx->left);
-    vs_reset_player(&vctx->right);
+    vs_reset_player(&vctx->left, FALSE);
+    vs_reset_player(&vctx->right, FALSE);
 }
 
 void vs_state_init_draw() {
@@ -1254,13 +1279,13 @@ void vs_state_init_draw() {
     debugOverlayTimer = 0;
     leftEventDrawCache[0] = '\0';
     rightEventDrawCache[0] = '\0';
-    winnerDrawCache = 0xFFFF;
-    winnerModeCache = FALSE;
-
     vctx->left.boardFlags  |= GF_NEEDS_DRAW;
     vctx->right.boardFlags |= GF_NEEDS_DRAW;
     vctx->leftNeedsRedraw = TRUE;
     vctx->rightNeedsRedraw = TRUE;
+
+    text_manager_init_vs_countdown();
+    text_manager_glyphs_visible(TRUE);
 }
 
 void vs_state_update() {
@@ -1272,10 +1297,56 @@ void vs_state_update() {
     vctx->joy1 = JOY_readJoypad(JOY_1);
     vctx->joy2 = JOY_readJoypad(JOY_2);
 
+    if (vctx->introActive) {
+        text_manager_set_enabled(TRUE);
+        text_manager_update();
+
+        if (text_manager_is_finished()) {
+            text_manager_glyphs_visible(FALSE);
+            text_manager_cleanup();
+            sprites_init();
+            set_vs_palette();
+
+            if (!vs_spawn_piece_for_player(&vctx->left)) vctx->leftDead = TRUE;
+            if (!vs_spawn_piece_for_player(&vctx->right)) vctx->rightDead = TRUE;
+
+            vctx->introActive = FALSE;
+            vctx->left.boardFlags  |= GF_NEEDS_DRAW;
+            vctx->right.boardFlags |= GF_NEEDS_DRAW;
+            vctx->leftNeedsRedraw = TRUE;
+            vctx->rightNeedsRedraw = TRUE;
+
+            if (vctx->leftDead || vctx->rightDead) {
+                if (vctx->leftDead) vctx->leftGameOverAnimRow = 0;
+                if (vctx->rightDead) vctx->rightGameOverAnimRow = 0;
+                vs_handle_match_end();
+            }
+        }
+
+        vctx->joy1Last = vctx->joy1;
+        vctx->joy2Last = vctx->joy2;
+        return;
+    }
+
     // --- MATCH OVER LOGIK ---
     if (vctx->matchOver) {
-        if ((vctx->joy1 & BUTTON_START) && !(vctx->joy1Last & BUTTON_START)) {
-            currentState = STATE_TITLE;
+        if (vctx->matchExitAction == VS_EXIT_NONE) {
+            if (vctx->matchPromptBlinkTimer > 0) {
+                vctx->matchPromptBlinkTimer--;
+            } else {
+                vctx->matchPromptBlinkTimer = GET_TICKS(20);
+                vctx->matchPromptVisible = !vctx->matchPromptVisible;
+            }
+
+            if ((vctx->joy1 & BUTTON_START) && !(vctx->joy1Last & BUTTON_START)) {
+                vctx->matchExitAction = VS_EXIT_RESTART;
+                vctx->matchPromptVisible = FALSE;
+                text_manager_request_exit();
+            } else if ((vctx->joy1 & BUTTON_C) && !(vctx->joy1Last & BUTTON_C)) {
+                vctx->matchExitAction = VS_EXIT_TITLE;
+                vctx->matchPromptVisible = FALSE;
+                text_manager_request_exit();
+            }
         }
 
         if (vctx->winnerSide == VS_WINNER_LEFT) {
@@ -1289,7 +1360,26 @@ void vs_state_update() {
 
         vs_update_event_timers();
         vs_sync_effect_sprites();
-        sprites_update();
+        text_manager_set_enabled(TRUE);
+        text_manager_update();
+
+        if (vctx->matchExitAction != VS_EXIT_NONE && text_manager_is_finished()) {
+            u16 action = vctx->matchExitAction;
+
+            text_manager_glyphs_visible(FALSE);
+            text_manager_cleanup();
+
+            if (action == VS_EXIT_RESTART) {
+                vs_state_init();
+                vs_state_init_draw();
+            } else {
+                currentState = STATE_TITLE;
+            }
+
+            vctx->joy1Last = vctx->joy1;
+            vctx->joy2Last = vctx->joy2;
+            return;
+        }
 
         vctx->joy1Last = vctx->joy1;
         vctx->joy2Last = vctx->joy2;
@@ -1391,24 +1481,18 @@ void vs_state_draw() {
     }
 
     if (vctx->matchOver) {
-        if (winnerDrawCache != vctx->winnerSide || winnerModeCache != vctx->rightAiEnabled) {
-            if (vctx->winnerSide == VS_WINNER_DRAW) {
-                VDP_drawText("  DRAW  ", 16, 13);
-            } else if (vctx->winnerSide == VS_WINNER_RIGHT) {
-                VDP_drawText(vctx->rightAiEnabled ? "CPU WINS" : "P2 WINS!", 16, 13);
-            } else if (vctx->winnerSide == VS_WINNER_LEFT) {
-                VDP_drawText("P1 WINS!", 16, 13);
-            }
-            VDP_drawText("START: EXIT", 14, 15);
-            winnerDrawCache = vctx->winnerSide;
-            winnerModeCache = vctx->rightAiEnabled;
+        if (vctx->matchExitAction == VS_EXIT_NONE && vctx->matchPromptVisible) {
+            VDP_drawText("START: TRY AGAIN - C: RETURN TO MENU", VS_PROMPT_X, VS_PROMPT_Y);
+        } else {
+            VDP_drawText("                                    ", VS_PROMPT_X, VS_PROMPT_Y);
         }
     }
 
 }
 
 void vs_state_cleanup() {
+    text_manager_glyphs_visible(FALSE);
+    text_manager_cleanup();
     vctx = NULL;
-    sprites_cleanup();
     VDP_clearPlane(BG_A, TRUE);
 }

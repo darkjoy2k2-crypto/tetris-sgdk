@@ -279,12 +279,15 @@ int main(bool hardReset) {
         if (currentState != lastState) {
             bool enteringGame = (currentState == STATE_GAME);
             bool leavingGame = (lastState == STATE_GAME);
+            bool enteringVs = (currentState == STATE_VS);
+            bool leavingVs = (lastState == STATE_VS);
             bool titleToChallenge = (lastState == STATE_TITLE && currentState == STATE_CHALLENGE);
+            bool fullScreenBgTransition = enteringGame || leavingGame || enteringVs || leavingVs || titleToChallenge;
 
             KLog_U1("STATE_CHANGE: Old State = ", lastState);
             KLog_U1("STATE_CHANGE: New State = ", currentState);
 
-            if (enteringGame || leavingGame || titleToChallenge) {
+            if (fullScreenBgTransition) {
                 // Fullscreen-Transitions: zuerst komplett auf schwarz, BG waehrend schwarz umschalten.
                 menu_bg_set_palette_frozen(FALSE);
                 bgPaletteFreezeByUiFade = FALSE;
@@ -307,7 +310,7 @@ int main(bool hardReset) {
 
             if (enteringGame) {
                 // Kein globaler Fade-In hier: Game steuert seinen eigenen Start-Fade.
-            } else if (leavingGame || titleToChallenge) {
+            } else if (leavingGame || enteringVs || leavingVs || titleToChallenge) {
                 PAL_getColors(0, fullFadeTarget, 64);
                 set_all_palettes_black();
                 PAL_fadeIn(0, 63, fullFadeTarget, UI_FADE_TICKS, FALSE);

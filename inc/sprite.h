@@ -111,7 +111,7 @@ void sprites_trigger_explosion_at_board_cell_at_origin(u16 boardX, u16 boardY, u
 void sprites_text_set_enabled(bool enabled);
 void sprites_text_set_string(const char* text);
 void sprites_text_set_position(u8 index, s16 x, s16 y);
-void sprites_text_set_glyph(u8 index, char c, s16 x, s16 y, bool visible);
+void sprites_text_set_glyph(u8 index, char c, s16 x, s16 y, bool priority, u8 depth, bool visible);
 void sprites_text_clear(void);
 u8 sprites_text_get_length(void);
 void sprites_cleanup();

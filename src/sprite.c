@@ -27,6 +27,10 @@ static TitleTextSprite titleTextSprites[TITLE_TEXT_MAX_CHARS];
 static u8 titleTextLength = 0;
 static bool titleTextEnabled = FALSE;
 
+#define TITLE_TEXT_SCREEN_W      320
+#define TITLE_TEXT_SCREEN_H_NTSC 224
+#define TITLE_TEXT_SCREEN_H_PAL  240
+
 #define PARTICLE_KIND_DUST      0
 #define PARTICLE_KIND_EXPLOSION 1
 
@@ -51,6 +55,27 @@ static u8 _count_free_particle_slots() {
         }
     }
     return freeCount;
+}
+
+static s16 _title_text_glyph_extent(const SpriteDefinition* def) {
+    if (def == &alpha_16) return 16;
+    if (def == &alpha_48) return 48;
+    return 32;
+}
+
+static bool _title_text_is_on_screen(const TitleTextSprite* ts) {
+    s16 extent;
+    s16 screenH;
+
+    if (ts == NULL || ts->def == NULL) return FALSE;
+
+    extent = _title_text_glyph_extent(ts->def);
+    screenH = (s16)(IS_PAL_SYSTEM ? TITLE_TEXT_SCREEN_H_PAL : TITLE_TEXT_SCREEN_H_NTSC);
+
+    if (ts->x <= -extent || ts->x >= TITLE_TEXT_SCREEN_W) return FALSE;
+    if (ts->y <= -extent || ts->y >= screenH) return FALSE;
+
+    return TRUE;
 }
 
 static bool _map_char_to_glyph(char c, const SpriteDefinition** def, u8* frame) {
@@ -603,7 +628,7 @@ void sprites_update() {
         TitleTextSprite* ts = &titleTextSprites[i];
         if (ts->vdpSprite == NULL) continue;
 
-        if (!titleTextEnabled || !ts->visible || i >= titleTextLength) {
+        if (!titleTextEnabled || !ts->visible || i >= titleTextLength || !_title_text_is_on_screen(ts)) {
             SPR_setPosition(ts->vdpSprite, -128, -128);
             continue;
         }
@@ -666,7 +691,7 @@ void sprites_text_set_position(u8 index, s16 x, s16 y) {
     titleTextSprites[index].y = y;
 }
 
-void sprites_text_set_glyph(u8 index, char c, s16 x, s16 y, bool visible) {
+void sprites_text_set_glyph(u8 index, char c, s16 x, s16 y, bool priority, u8 depth, bool visible) {
     const SpriteDefinition* def;
     u8 frame;
 
@@ -679,6 +704,8 @@ void sprites_text_set_glyph(u8 index, char c, s16 x, s16 y, bool visible) {
 
     if (titleTextSprites[index].vdpSprite != NULL) {
         SPR_setDefinition(titleTextSprites[index].vdpSprite, def);
+        SPR_setPriority(titleTextSprites[index].vdpSprite, priority);
+        SPR_setDepth(titleTextSprites[index].vdpSprite, depth);
         titleTextSprites[index].def = def;
     }
 
@@ -695,6 +722,12 @@ void sprites_text_set_glyph(u8 index, char c, s16 x, s16 y, bool visible) {
 void sprites_text_clear(void) {
     for (u8 i = 0; i < TITLE_TEXT_MAX_CHARS; i++) {
         titleTextSprites[i].visible = FALSE;
+        titleTextSprites[i].x = -128;
+        titleTextSprites[i].y = -128;
+
+        if (titleTextSprites[i].vdpSprite != NULL) {
+            SPR_setPosition(titleTextSprites[i].vdpSprite, -128, -128);
+        }
     }
     titleTextLength = 0;
 }
@@ -709,6 +742,12 @@ void sprites_cleanup() {
 
     for (u8 i = 0; i < TITLE_TEXT_MAX_CHARS; i++) {
         titleTextSprites[i].visible = FALSE;
+        titleTextSprites[i].x = -128;
+        titleTextSprites[i].y = -128;
+
+        if (titleTextSprites[i].vdpSprite != NULL) {
+            SPR_setPosition(titleTextSprites[i].vdpSprite, -128, -128);
+        }
     }
 
     SPR_reset();

@@ -174,7 +174,11 @@ typedef struct VsContext {
     s16  leftGameOverAnimRow;
     s16  rightGameOverAnimRow;
     bool matchOver;
+    bool introActive;
     u16  winnerSide;
+    u16  matchExitAction;
+    u16  matchPromptBlinkTimer;
+    bool matchPromptVisible;
     bool leftLastRotate;
     bool rightLastRotate;
     u16  leftEventTimer;

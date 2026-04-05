@@ -55,6 +55,7 @@ static u16 debugOverlayTimer = 0;
 static char leftEventDrawCache[VS_EVENT_W + 1] = "";
 static char rightEventDrawCache[VS_EVENT_W + 1] = "";
 
+
 static void bind_player(GameContext* player, u16 joyNow, u16 joyPrev, GameContext** savedCtx, u16* savedJoy, u16* savedLastJoy);
 static void unbind_player(GameContext* savedCtx, u16 savedJoy, u16 savedLastJoy);
 static void vs_finish_line_clear(VsContext* vs, GameContext* player, bool isLeft);
@@ -76,10 +77,9 @@ static bool vs_update_board_effect_animation(VsContext* vs, GameContext* player,
 static void vs_handle_item_spawn(GameContext* player, u16 itemMode);
 static u16 vs_get_gravity_threshold(GameContext* player, u16 joyNow, bool allowSoftDrop);
 static void vs_set_event_text(bool isLeft, const char* text);
-static void vs_update_event_timers(void);
 static void vs_draw_event_text(void);
 static void vs_handle_match_end(void);
-static void vs_finalize_attack(VsContext* vs, bool isLeft, u16 attack, u16 canceled, const char* eventName, bool b2b, bool perfectClear);
+static void vs_finalize_attack(VsContext* vs, bool isLeft, u16 attack, u16 canceled, const char* eventName, bool b2b, bool perfectClear, u16 comboCount);
 static void vs_sync_effect_sprites(void);
 
 static s16 vs_board_x_for(bool isLeft) {
@@ -202,29 +202,29 @@ static void vs_trigger_good_effect(VsContext* vs, GameContext* player, bool isLe
         case 0:
             player->activeBadEffect = EFFECT_I_RAIN;
             player->badEffectTimer = DUR_I_RAIN_SPAWNS;
-            vs_set_event_text(isLeft, "I-RAIN!");
+            vs_set_event_text(isLeft, "IRAIN");
             break;
         case 1:
             vs_prepare_sort_buffer(player, vs_get_sort_buffer(isLeft));
             player->sortingRow = 0;
-            vs_set_event_text(isLeft, "SORTED!");
+            vs_set_event_text(isLeft, "SORT");
             SOUND_play(SND_TETRIS);
             break;
         case 2:
             player->activeBadEffect = EFFECT_RAINBOW;
             player->badEffectTimer = 0;
             player->sortingRow = 0;
-            vs_set_event_text(isLeft, "RAINBOW!");
+            vs_set_event_text(isLeft, "RGB");
             break;
         case 3:
             player->activeBadEffect = EFFECT_FREEZE;
             player->badEffectTimer = DUR_FREEZE_TICKS;
-            vs_set_event_text(isLeft, "FROZEN!");
+            vs_set_event_text(isLeft, "ICE");
             break;
         default:
             player->activeBadEffect = EFFECT_MULTIPLIER;
             player->badEffectTimer = 1;
-            vs_set_event_text(isLeft, "CLEARED!");
+            vs_set_event_text(isLeft, "CLR");
             vs_trigger_multiclear(player, isLeft);
             break;
     }
@@ -250,40 +250,40 @@ static void vs_trigger_bad_effect(VsContext* vs, GameContext* player, bool isLef
             player->activeBadEffect = EFFECT_NO_ROTATE;
             player->badEffectTimer = DUR_NO_ROTATE_TICKS;
             player->flags |= GF_ROT_LOCKED;
-            vs_set_event_text(isLeft, "NO ROTATE!");
+            vs_set_event_text(isLeft, "NOROT");
             break;
         case 1:
             player->activeBadEffect = EFFECT_REVERSED;
             player->badEffectTimer = DUR_REVERSED_TICKS;
-            vs_set_event_text(isLeft, "CONFUSED!");
+            vs_set_event_text(isLeft, "SILLY");
             break;
         case 2:
             player->activeBadEffect = EFFECT_FULLSPEED;
             player->badEffectTimer = GET_TICKS(120) + DUR_FULLSPEED_SPAWNS;
             playGenericBadSound = FALSE;
-            vs_set_event_text(isLeft, "FAST!");
+            vs_set_event_text(isLeft, "FAST");
             break;
         case 3:
             player->activeBadEffect = EFFECT_SAME_TILES;
             player->badEffectTimer = DUR_SAME_TILES_SPAWNS;
             player->forcedPieceType = (s16)(random() % 7);
-            vs_set_event_text(isLeft, "SAME!");
+            vs_set_event_text(isLeft, "SAME");
             break;
         case 4:
             player->activeBadEffect = EFFECT_HOLD_LOCK;
             player->badEffectTimer = DUR_HOLD_LOCK_TICKS;
-            vs_set_event_text(isLeft, "HOLD LOCK!");
+            vs_set_event_text(isLeft, "NOHLD");
             break;
         case 5:
             player->activeBadEffect = EFFECT_HIDE_NEXT;
             player->badEffectTimer = DUR_HIDE_NEXT_TICKS;
-            vs_set_event_text(isLeft, "NO NEXT!");
+            vs_set_event_text(isLeft, "NONXT");
             break;
         default:
             player->activeBadEffect = EFFECT_SHADOW_BOARD;
             player->badEffectTimer = DUR_SHADOW_TICKS;
             player->sortingRow = 0;
-            vs_set_event_text(isLeft, "FADE!");
+            vs_set_event_text(isLeft, "FADE");
             break;
     }
 
@@ -625,59 +625,31 @@ static u16 vs_base_attack(u16 lines, bool tSpin) {
 
 static void vs_set_event_text(bool isLeft, const char* text) {
     char* dst = isLeft ? vctx->leftEventText : vctx->rightEventText;
-    u16* timer = isLeft ? &vctx->leftEventTimer : &vctx->rightEventTimer;
 
     if (text == NULL) {
         dst[0] = '\0';
-        *timer = 0;
+        text_manager_clear_vs_status(isLeft);
         return;
     }
 
     strncpy(dst, text, 23);
     dst[23] = '\0';
-    *timer = GET_TICKS(150);
-}
-
-static void vs_update_event_timers(void) {
-    if (vctx->leftEventTimer > 0) {
-        vctx->leftEventTimer--;
-        if (vctx->leftEventTimer == 0) vctx->leftEventText[0] = '\0';
-    }
-
-    if (vctx->rightEventTimer > 0) {
-        vctx->rightEventTimer--;
-        if (vctx->rightEventTimer == 0) vctx->rightEventText[0] = '\0';
-    }
+    text_manager_set_vs_status(isLeft, dst);
 }
 
 static void vs_draw_event_text(void) {
-    char leftLine[VS_EVENT_W + 1];
-    char rightLine[VS_EVENT_W + 1];
-
-    memset(leftLine, ' ', VS_EVENT_W);
-    leftLine[VS_EVENT_W] = '\0';
-    if (vctx->leftEventText[0] != '\0') {
-        strncpy(leftLine, vctx->leftEventText, VS_EVENT_W);
+    if (strcmp(leftEventDrawCache, "              ") != 0) {
+        VDP_drawText("              ", VS_LEFT_X, VS_EVENT_Y);
+        strcpy(leftEventDrawCache, "              ");
     }
 
-    memset(rightLine, ' ', VS_EVENT_W);
-    rightLine[VS_EVENT_W] = '\0';
-    if (vctx->rightEventText[0] != '\0') {
-        strncpy(rightLine, vctx->rightEventText, VS_EVENT_W);
-    }
-
-    if (strcmp(leftLine, leftEventDrawCache) != 0) {
-        VDP_drawText(leftLine, VS_LEFT_X, VS_EVENT_Y);
-        strcpy(leftEventDrawCache, leftLine);
-    }
-
-    if (strcmp(rightLine, rightEventDrawCache) != 0) {
-        VDP_drawText(rightLine, VS_RIGHT_X, VS_EVENT_Y);
-        strcpy(rightEventDrawCache, rightLine);
+    if (strcmp(rightEventDrawCache, "              ") != 0) {
+        VDP_drawText("              ", VS_RIGHT_X, VS_EVENT_Y);
+        strcpy(rightEventDrawCache, "              ");
     }
 }
 
-static void vs_finalize_attack(VsContext* vs, bool isLeft, u16 attack, u16 canceled, const char* eventName, bool b2b, bool perfectClear) {
+static void vs_finalize_attack(VsContext* vs, bool isLeft, u16 attack, u16 canceled, const char* eventName, bool b2b, bool perfectClear, u16 comboCount) {
     u16* incoming;
     u16* outgoing;
     u16 sent;
@@ -698,17 +670,17 @@ static void vs_finalize_attack(VsContext* vs, bool isLeft, u16 attack, u16 cance
     if ((u32)(*outgoing) + sent > 0xFFFF) *outgoing = 0xFFFF;
     else *outgoing = (u16)(*outgoing + sent);
 
-    if (eventName != NULL && eventName[0] != '\0') {
+    if ((eventName != NULL && eventName[0] != '\0') || (comboCount > 1)) {
         if (perfectClear) {
-            sprintf(text, "PC %s +%u", eventName, sent);
-        } else if (b2b && canceled > 0) {
-            sprintf(text, "B2B %s C%u", eventName, canceled);
+            strcpy(text, "PCLR");
+        } else if (comboCount > 1) {
+            if (comboCount > 99) comboCount = 99;
+            sprintf(text, "X%u", comboCount);
         } else if (b2b) {
-            sprintf(text, "B2B %s +%u", eventName, sent);
-        } else if (canceled > 0) {
-            sprintf(text, "%s C%u +%u", eventName, canceled, sent);
+            strcpy(text, "B2B");
         } else {
-            sprintf(text, "%s +%u", eventName, sent);
+            strncpy(text, eventName, 23);
+            text[23] = '\0';
         }
 
         vs_set_event_text(isLeft, text);
@@ -724,8 +696,8 @@ static void vs_handle_match_end(void) {
         vctx->matchExitAction = VS_EXIT_NONE;
         vctx->matchPromptBlinkTimer = GET_TICKS(20);
         vctx->matchPromptVisible = TRUE;
-        vs_set_event_text(TRUE, "DRAW");
-        vs_set_event_text(FALSE, "DRAW");
+        text_manager_clear_vs_status(TRUE);
+        text_manager_clear_vs_status(FALSE);
         text_manager_init_vs_winner("DRAW");
         text_manager_glyphs_visible(TRUE);
         return;
@@ -742,7 +714,8 @@ static void vs_handle_match_end(void) {
         vctx->left.badEffectTimer = 0;
         vctx->left.boardFlags |= GF_NEEDS_DRAW;
         vctx->leftNeedsRedraw = TRUE;
-        vs_set_event_text(TRUE, "WINNER");
+        text_manager_clear_vs_status(TRUE);
+        text_manager_clear_vs_status(FALSE);
         text_manager_init_vs_winner("1P WINS");
         text_manager_glyphs_visible(TRUE);
         return;
@@ -759,7 +732,8 @@ static void vs_handle_match_end(void) {
         vctx->right.badEffectTimer = 0;
         vctx->right.boardFlags |= GF_NEEDS_DRAW;
         vctx->rightNeedsRedraw = TRUE;
-        vs_set_event_text(FALSE, "WINNER");
+        text_manager_clear_vs_status(TRUE);
+        text_manager_clear_vs_status(FALSE);
         text_manager_init_vs_winner(vctx->rightAiEnabled ? "CPU WINS" : "2P WINS");
         text_manager_glyphs_visible(TRUE);
     }
@@ -835,21 +809,21 @@ static void vs_finish_line_clear(VsContext* vs, GameContext* player, bool isLeft
         counter = isLeft ? vctx->rightGarbagePending : vctx->leftGarbagePending;
 
         if (tSpin) {
-            if (linesFound == 1) eventName = "T-SPIN S";
-            else if (linesFound == 2) eventName = "T-SPIN D";
-            else if (linesFound == 3) eventName = "T-SPIN T";
-            else eventName = "T-SPIN";
+            if (linesFound == 1) eventName = "TS1";
+            else if (linesFound == 2) eventName = "TS2";
+            else if (linesFound == 3) eventName = "TS3";
+            else eventName = "TSPN";
         } else if (linesFound == 4) {
-            eventName = "TETRIS";
+            eventName = "TETR";
         } else if (linesFound == 3) {
-            eventName = "TRIPLE";
+            eventName = "TRI";
         } else if (linesFound == 2) {
-            eventName = "DOUBLE";
+            eventName = "DBL";
         } else {
-            eventName = "SINGLE";
+            eventName = "";
         }
 
-        vs_finalize_attack(vs, isLeft, attack, counter, eventName, b2bBonus, perfectClear);
+        vs_finalize_attack(vs, isLeft, attack, counter, eventName, b2bBonus, perfectClear, player->comboCount);
 
         if (totalHearts > totalSkulls) {
             vs_trigger_good_effect(vs, player, isLeft);
@@ -1065,6 +1039,8 @@ bool vs_lock_piece_for_player(VsContext* vs, GameContext* player, bool isLeft, u
     clearLinesAtOrigin(boardX, VS_BOARD_Y);
     unbind_player(savedCtx, savedJoy, savedLastJoy);
 
+    vs_set_event_text(isLeft, "NO-STAT");
+
     player->boardFlags |= GF_NEEDS_DRAW;
     return TRUE;
 }
@@ -1243,6 +1219,8 @@ void vs_state_init() {
     vctx->matchPromptBlinkTimer = GET_TICKS(20);
     vctx->matchPromptVisible = TRUE;
     vctx->introActive = TRUE;
+    text_manager_clear_vs_status(TRUE);
+    text_manager_clear_vs_status(FALSE);
     vs_brain_reset(vctx);
 
     menu_bg_set_mode_instant(BG_MODE_CLUB);
@@ -1305,6 +1283,9 @@ void vs_state_update() {
             text_manager_glyphs_visible(FALSE);
             text_manager_cleanup();
             sprites_init();
+            sprites_text_set_enabled(TRUE);
+            text_manager_clear_vs_status(TRUE);
+            text_manager_clear_vs_status(FALSE);
             set_vs_palette();
 
             if (!vs_spawn_piece_for_player(&vctx->left)) vctx->leftDead = TRUE;
@@ -1358,7 +1339,6 @@ void vs_state_update() {
         if (vctx->leftDead) vs_step_game_over_animation(&vctx->left, VS_LEFT_X, &vctx->leftGameOverAnimRow, &vctx->leftNeedsRedraw);
         if (vctx->rightDead) vs_step_game_over_animation(&vctx->right, VS_RIGHT_X, &vctx->rightGameOverAnimRow, &vctx->rightNeedsRedraw);
 
-        vs_update_event_timers();
         vs_sync_effect_sprites();
         text_manager_set_enabled(TRUE);
         text_manager_update();
@@ -1454,9 +1434,9 @@ void vs_state_update() {
     if (vctx->leftDead)  vs_step_game_over_animation(&vctx->left, VS_LEFT_X, &vctx->leftGameOverAnimRow, &vctx->leftNeedsRedraw);
     if (vctx->rightDead) vs_step_game_over_animation(&vctx->right, VS_RIGHT_X, &vctx->rightGameOverAnimRow, &vctx->rightNeedsRedraw);
 
+    text_manager_update_vs_statuses();
     vs_sync_effect_sprites();
     sprites_update();
-    vs_update_event_timers();
 
     if (vctx->leftDead || vctx->rightDead) {
         vctx->left.boardFlags  |= GF_NEEDS_DRAW;

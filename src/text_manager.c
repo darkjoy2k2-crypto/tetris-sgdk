@@ -26,11 +26,20 @@
 #define HIGHSCORE_TEXT_Y        160
 #define HIGHSCORE_HOLD_TICKS    60
 #define HIGHSCORE_START_DELAY   30
-#define VS_WINNER_TEXT_Y        112
-#define VS_WINNER_HOLD_TICKS    60
-#define VS_COUNTDOWN_TEXT_Y     112
-#define VS_COUNTDOWN_HOLD_TICKS 20
-#define VS_COUNTDOWN_START_DELAY 8
+#define VS_WINNER_TEXT_Y         112
+#define VS_WINNER_HOLD_TICKS      60
+#define VS_COUNTDOWN_TEXT_Y      112
+#define VS_COUNTDOWN_HOLD_TICKS   20
+#define VS_COUNTDOWN_START_DELAY   8
+#define VS_STATUS_LEFT_BOARD_X     5
+#define VS_STATUS_RIGHT_BOARD_X   25
+#define VS_STATUS_Y_LEFT         176
+#define VS_STATUS_Y_RIGHT        176
+#define VS_STATUS_HOLD_TICKS      36
+#define VS_STATUS_LINE1_OFFSET   -32
+#define VS_STATUS_LINE2_OFFSET     0
+#define VS_STATUS_DEPTH_TOP        2
+#define VS_STATUS_DEPTH_BOTTOM     0
 
 typedef enum TextManagerScene {
     TEXT_SCENE_NONE = 0,
@@ -74,6 +83,22 @@ typedef struct FallingGlyph {
     u16 delay;
     bool priority;
 } FallingGlyph;
+
+typedef struct VsStatusChannel {
+    s16 width;
+    s16 x[TITLE_TEXT_MAX_CHARS];
+    s16 y[TITLE_TEXT_MAX_CHARS];
+    s16 vx[TITLE_TEXT_MAX_CHARS];
+    s16 vy[TITLE_TEXT_MAX_CHARS];
+    u16 holdTimer;
+    u16 delay[TITLE_TEXT_MAX_CHARS];
+    u8 len;
+    bool active;
+    bool falling;
+    bool priority[TITLE_TEXT_MAX_CHARS];
+    u8 depth[TITLE_TEXT_MAX_CHARS];
+    char text[TITLE_TEXT_MAX_CHARS + 1];
+} VsStatusChannel;
 
 static const char* titleWords[TITLE_WORD_COUNT] = {
     "tetris",
@@ -155,6 +180,8 @@ static s16 screenH = TITLE_SCREEN_H_NTSC;
 static TextManagerScene activeScene = TEXT_SCENE_NONE;
 static u8 countdownWordIndex = 0;
 static bool sceneFinished = FALSE;
+static VsStatusChannel vsStatusChannels[2];
+static bool vsStatusRenderedLastFrame = FALSE;
 
 static u8 text_manager_glyph_width(char c) {
     if (c == 'M' || c == 'm' || c == 'W' || c == 'w') return 48;
@@ -171,6 +198,89 @@ static s16 text_manager_word_width(const char* text, u8 len) {
     }
 
     return total;
+}
+
+static VsStatusChannel* text_manager_get_vs_status(bool isLeft) {
+    return isLeft ? &vsStatusChannels[0] : &vsStatusChannels[1];
+}
+
+static s16 text_manager_vs_board_center_x(bool isLeft) {
+    s16 boardX = isLeft ? VS_STATUS_LEFT_BOARD_X : VS_STATUS_RIGHT_BOARD_X;
+    return (s16)((boardX << 3) + 40);
+}
+
+static s16 text_manager_vs_base_y(bool isLeft) {
+    return isLeft ? VS_STATUS_Y_LEFT : VS_STATUS_Y_RIGHT;
+}
+
+static bool text_manager_vs_status_supported(char c) {
+    if ((c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')) return TRUE;
+    if (c == '!' || c == '.' || c == ';') return TRUE;
+    return FALSE;
+}
+
+static void text_manager_reset_vs_status_channel(bool isLeft) {
+    VsStatusChannel* status = text_manager_get_vs_status(isLeft);
+    memset(status, 0, sizeof(VsStatusChannel));
+}
+
+static bool text_manager_has_active_vs_statuses(void) {
+    return vsStatusChannels[0].active || vsStatusChannels[1].active;
+}
+
+static void text_manager_render_vs_statuses(void) {
+    const s16 statusScreenH = (s16)(IS_PAL_SYSTEM ? TITLE_SCREEN_H_PAL : TITLE_SCREEN_H_NTSC);
+    u8 slot = 0;
+    bool renderedAny = FALSE;
+
+    for (u8 side = 0; side < 2; side++) {
+        bool isLeft = (side == 0);
+        VsStatusChannel* status = &vsStatusChannels[side];
+        bool anyVisible = FALSE;
+
+        if (!status->active) continue;
+
+        if (!status->falling) {
+            if (status->holdTimer > 0) {
+                status->holdTimer--;
+            } else {
+                status->falling = TRUE;
+
+                for (u8 i = 0; i < status->len; i++) {
+                    status->vx[i] = (s16)((random() % 5) - 2);
+                    status->vy[i] = 0;
+                    status->delay[i] = (u16)((i >> 1) * 2);
+                }
+            }
+        }
+
+        for (u8 i = 0; i < status->len; i++) {
+            if (status->falling) {
+                if (status->delay[i] > 0) {
+                    status->delay[i]--;
+                } else {
+                    if (status->vy[i] < 14) status->vy[i]++;
+                    status->x[i] += status->vx[i];
+                    status->y[i] += status->vy[i];
+                }
+            }
+
+            if (status->y[i] > (statusScreenH + 40)) continue;
+
+            anyVisible = TRUE;
+            if (slot < TITLE_TEXT_MAX_CHARS) {
+                sprites_text_set_glyph(slot, status->text[i], status->x[i], status->y[i], status->priority[i], status->depth[i], TRUE);
+                renderedAny = TRUE;
+                slot++;
+            }
+        }
+
+        if (!anyVisible && status->falling) {
+            text_manager_reset_vs_status_channel(isLeft);
+        }
+    }
+
+    vsStatusRenderedLastFrame = renderedAny;
 }
 
 static void text_manager_render_word(u8 wordIndex) {
@@ -318,6 +428,8 @@ static void text_manager_reset_common(u16 holdTicks) {
     sceneFinished = FALSE;
     wordEnabled = FALSE;
     wordInitialized = FALSE;
+    memset(vsStatusChannels, 0, sizeof(vsStatusChannels));
+    vsStatusRenderedLastFrame = FALSE;
 
     for (u8 i = 0; i < TITLE_TEXT_MAX_CHARS; i++) {
         falling[i].active = FALSE;
@@ -536,8 +648,173 @@ void text_manager_glyphs_visible(bool state) {
 
     if (!state) {
         sprites_text_clear();
+        vsStatusRenderedLastFrame = FALSE;
         sprites_update();
     }
+}
+
+void text_manager_set_vs_status(bool isLeft, const char* text) {
+    VsStatusChannel* status = text_manager_get_vs_status(isLeft);
+    s16 centerX;
+    s16 baseY;
+    const char* bottomText = text;
+    bool twoLineNo = FALSE;
+    u8 idx = 0;
+
+    text_manager_reset_vs_status_channel(isLeft);
+    if (text == NULL || text[0] == '\0') return;
+
+    centerX = text_manager_vs_board_center_x(isLeft);
+    baseY = text_manager_vs_base_y(isLeft);
+
+    if (strcmp(text, "NOROT") == 0) {
+        twoLineNo = TRUE;
+        bottomText = "ROTATE";
+    } else if (strcmp(text, "NOHLD") == 0) {
+        twoLineNo = TRUE;
+        bottomText = "HOLD";
+    } else if (strcmp(text, "NONXT") == 0) {
+        twoLineNo = TRUE;
+        bottomText = "NEXT";
+    } else if (strcmp(text, "NO-STAT") == 0) {
+        twoLineNo = TRUE;
+        bottomText = "STAT";
+    }
+
+    if (twoLineNo) {
+        s16 topWidth;
+        s16 bottomWidth = 0;
+        s16 topX;
+        s16 bottomX;
+        s16 maxStartX;
+
+        status->text[idx++] = 'N';
+        status->text[idx++] = 'O';
+
+        for (u8 i = 0; bottomText[i] != '\0' && idx < TITLE_TEXT_MAX_CHARS; i++) {
+            char c = bottomText[i];
+
+            if (c >= 'a' && c <= 'z') c = (char)(c - ('a' - 'A'));
+            if (!text_manager_vs_status_supported(c)) continue;
+            status->text[idx++] = c;
+        }
+
+        status->len = idx;
+        if (status->len == 0) return;
+        status->text[status->len] = '\0';
+
+        topWidth = (s16)(text_manager_glyph_width('N') + text_manager_glyph_width('O') + TITLE_TEXT_GAP_PX);
+        for (u8 i = 2; i < status->len; i++) {
+            bottomWidth += text_manager_glyph_width(status->text[i]);
+            if (i + 1 < status->len) bottomWidth += TITLE_TEXT_GAP_PX;
+        }
+
+        topX = (s16)(centerX - (topWidth >> 1));
+        bottomX = (s16)(centerX - (bottomWidth >> 1));
+        maxStartX = (s16)(TITLE_SCREEN_W_NTSC - topWidth);
+        if (maxStartX < 0) maxStartX = 0;
+        if (topX < 0) topX = 0;
+        if (topX > maxStartX) topX = maxStartX;
+        maxStartX = (s16)(TITLE_SCREEN_W_NTSC - bottomWidth);
+        if (maxStartX < 0) maxStartX = 0;
+        if (bottomX < 0) bottomX = 0;
+        if (bottomX > maxStartX) bottomX = maxStartX;
+
+        status->width = (topWidth > bottomWidth) ? topWidth : bottomWidth;
+
+        status->x[0] = topX;
+        status->y[0] = (s16)(baseY + VS_STATUS_LINE1_OFFSET);
+        status->vx[0] = 0;
+        status->vy[0] = 0;
+        status->delay[0] = 0;
+        status->priority[0] = PRIO_HIGH;
+        status->depth[0] = VS_STATUS_DEPTH_TOP;
+
+        status->x[1] = (s16)(topX + text_manager_glyph_width('N') + TITLE_TEXT_GAP_PX);
+        status->y[1] = (s16)(baseY + VS_STATUS_LINE1_OFFSET);
+        status->vx[1] = 0;
+        status->vy[1] = 0;
+        status->delay[1] = 0;
+        status->priority[1] = PRIO_HIGH;
+        status->depth[1] = VS_STATUS_DEPTH_TOP;
+
+        for (u8 i = 2; i < status->len; i++) {
+            char c = status->text[i];
+
+            status->x[i] = bottomX;
+            status->y[i] = (s16)(baseY + VS_STATUS_LINE2_OFFSET);
+            status->vx[i] = 0;
+            status->vy[i] = 0;
+            status->delay[i] = 0;
+            status->priority[i] = PRIO_HIGH;
+            status->depth[i] = VS_STATUS_DEPTH_BOTTOM;
+            bottomX += (s16)(text_manager_glyph_width(c) + TITLE_TEXT_GAP_PX);
+        }
+    } else {
+        s16 totalWidth = 0;
+        s16 penX;
+
+        for (u8 in = 0; text[in] != '\0' && idx < TITLE_TEXT_MAX_CHARS; in++) {
+            char c = text[in];
+
+            if (c >= 'a' && c <= 'z') c = (char)(c - ('a' - 'A'));
+            if (!text_manager_vs_status_supported(c)) continue;
+            status->text[idx++] = c;
+        }
+
+        status->len = idx;
+        if (status->len == 0) return;
+        status->text[status->len] = '\0';
+
+        totalWidth = text_manager_word_width(status->text, status->len);
+        status->width = totalWidth;
+        penX = (s16)(centerX - (totalWidth >> 1));
+
+        if (totalWidth < TITLE_SCREEN_W_NTSC) {
+            s16 maxStartX = (s16)(TITLE_SCREEN_W_NTSC - totalWidth);
+            if (penX < 0) penX = 0;
+            if (penX > maxStartX) penX = maxStartX;
+        }
+
+        for (u8 i = 0; i < status->len; i++) {
+            status->x[i] = penX;
+            status->y[i] = baseY;
+            status->vx[i] = 0;
+            status->vy[i] = 0;
+            status->delay[i] = 0;
+            status->priority[i] = PRIO_HIGH;
+            status->depth[i] = VS_STATUS_DEPTH_BOTTOM;
+            penX += (s16)(text_manager_glyph_width(status->text[i]) + TITLE_TEXT_GAP_PX);
+        }
+    }
+
+    status->holdTimer = GET_TICKS(VS_STATUS_HOLD_TICKS);
+    status->active = TRUE;
+    status->falling = FALSE;
+    sprites_text_set_enabled(TRUE);
+}
+
+void text_manager_clear_vs_status(bool isLeft) {
+    text_manager_reset_vs_status_channel(isLeft);
+
+    if (!wordInitialized && !text_manager_has_active_vs_statuses()) {
+        sprites_text_clear();
+        vsStatusRenderedLastFrame = FALSE;
+    }
+}
+
+void text_manager_update_vs_statuses(void) {
+    if (!text_manager_has_active_vs_statuses()) {
+        if (vsStatusRenderedLastFrame) {
+            sprites_text_clear();
+            vsStatusRenderedLastFrame = FALSE;
+        }
+        return;
+    }
+
+    sprites_text_set_enabled(TRUE);
+    sprites_text_clear();
+    text_manager_render_vs_statuses();
 }
 
 void text_manager_set_enabled(bool enabled) {
@@ -550,28 +827,40 @@ void text_manager_request_exit(void) {
 }
 
 void text_manager_update(void) {
-    if (!wordInitialized) return;
+    bool hasScene = wordInitialized;
+    bool hasVsStatus = text_manager_has_active_vs_statuses();
+
+    if (!hasScene && !hasVsStatus) return;
 
     sprites_text_clear();
 
-    if (!wordEnabled) {
-        sprites_update();
-        return;
+    if (hasScene) {
+        if (!wordEnabled) {
+            if (hasVsStatus) text_manager_render_vs_statuses();
+            else vsStatusRenderedLastFrame = FALSE;
+            sprites_update();
+            return;
+        }
+
+        if (startDelayTicks > 0) {
+            startDelayTicks--;
+            if (hasVsStatus) text_manager_render_vs_statuses();
+            else vsStatusRenderedLastFrame = FALSE;
+            sprites_update();
+            return;
+        }
+
+        if (activeScene == TEXT_SCENE_TITLE) {
+            text_manager_update_title_scene();
+        } else if (activeScene == TEXT_SCENE_HIGHSCORE || activeScene == TEXT_SCENE_VS_WINNER) {
+            text_manager_update_highscore_scene();
+        } else if (activeScene == TEXT_SCENE_VS_COUNTDOWN) {
+            text_manager_update_vs_countdown_scene();
+        }
     }
 
-    if (startDelayTicks > 0) {
-        startDelayTicks--;
-        sprites_update();
-        return;
-    }
-
-    if (activeScene == TEXT_SCENE_TITLE) {
-        text_manager_update_title_scene();
-    } else if (activeScene == TEXT_SCENE_HIGHSCORE || activeScene == TEXT_SCENE_VS_WINNER) {
-        text_manager_update_highscore_scene();
-    } else if (activeScene == TEXT_SCENE_VS_COUNTDOWN) {
-        text_manager_update_vs_countdown_scene();
-    }
+    if (hasVsStatus) text_manager_render_vs_statuses();
+    else vsStatusRenderedLastFrame = FALSE;
 
     sprites_update();
 }
@@ -603,4 +892,6 @@ void text_manager_cleanup(void) {
     activeScene = TEXT_SCENE_NONE;
     countdownWordIndex = 0;
     sceneFinished = FALSE;
+    memset(vsStatusChannels, 0, sizeof(vsStatusChannels));
+    vsStatusRenderedLastFrame = FALSE;
 }

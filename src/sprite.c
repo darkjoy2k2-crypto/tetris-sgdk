@@ -155,7 +155,21 @@ void sprites_init() {
     gameSprites[INDEX_NEXT].offsetX   = 0; gameSprites[INDEX_NEXT].offsetY   = 8;
     gameSprites[INDEX_HOLD].offsetX   = 0; gameSprites[INDEX_HOLD].offsetY   = -8;
 
-    // Dust-Partikel-Sprites initialisieren (4 reservierte Slots)
+    /* Gemeinsamer Glyph-Pool hat Vorrang vor optionalen Partikel-Slots. */
+    for (u8 i = 0; i < TITLE_TEXT_MAX_CHARS; i++) {
+        memset(&titleTextSprites[i], 0, sizeof(TitleTextSprite));
+        titleTextSprites[i].vdpSprite = SPR_addSprite(&alpha_32, -128, -128, TILE_ATTR(PAL2, 0, 0, 0));
+        titleTextSprites[i].def = &alpha_32;
+        titleTextSprites[i].frame = 0;
+        titleTextSprites[i].visible = FALSE;
+
+        if (titleTextSprites[i].vdpSprite != NULL) {
+            SPR_setPriority(titleTextSprites[i].vdpSprite, PRIO_HIGH);
+            SPR_setDepth(titleTextSprites[i].vdpSprite, DEPTH_FOREGROUND);
+        }
+    }
+
+    // Dust-Partikel-Sprites initialisieren (nachrangig hinter Text-Glyphen)
     for (u8 di = 0; di < DUST_SLOT_COUNT; di++) {
         memset(&dustParticles[di], 0, sizeof(DustParticle));
         dustParticles[di].vdpSprite = SPR_addSprite(&anim_dust, -128, -128, TILE_ATTR(PAL2, 0, 0, 0));
@@ -167,19 +181,6 @@ void sprites_init() {
         if (dustParticles[di].vdpSprite != NULL) {
             SPR_setPriority(dustParticles[di].vdpSprite, PRIO_LOW);
             SPR_setDepth(dustParticles[di].vdpSprite, DEPTH_DEFAULT);
-        }
-    }
-
-    for (u8 i = 0; i < TITLE_TEXT_MAX_CHARS; i++) {
-        memset(&titleTextSprites[i], 0, sizeof(TitleTextSprite));
-        titleTextSprites[i].vdpSprite = SPR_addSprite(&alpha_32, -128, -128, TILE_ATTR(PAL2, 0, 0, 0));
-        titleTextSprites[i].def = &alpha_32;
-        titleTextSprites[i].frame = 0;
-        titleTextSprites[i].visible = FALSE;
-
-        if (titleTextSprites[i].vdpSprite != NULL) {
-            SPR_setPriority(titleTextSprites[i].vdpSprite, PRIO_HIGH);
-            SPR_setDepth(titleTextSprites[i].vdpSprite, DEPTH_FOREGROUND);
         }
     }
 

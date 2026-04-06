@@ -263,8 +263,7 @@ int main(bool hardReset) {
     joyState = JOY_readJoypad(JOY_1);
     lastJoyState = joyState; 
     
-    SOUND_init(); 
-    SOUND_playMusic();
+    SOUND_init();
 
     // Start-Zustand: SRAM Initialisierung über SaveManager
     KLog("MAIN: Switching to STATE_SAVE (SRAM_INIT)");

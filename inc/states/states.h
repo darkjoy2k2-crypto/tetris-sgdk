@@ -70,8 +70,15 @@ typedef struct SelectContext {
     bool needsRedraw;
 } SelectContext;
 
+typedef enum SoundTestMode {
+    SOUND_TEST_MODE_SFX = 0,
+    SOUND_TEST_MODE_MUSIC
+} SoundTestMode;
+
 typedef struct SoundTestContext {
     u16 currentID;
+    u16 currentMusicID;
+    u16 mode;
     bool needsDraw;
 } SoundTestContext;
 

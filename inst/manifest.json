@@ -1,0 +1,16 @@
+{
+  "exports": [
+    {
+      "source": "F:\\Projekte\\tetris\\tetris-sgdk\\res\\music\\sgdk_drum_run_rave.vgm",
+      "output_dir": "F:\\Projekte\\tetris\\tetris-sgdk\\inst\\sgdk_test",
+      "count": 21,
+      "summary_file": "F:\\Projekte\\tetris\\tetris-sgdk\\inst\\sgdk_test\\_export_summary.json"
+    },
+    {
+      "source": "F:\\Projekte\\tetris\\tetris-sgdk\\py\\sound\\vgz\\10 - Guile's Theme.vgz",
+      "output_dir": "F:\\Projekte\\tetris\\tetris-sgdk\\inst\\guile_theme",
+      "count": 8,
+      "summary_file": "F:\\Projekte\\tetris\\tetris-sgdk\\inst\\guile_theme\\_export_summary.json"
+    }
+  ]
+}

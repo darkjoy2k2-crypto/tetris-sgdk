@@ -1,11 +1,20 @@
 #include "sound_manager.h"
 #include "sounds.h"
+#include "music.h"
 #include "states/states.h" // WICHTIG: Für den Zugriff auf config.flags
+
+#define DEFAULT_MUSIC_ID  2
 
 typedef struct SoundEntry {
     const u8* data;
     u32 size;
 } __attribute__((aligned(2))) SoundEntry;
+
+typedef struct MusicEntry {
+    const u8* data;
+    u32 size;
+    const char* name;
+} MusicEntry;
 
 // Master-Array für alle 99 Sounds (WAV_001 bis WAV_099)
 static const SoundEntry sfx_bank[100] = {
@@ -45,8 +54,17 @@ static const SoundEntry sfx_bank[100] = {
     { WAV_097, sizeof(WAV_097) }, { WAV_098, sizeof(WAV_098) }, { WAV_099, sizeof(WAV_099) }
 };
 
+static const MusicEntry music_bank[] = {
+    { NULL, 0, "STOP" },
+    { music_sgdk_beat_only, sizeof(music_sgdk_beat_only), "SGDK BEAT" },
+    { music_sgdk_beat_mix, sizeof(music_sgdk_beat_mix), "SGDK MIX" }
+};
+
+static u16 currentMusicId = 0;
+
 void SOUND_init() {
     Z80_loadDriver(Z80_DRIVER_XGM2, 0);
+    currentMusicId = 0;
 }
 
 static void play(u16 id, SoundPCMChannel channel) {
@@ -62,13 +80,52 @@ void SOUND_play(SoundEvent event) {
     play((u16)event, SOUND_PCM_CH_AUTO);
 }
 
-void SOUND_playMusic() {
-    // Flag-Check für Musik
-    if (!GET_FLAG(config.flags, FLAG_MUSIC)) return;
+u16 SOUND_getMusicCount() {
+    return (u16)((sizeof(music_bank) / sizeof(music_bank[0])) - 1);
+}
 
-    // XGM2_play(&track1);
+const char* SOUND_getMusicName(u16 id) {
+    if ((id > 0) && (id <= SOUND_getMusicCount()) && (music_bank[id].data != NULL)) {
+        return music_bank[id].name;
+    }
+
+    return "---";
+}
+
+void SOUND_playMusicById(u16 id) {
+    if ((id == 0) || (id > SOUND_getMusicCount()) || (music_bank[id].data == NULL)) {
+        SOUND_stopMusic();
+        return;
+    }
+
+    if (XGM2_isPlaying()) {
+        XGM2_stop();
+    }
+
+    XGM2_stopPCM(SOUND_PCM_CH1);
+    XGM2_stopPCM(SOUND_PCM_CH2);
+    XGM2_stopPCM(SOUND_PCM_CH3);
+
+    XGM2_play_FAR(music_bank[id].data, music_bank[id].size);
+    currentMusicId = id;
+}
+
+void SOUND_playMusic() {
+    if (!GET_FLAG(config.flags, FLAG_MUSIC)) {
+        SOUND_stopMusic();
+        return;
+    }
+
+    SOUND_playMusicById(DEFAULT_MUSIC_ID);
 }
 
 void SOUND_stopMusic() {
-    XGM2_stop();
+    if (XGM2_isPlaying()) {
+        XGM2_stop();
+    }
+
+    XGM2_stopPCM(SOUND_PCM_CH1);
+    XGM2_stopPCM(SOUND_PCM_CH2);
+    XGM2_stopPCM(SOUND_PCM_CH3);
+    currentMusicId = 0;
 }

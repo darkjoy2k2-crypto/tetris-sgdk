@@ -224,7 +224,10 @@ Audio:
 - `SOUND_play(event)` → `XGM2_playPCM(..., SOUND_PCM_CH_AUTO)`
 - Sound nur wenn `FLAG_SOUND` gesetzt
 - Musik nur wenn `FLAG_MUSIC` gesetzt
-- `SOUND_playMusic()` enthält aktuell keinen Track-Start; Projektzustand = Musik-API vorhanden, Track-Playback unvollständig/auskommentiert
+- `SOUND_playMusic()` startet den Standardtrack aus `res/music.res`
+- `SOUND_playMusicById(id)` startet einen eingebetteten Musiktrack numerisch (Sound-Test)
+- `res/music.res` verwendet für Musik `XGM2`-Ressourcen aus `.vgm`-Quellen; keine rohen `BIN`-VGMs und kein alter `XGM`-Pfad mit `Z80_DRIVER_XGM2`
+- `SOUND_getMusicCount()` / `SOUND_getMusicName(id)` versorgen die Sound-Test-UI
 - `SOUND_stopMusic()` → `XGM2_stop()`
 
 Wichtige `SoundEvent` IDs:

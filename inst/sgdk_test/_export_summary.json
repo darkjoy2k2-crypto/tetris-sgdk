@@ -1,0 +1,238 @@
+{
+  "source": "F:\\Projekte\\tetris\\tetris-sgdk\\res\\music\\sgdk_drum_run_rave.vgm",
+  "output_dir": "F:\\Projekte\\tetris\\tetris-sgdk\\inst\\sgdk_test",
+  "count": 21,
+  "instruments": [
+    {
+      "patch_id": 0,
+      "name": "guile_patch_00",
+      "label": "SGDK_TEST_00_GUILE_PATCH_00",
+      "file": "F:\\Projekte\\tetris\\tetris-sgdk\\inst\\sgdk_test\\sgdk_test_00_guile_patch_00.dmp",
+      "first_channel": 0,
+      "alg": 5,
+      "fb": 0,
+      "fms": 0,
+      "ams": 0
+    },
+    {
+      "patch_id": 1,
+      "name": "guile_patch_01",
+      "label": "SGDK_TEST_01_GUILE_PATCH_01",
+      "file": "F:\\Projekte\\tetris\\tetris-sgdk\\inst\\sgdk_test\\sgdk_test_01_guile_patch_01.dmp",
+      "first_channel": 0,
+      "alg": 5,
+      "fb": 0,
+      "fms": 0,
+      "ams": 0
+    },
+    {
+      "patch_id": 2,
+      "name": "guile_patch_02",
+      "label": "SGDK_TEST_02_GUILE_PATCH_02",
+      "file": "F:\\Projekte\\tetris\\tetris-sgdk\\inst\\sgdk_test\\sgdk_test_02_guile_patch_02.dmp",
+      "first_channel": 1,
+      "alg": 5,
+      "fb": 6,
+      "fms": 0,
+      "ams": 0
+    },
+    {
+      "patch_id": 3,
+      "name": "guile_patch_03",
+      "label": "SGDK_TEST_03_GUILE_PATCH_03",
+      "file": "F:\\Projekte\\tetris\\tetris-sgdk\\inst\\sgdk_test\\sgdk_test_03_guile_patch_03.dmp",
+      "first_channel": 3,
+      "alg": 0,
+      "fb": 7,
+      "fms": 0,
+      "ams": 0
+    },
+    {
+      "patch_id": 4,
+      "name": "guile_patch_04",
+      "label": "SGDK_TEST_04_GUILE_PATCH_04",
+      "file": "F:\\Projekte\\tetris\\tetris-sgdk\\inst\\sgdk_test\\sgdk_test_04_guile_patch_04.dmp",
+      "first_channel": 3,
+      "alg": 0,
+      "fb": 7,
+      "fms": 0,
+      "ams": 0
+    },
+    {
+      "patch_id": 5,
+      "name": "guile_patch_05",
+      "label": "SGDK_TEST_05_GUILE_PATCH_05",
+      "file": "F:\\Projekte\\tetris\\tetris-sgdk\\inst\\sgdk_test\\sgdk_test_05_guile_patch_05.dmp",
+      "first_channel": 1,
+      "alg": 1,
+      "fb": 7,
+      "fms": 0,
+      "ams": 0
+    },
+    {
+      "patch_id": 6,
+      "name": "guile_patch_06",
+      "label": "SGDK_TEST_06_GUILE_PATCH_06",
+      "file": "F:\\Projekte\\tetris\\tetris-sgdk\\inst\\sgdk_test\\sgdk_test_06_guile_patch_06.dmp",
+      "first_channel": 2,
+      "alg": 1,
+      "fb": 7,
+      "fms": 0,
+      "ams": 0
+    },
+    {
+      "patch_id": 7,
+      "name": "guile_patch_07",
+      "label": "SGDK_TEST_07_GUILE_PATCH_07",
+      "file": "F:\\Projekte\\tetris\\tetris-sgdk\\inst\\sgdk_test\\sgdk_test_07_guile_patch_07.dmp",
+      "first_channel": 3,
+      "alg": 2,
+      "fb": 0,
+      "fms": 0,
+      "ams": 0
+    },
+    {
+      "patch_id": 8,
+      "name": "guile_patch_08",
+      "label": "SGDK_TEST_08_GUILE_PATCH_08",
+      "file": "F:\\Projekte\\tetris\\tetris-sgdk\\inst\\sgdk_test\\sgdk_test_08_guile_patch_08.dmp",
+      "first_channel": 1,
+      "alg": 0,
+      "fb": 0,
+      "fms": 0,
+      "ams": 0
+    },
+    {
+      "patch_id": 9,
+      "name": "guile_patch_09",
+      "label": "SGDK_TEST_09_GUILE_PATCH_09",
+      "file": "F:\\Projekte\\tetris\\tetris-sgdk\\inst\\sgdk_test\\sgdk_test_09_guile_patch_09.dmp",
+      "first_channel": 3,
+      "alg": 0,
+      "fb": 7,
+      "fms": 0,
+      "ams": 0
+    },
+    {
+      "patch_id": 10,
+      "name": "guile_patch_10",
+      "label": "SGDK_TEST_10_GUILE_PATCH_10",
+      "file": "F:\\Projekte\\tetris\\tetris-sgdk\\inst\\sgdk_test\\sgdk_test_10_guile_patch_10.dmp",
+      "first_channel": 4,
+      "alg": 5,
+      "fb": 3,
+      "fms": 0,
+      "ams": 0
+    },
+    {
+      "patch_id": 11,
+      "name": "guile_patch_11",
+      "label": "SGDK_TEST_11_GUILE_PATCH_11",
+      "file": "F:\\Projekte\\tetris\\tetris-sgdk\\inst\\sgdk_test\\sgdk_test_11_guile_patch_11.dmp",
+      "first_channel": 3,
+      "alg": 4,
+      "fb": 7,
+      "fms": 0,
+      "ams": 0
+    },
+    {
+      "patch_id": 12,
+      "name": "guile_patch_12",
+      "label": "SGDK_TEST_12_GUILE_PATCH_12",
+      "file": "F:\\Projekte\\tetris\\tetris-sgdk\\inst\\sgdk_test\\sgdk_test_12_guile_patch_12.dmp",
+      "first_channel": 0,
+      "alg": 5,
+      "fb": 7,
+      "fms": 0,
+      "ams": 0
+    },
+    {
+      "patch_id": 13,
+      "name": "guile_patch_13",
+      "label": "SGDK_TEST_13_GUILE_PATCH_13",
+      "file": "F:\\Projekte\\tetris\\tetris-sgdk\\inst\\sgdk_test\\sgdk_test_13_guile_patch_13.dmp",
+      "first_channel": 3,
+      "alg": 4,
+      "fb": 7,
+      "fms": 0,
+      "ams": 0
+    },
+    {
+      "patch_id": 14,
+      "name": "guile_patch_14",
+      "label": "SGDK_TEST_14_GUILE_PATCH_14",
+      "file": "F:\\Projekte\\tetris\\tetris-sgdk\\inst\\sgdk_test\\sgdk_test_14_guile_patch_14.dmp",
+      "first_channel": 2,
+      "alg": 4,
+      "fb": 7,
+      "fms": 0,
+      "ams": 0
+    },
+    {
+      "patch_id": 15,
+      "name": "guile_patch_15",
+      "label": "SGDK_TEST_15_GUILE_PATCH_15",
+      "file": "F:\\Projekte\\tetris\\tetris-sgdk\\inst\\sgdk_test\\sgdk_test_15_guile_patch_15.dmp",
+      "first_channel": 1,
+      "alg": 7,
+      "fb": 7,
+      "fms": 0,
+      "ams": 0
+    },
+    {
+      "patch_id": 16,
+      "name": "guile_patch_16",
+      "label": "SGDK_TEST_16_GUILE_PATCH_16",
+      "file": "F:\\Projekte\\tetris\\tetris-sgdk\\inst\\sgdk_test\\sgdk_test_16_guile_patch_16.dmp",
+      "first_channel": 1,
+      "alg": 0,
+      "fb": 0,
+      "fms": 0,
+      "ams": 0
+    },
+    {
+      "patch_id": 17,
+      "name": "guile_patch_17",
+      "label": "SGDK_TEST_17_GUILE_PATCH_17",
+      "file": "F:\\Projekte\\tetris\\tetris-sgdk\\inst\\sgdk_test\\sgdk_test_17_guile_patch_17.dmp",
+      "first_channel": 1,
+      "alg": 0,
+      "fb": 5,
+      "fms": 0,
+      "ams": 0
+    },
+    {
+      "patch_id": 18,
+      "name": "guile_patch_18",
+      "label": "SGDK_TEST_18_GUILE_PATCH_18",
+      "file": "F:\\Projekte\\tetris\\tetris-sgdk\\inst\\sgdk_test\\sgdk_test_18_guile_patch_18.dmp",
+      "first_channel": 1,
+      "alg": 2,
+      "fb": 7,
+      "fms": 0,
+      "ams": 0
+    },
+    {
+      "patch_id": 19,
+      "name": "guile_patch_19",
+      "label": "SGDK_TEST_19_GUILE_PATCH_19",
+      "file": "F:\\Projekte\\tetris\\tetris-sgdk\\inst\\sgdk_test\\sgdk_test_19_guile_patch_19.dmp",
+      "first_channel": 0,
+      "alg": 5,
+      "fb": 7,
+      "fms": 0,
+      "ams": 0
+    },
+    {
+      "patch_id": 20,
+      "name": "guile_patch_20",
+      "label": "SGDK_TEST_20_GUILE_PATCH_20",
+      "file": "F:\\Projekte\\tetris\\tetris-sgdk\\inst\\sgdk_test\\sgdk_test_20_guile_patch_20.dmp",
+      "first_channel": 2,
+      "alg": 7,
+      "fb": 0,
+      "fms": 0,
+      "ams": 0
+    }
+  ]
+}

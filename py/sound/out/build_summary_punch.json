@@ -1,0 +1,184 @@
+{
+  "style": "street_fighter_punch_mix",
+  "sources": {
+    "guile": "F:\\Projekte\\tetris\\tetris-sgdk\\py\\sound\\vgz\\10 - Guile's Theme.vgz",
+    "ryu": "F:\\Projekte\\tetris\\tetris-sgdk\\py\\sound\\vgz\\07 - Ryu's Theme.vgz",
+    "ken": "F:\\Projekte\\tetris\\tetris-sgdk\\py\\sound\\vgz\\12 - Ken's Theme.vgz",
+    "chun": "F:\\Projekte\\tetris\\tetris-sgdk\\py\\sound\\vgz\\13 - Chun Li's Theme.vgz",
+    "balrog": "F:\\Projekte\\tetris\\tetris-sgdk\\py\\sound\\vgz\\22 - Balrog's Theme.vgz"
+  },
+  "source_midi": "F:\\Projekte\\tetris\\tetris-sgdk\\py\\sound\\midi\\tetris.mid",
+  "selected_patch_count": 6,
+  "vgm_output": "F:\\Projekte\\tetris\\tetris-sgdk\\py\\sound\\out\\tetris_sf_punch_mix.vgm",
+  "xgm_output": "F:\\Projekte\\tetris\\tetris-sgdk\\py\\sound\\out\\tetris_sf_punch_mix.xgm2",
+  "arrangement": {
+    "primary_lead": [
+      3,
+      2
+    ],
+    "bass_sources": [
+      [
+        1,
+        0
+      ],
+      [
+        7,
+        6
+      ]
+    ],
+    "harmony_sources": [
+      [
+        2,
+        1
+      ],
+      [
+        4,
+        3
+      ],
+      [
+        5,
+        4
+      ]
+    ],
+    "group_profiles": [
+      {
+        "source": [
+          7,
+          6
+        ],
+        "count": 290,
+        "range": [
+          28,
+          50
+        ],
+        "avg_note": 37.9
+      },
+      {
+        "source": [
+          1,
+          0
+        ],
+        "count": 452,
+        "range": [
+          28,
+          57
+        ],
+        "avg_note": 42.71
+      },
+      {
+        "source": [
+          6,
+          5
+        ],
+        "count": 118,
+        "range": [
+          40,
+          88
+        ],
+        "avg_note": 66.73
+      },
+      {
+        "source": [
+          3,
+          2
+        ],
+        "count": 216,
+        "range": [
+          52,
+          88
+        ],
+        "avg_note": 68.73
+      },
+      {
+        "source": [
+          2,
+          1
+        ],
+        "count": 172,
+        "range": [
+          56,
+          81
+        ],
+        "avg_note": 71.88
+      },
+      {
+        "source": [
+          5,
+          4
+        ],
+        "count": 55,
+        "range": [
+          60,
+          83
+        ],
+        "avg_note": 72.25
+      },
+      {
+        "source": [
+          4,
+          3
+        ],
+        "count": 200,
+        "range": [
+          60,
+          81
+        ],
+        "avg_note": 73.08
+      }
+    ]
+  },
+  "render": {
+    "frames": 5864,
+    "groups": [
+      {
+        "source": [
+          -11,
+          1
+        ],
+        "note_count": 889,
+        "patch": "ken_rhythm_guitar"
+      },
+      {
+        "source": [
+          -10,
+          0
+        ],
+        "note_count": 742,
+        "patch": "guile_bass_punch"
+      },
+      {
+        "source": [
+          -15,
+          5
+        ],
+        "note_count": 594,
+        "patch": "chun_accent_stab"
+      },
+      {
+        "source": [
+          -14,
+          4
+        ],
+        "note_count": 427,
+        "patch": "guile_support_pad"
+      },
+      {
+        "source": [
+          -12,
+          2
+        ],
+        "note_count": 216,
+        "patch": "balrog_trumpet_lead"
+      },
+      {
+        "source": [
+          -13,
+          3
+        ],
+        "note_count": 216,
+        "patch": "ryu_guitar_lead"
+      }
+    ]
+  },
+  "converter_log": "xgm2tool -> tetris_sf_punch_mix.xgm2: ok Optimizing VGM...\nVGM lenght: 4310040 (97 seconds)\nNumber of command after PCM commands remove: 20978\nMusic data size: 35811\nLen (samples): 4310040\nNumber of command after commands clean: 15847\nComputed VGM duration: 4310040 samples (97 seconds)\nConverting VGM to XGM...\nNumber of PCM sample: 0\nNumber of FM command : 1884\nNumber of PSG command : 23\nPCM data size: 0\nFM music data size: 10979 - packed size: 3816\nPSG music data size: 48 - packed size: 14\nXGM duration: 5864 frames (97 seconds) - loop: 0 frames (0 seconds)"
+}

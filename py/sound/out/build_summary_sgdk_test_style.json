@@ -1,0 +1,195 @@
+{
+  "style": "sgdk_test_instruments",
+  "source_vgm": "F:\\Projekte\\tetris\\tetris-sgdk\\res\\music\\sgdk_drum_run_rave.vgm",
+  "source_midi": "F:\\Projekte\\tetris\\tetris-sgdk\\py\\sound\\midi\\tetris.mid",
+  "roles": {
+    "primary_lead": [
+      3,
+      2
+    ],
+    "secondary_lead": [
+      4,
+      3
+    ],
+    "bass_sources": [
+      [
+        7,
+        6
+      ],
+      [
+        1,
+        0
+      ]
+    ],
+    "support_sources": [
+      [
+        2,
+        1
+      ],
+      [
+        6,
+        5
+      ],
+      [
+        5,
+        4
+      ]
+    ],
+    "profiles": [
+      {
+        "source": [
+          7,
+          6
+        ],
+        "count": 290,
+        "range": [
+          28,
+          50
+        ],
+        "avg_note": 37.9
+      },
+      {
+        "source": [
+          1,
+          0
+        ],
+        "count": 452,
+        "range": [
+          28,
+          57
+        ],
+        "avg_note": 42.71
+      },
+      {
+        "source": [
+          6,
+          5
+        ],
+        "count": 118,
+        "range": [
+          40,
+          88
+        ],
+        "avg_note": 66.73
+      },
+      {
+        "source": [
+          3,
+          2
+        ],
+        "count": 216,
+        "range": [
+          52,
+          88
+        ],
+        "avg_note": 68.73
+      },
+      {
+        "source": [
+          2,
+          1
+        ],
+        "count": 172,
+        "range": [
+          56,
+          81
+        ],
+        "avg_note": 71.88
+      },
+      {
+        "source": [
+          5,
+          4
+        ],
+        "count": 55,
+        "range": [
+          60,
+          83
+        ],
+        "avg_note": 72.25
+      },
+      {
+        "source": [
+          4,
+          3
+        ],
+        "count": 200,
+        "range": [
+          60,
+          81
+        ],
+        "avg_note": 73.08
+      }
+    ]
+  },
+  "loop_start_frame": 206,
+  "loop_start_seconds": 3.43,
+  "vgm_output": "F:\\Projekte\\tetris\\tetris-sgdk\\py\\sound\\out\\tetris_sgdk_test_style.vgm",
+  "xgm_output": "F:\\Projekte\\tetris\\tetris-sgdk\\py\\sound\\out\\tetris_sgdk_test_style.xgm2",
+  "render": {
+    "frames": 5867,
+    "groups": [
+      {
+        "track": 1,
+        "midi_channel": 0,
+        "note_count": 452,
+        "patch": "sgdk_bass_drive"
+      },
+      {
+        "track": 7,
+        "midi_channel": 6,
+        "note_count": 290,
+        "patch": "sgdk_bass_drive"
+      },
+      {
+        "track": -30,
+        "midi_channel": 10,
+        "note_count": 284,
+        "patch": "sgdk_stomp_beat"
+      },
+      {
+        "track": 3,
+        "midi_channel": 2,
+        "note_count": 216,
+        "patch": "sgdk_bright_lead"
+      },
+      {
+        "track": 4,
+        "midi_channel": 3,
+        "note_count": 200,
+        "patch": "sgdk_synth_second"
+      },
+      {
+        "track": -31,
+        "midi_channel": 11,
+        "note_count": 189,
+        "patch": "sgdk_vocal_chop"
+      },
+      {
+        "track": 2,
+        "midi_channel": 1,
+        "note_count": 172,
+        "patch": "sgdk_soft_pad"
+      },
+      {
+        "track": 6,
+        "midi_channel": 5,
+        "note_count": 118,
+        "patch": "sgdk_pluck_support"
+      },
+      {
+        "track": 5,
+        "midi_channel": 4,
+        "note_count": 55,
+        "patch": "sgdk_soft_pad"
+      },
+      {
+        "track": -32,
+        "midi_channel": 12,
+        "note_count": 12,
+        "patch": "sgdk_intro_pad"
+      }
+    ]
+  },
+  "converter_log": "xgm2tool -> tetris_sgdk_test_style.xgm2: ok Optimizing VGM...\nVGM lenght: 4312245 (97 seconds)\nNumber of command after PCM commands remove: 51366\nMusic data size: 95385\nLen (samples): 4312245\nNumber of command after commands clean: 35708\nComputed VGM duration: 4312245 samples (97 seconds)\nConverting VGM to XGM...\nNumber of PCM sample: 0\nNumber of FM command : 5227\nNumber of PSG command : 24\nPCM data size: 0\nFM music data size: 43708 - packed size: 20862\nPSG music data size: 48 - packed size: 19\nXGM duration: 5867 frames (97 seconds) - loop: 5661 frames (94 seconds)"
+}

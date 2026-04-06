@@ -10,8 +10,14 @@
 !/inc/**
 !/py/
 !/py/**
+!/inst/
+!/inst/**
 !/.github/
 !/.github/**
+
+# Relevante Root-Dateien explizit zulassen
+!/*.md
+!/*.code-workspace
 
 # Spezialfall /out:
 # Wir erlauben den Ordner, ignorieren aber den gesamten Inhalt rekursiv
@@ -46,5 +52,9 @@
 # Metadaten und temporäre Build-Files
 *.o
 *.d
-*.res
-*.s
+
+# Wichtige SGDK-Quellen dürfen nicht global blockiert werden
+!/res/*.res
+!/res/**/*.res
+!/src/*.s
+!/src/**/*.s

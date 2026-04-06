@@ -113,7 +113,7 @@ void options_update() {
         else { // TOGGLE FLAGS
             SOUND_play(SND_ROTATE);
             switch(ctx->cursor) {
-                case 0: TOGGLE_FLAG(ctx->flags, FLAG_MUSIC); if (GET_FLAG(ctx->flags, FLAG_MUSIC)) SOUND_playMusic(); else XGM_stopPlay(); break;
+                case 0: TOGGLE_FLAG(ctx->flags, FLAG_MUSIC); if (GET_FLAG(ctx->flags, FLAG_MUSIC)) SOUND_playMusic(); else SOUND_stopMusic(); break;
                 case 1: TOGGLE_FLAG(ctx->flags, FLAG_SOUND); break;
                 case 3: TOGGLE_FLAG(ctx->flags, FLAG_BG); break;
                 case 4: TOGGLE_FLAG(ctx->flags, FLAG_DEBUG); SYS_showFrameLoad(GET_FLAG(ctx->flags, FLAG_DEBUG) ? TRUE : FALSE); break;

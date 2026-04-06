@@ -1,0 +1,55 @@
+{
+  "source_vgz": "F:\\Projekte\\tetris\\tetris-sgdk\\py\\sound\\vgz\\10 - Guile's Theme.vgz",
+  "source_midi": "F:\\Projekte\\tetris\\tetris-sgdk\\py\\sound\\midi\\tetris.mid",
+  "patch_count": 8,
+  "vgm_output": "F:\\Projekte\\tetris\\tetris-sgdk\\py\\sound\\out\\tetris_guile_arrangement.vgm",
+  "xgm_output": "F:\\Projekte\\tetris\\tetris-sgdk\\py\\sound\\out\\tetris_guile_arrangement.xgm2",
+  "render": {
+    "frames": 5864,
+    "groups": [
+      {
+        "track": 1,
+        "midi_channel": 0,
+        "note_count": 452,
+        "patch": "guile_patch_00"
+      },
+      {
+        "track": 7,
+        "midi_channel": 6,
+        "note_count": 290,
+        "patch": "guile_patch_01"
+      },
+      {
+        "track": 3,
+        "midi_channel": 2,
+        "note_count": 216,
+        "patch": "guile_patch_02"
+      },
+      {
+        "track": 4,
+        "midi_channel": 3,
+        "note_count": 200,
+        "patch": "guile_patch_03"
+      },
+      {
+        "track": 2,
+        "midi_channel": 1,
+        "note_count": 172,
+        "patch": "guile_patch_04"
+      },
+      {
+        "track": 6,
+        "midi_channel": 5,
+        "note_count": 118,
+        "patch": "guile_patch_05"
+      },
+      {
+        "track": 5,
+        "midi_channel": 4,
+        "note_count": 55,
+        "patch": "guile_patch_06"
+      }
+    ]
+  },
+  "converter_log": "xgm2tool -> tetris_guile_arrangement.xgm2: ok Optimizing VGM...\nVGM lenght: 4310040 (97 seconds)\nNumber of command after PCM commands remove: 30492\nMusic data size: 57879\nLen (samples): 4310040\nNumber of command after commands clean: 23203\nComputed VGM duration: 4310040 samples (97 seconds)\nConverting VGM to XGM...\nNumber of PCM sample: 0\nNumber of FM command : 2824\nNumber of PSG command : 23\nPCM data size: 0\nFM music data size: 22024 - packed size: 9987\nPSG music data size: 48 - packed size: 14\nXGM duration: 5864 frames (97 seconds) - loop: 0 frames (0 seconds)"
+}

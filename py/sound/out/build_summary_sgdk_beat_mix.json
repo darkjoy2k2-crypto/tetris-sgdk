@@ -1,0 +1,59 @@
+{
+  "style": "sgdk_beat_plus_tetris",
+  "source_beat_vgm": "F:\\Projekte\\tetris\\tetris-sgdk\\py\\sound\\out\\sgdk_test_beat_only.vgm",
+  "source_vgm": "F:\\Projekte\\tetris\\tetris-sgdk\\res\\music\\sgdk_drum_run_rave.vgm",
+  "source_midi": "F:\\Projekte\\tetris\\tetris-sgdk\\py\\sound\\midi\\tetris.mid",
+  "beat_frames": 5690,
+  "loop_start_frame": 206,
+  "loop_start_seconds": 3.43,
+  "vgm_output": "F:\\Projekte\\tetris\\tetris-sgdk\\py\\sound\\out\\tetris_sgdk_beat_mix.vgm",
+  "xgm_output": "F:\\Projekte\\tetris\\tetris-sgdk\\py\\sound\\out\\tetris_sgdk_beat_mix.xgm2",
+  "render": {
+    "frames": 5864,
+    "groups": [
+      {
+        "track": 1,
+        "midi_channel": 0,
+        "note_count": 452,
+        "patch": "sgdk_mix_bass"
+      },
+      {
+        "track": 7,
+        "midi_channel": 6,
+        "note_count": 290,
+        "patch": "sgdk_mix_bass"
+      },
+      {
+        "track": 3,
+        "midi_channel": 2,
+        "note_count": 216,
+        "patch": "sgdk_mix_main"
+      },
+      {
+        "track": 4,
+        "midi_channel": 3,
+        "note_count": 200,
+        "patch": "sgdk_mix_second"
+      },
+      {
+        "track": 2,
+        "midi_channel": 1,
+        "note_count": 172,
+        "patch": "sgdk_mix_support"
+      },
+      {
+        "track": 6,
+        "midi_channel": 5,
+        "note_count": 118,
+        "patch": "sgdk_mix_support"
+      },
+      {
+        "track": 5,
+        "midi_channel": 4,
+        "note_count": 55,
+        "patch": "sgdk_mix_support"
+      }
+    ]
+  },
+  "converter_log": "xgm2tool -> tetris_sgdk_beat_mix.xgm2: ok Optimizing VGM...\nVGM lenght: 4310040 (97 seconds)\nNumber of command after PCM commands remove: 35138\nMusic data size: 68487\nLen (samples): 4310040\nNumber of command after commands clean: 27740\nComputed VGM duration: 4310040 samples (97 seconds)\nConverting VGM to XGM...\nNumber of PCM sample: 25\nNumber of FM command : 3808\nNumber of PSG command : 7020\nPCM data size: 206080\nFM music data size: 20026 - packed size: 9128\nPSG music data size: 7838 - packed size: 3781\nXGM duration: 5864 frames (97 seconds) - loop: 5658 frames (94 seconds)"
+}

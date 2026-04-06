@@ -1,0 +1,13 @@
+{
+  "source_vgm": "F:\\Projekte\\tetris\\tetris-sgdk\\res\\music\\sgdk_drum_run_rave.vgm",
+  "output_vgm": "F:\\Projekte\\tetris\\tetris-sgdk\\py\\sound\\out\\sgdk_test_beat_only.vgm",
+  "kept_pcm_commands": 998,
+  "kept_psg_commands": 6316,
+  "kept_wait_commands": 4742,
+  "kept_data_blocks": 1,
+  "kept_global_writes": 330,
+  "loop_preserved": false,
+  "output_size": 889867,
+  "xgm_output": "F:\\Projekte\\tetris\\tetris-sgdk\\py\\sound\\out\\sgdk_test_beat_only.xgm2",
+  "converter_log": "xgm2tool -> sgdk_test_beat_only.xgm2: ok Optimizing VGM...\nVGM lenght: 4182443 (94 seconds)\nNumber of command after PCM commands remove: 12388\nMusic data size: 24467\nLen (samples): 4182444\nNumber of command after commands clean: 12316\nComputed VGM duration: 4182444 samples (94 seconds)\nConverting VGM to XGM...\nNumber of PCM sample: 25\nNumber of FM command : 1236\nNumber of PSG command : 6554\nPCM data size: 206080\nFM music data size: 1775 - packed size: 433\nPSG music data size: 7370 - packed size: 2779\nXGM duration: 4742 frames (94 seconds) - loop: 0 frames (0 seconds)"
+}

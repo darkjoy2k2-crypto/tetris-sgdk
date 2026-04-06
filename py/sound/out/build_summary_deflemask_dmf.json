@@ -1,0 +1,48 @@
+{
+  "source_vgm": "F:\\Projekte\\tetris\\tetris-sgdk\\res\\music\\sgdk_drum_run_rave.vgm",
+  "source_midi": "F:\\Projekte\\tetris\\tetris-sgdk\\py\\sound\\midi\\tetris.mid",
+  "dmf_output": "F:\\Projekte\\tetris\\tetris-sgdk\\py\\sound\\out\\tetris_vgm_cross.dmf",
+  "dmf_version": 26,
+  "system_id": 2,
+  "order_count": 15,
+  "pattern_length": 64,
+  "instrument_count": 4,
+  "extracted_patch_count": 21,
+  "channel_roles": {
+    "track3_ch2": {
+      "dmf_channel": 0,
+      "instrument_index": 0,
+      "volume_base": 104
+    },
+    "track4_ch3": {
+      "dmf_channel": 1,
+      "instrument_index": 1,
+      "volume_base": 72
+    },
+    "track7_ch6": {
+      "dmf_channel": 3,
+      "instrument_index": 2,
+      "volume_base": 86
+    },
+    "track1_ch0": {
+      "dmf_channel": 4,
+      "instrument_index": 2,
+      "volume_base": 74
+    },
+    "track2_ch1": {
+      "dmf_channel": 2,
+      "instrument_index": 3,
+      "volume_base": 58
+    },
+    "track6_ch5": {
+      "dmf_channel": 5,
+      "instrument_index": 3,
+      "volume_base": 58
+    },
+    "track5_ch4": {
+      "dmf_channel": 5,
+      "instrument_index": 3,
+      "volume_base": 58
+    }
+  }
+}

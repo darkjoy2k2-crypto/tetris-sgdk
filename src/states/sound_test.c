@@ -7,16 +7,29 @@
 
 static SoundTestContext* ctx = NULL;
 
+static void sound_test_step_value(u16* value, s16 dir, u16 minValue, u16 maxValue) {
+    if (maxValue < minValue) {
+        *value = minValue;
+        return;
+    }
+
+    if (dir > 0) {
+        *value = (*value >= maxValue) ? minValue : (*value + 1);
+    } else if (dir < 0) {
+        *value = (*value <= minValue) ? maxValue : (*value - 1);
+    }
+}
+
 void sound_test_init() {
-    // Brücke zur globalen Union schlagen
     ctx = &sctx->soundtest;
 
-    // Hintergrund-Modul konfigurieren
     menu_bg_set_mode(BG_MODE_MENU);
+    SOUND_stopMusic();
 
-    // Initialisierung der Werte (Speicher wurde in main.c genullt)
     ctx->currentID = 1;
-    ctx->needsDraw = true;
+    ctx->currentMusicID = 1;
+    ctx->mode = SOUND_TEST_MODE_SFX;
+    ctx->needsDraw = TRUE;
 }
 
 void sound_test_init_draw() {
@@ -24,54 +37,94 @@ void sound_test_init_draw() {
 
     UI_init_fonts_and_palettes();
 
-    // Statische UI-Elemente
     VDP_clearTextArea(0, 0, 40, 28);
     VDP_drawText("--- SOUND TEST MODE ---", 9, 4);
-    VDP_drawText("LEFT/RIGHT: SELECT", 11, 10);
-    VDP_drawText("A: PLAY | START: BACK", 9, 22);
+    VDP_drawText("LEFT/RIGHT: SELECT ID", 9, 9);
+    VDP_drawText("UP/DOWN: SFX OR MUSIC", 8, 10);
+    VDP_drawText("A: PLAY | B/C: STOP MUSIC", 6, 22);
+    VDP_drawText("START: BACK", 13, 24);
 }
 
 void sound_test_update() {
+    u16 changed;
+
     if (ctx == NULL) return;
 
-    // Lokale Flankenerkennung (nutzt joyState/lastJoyState vom System)
-    u16 changed = joyState & ~lastJoyState;
+    changed = joyState & ~lastJoyState;
 
-    // Navigation (1-99)
+    if (changed & BUTTON_UP) {
+        ctx->mode = SOUND_TEST_MODE_SFX;
+        ctx->needsDraw = TRUE;
+        SOUND_play(SND_MOVE);
+    }
+    if (changed & BUTTON_DOWN) {
+        ctx->mode = SOUND_TEST_MODE_MUSIC;
+        ctx->needsDraw = TRUE;
+        SOUND_play(SND_MOVE);
+    }
+
     if (changed & BUTTON_RIGHT) {
-        ctx->currentID = (ctx->currentID >= 99) ? 1 : ctx->currentID + 1;
-        ctx->needsDraw = true;
+        if (ctx->mode == SOUND_TEST_MODE_SFX) {
+            sound_test_step_value(&ctx->currentID, 1, 1, 99);
+        } else {
+            sound_test_step_value(&ctx->currentMusicID, 1, 1, SOUND_getMusicCount());
+            SOUND_stopMusic();
+        }
+        ctx->needsDraw = TRUE;
+        SOUND_play(SND_MOVE);
     }
     if (changed & BUTTON_LEFT) {
-        ctx->currentID = (ctx->currentID <= 1) ? 99 : ctx->currentID - 1;
-        ctx->needsDraw = true;
+        if (ctx->mode == SOUND_TEST_MODE_SFX) {
+            sound_test_step_value(&ctx->currentID, -1, 1, 99);
+        } else {
+            sound_test_step_value(&ctx->currentMusicID, -1, 1, SOUND_getMusicCount());
+            SOUND_stopMusic();
+        }
+        ctx->needsDraw = TRUE;
+        SOUND_play(SND_MOVE);
     }
 
-    // Sound abspielen
     if (changed & BUTTON_A) {
-        SOUND_play((SoundEvent)ctx->currentID);
+        if (ctx->mode == SOUND_TEST_MODE_SFX) {
+            SOUND_play((SoundEvent)ctx->currentID);
+        } else {
+            SOUND_playMusicById(ctx->currentMusicID);
+        }
     }
 
-    // Zurück zum Titel
+    if (changed & (BUTTON_B | BUTTON_C)) {
+        SOUND_stopMusic();
+    }
+
     if (changed & BUTTON_START) {
+        SOUND_stopMusic();
         currentState = STATE_TITLE;
     }
 }
 
 void sound_test_draw() {
+    char txt[32];
+
     if (ctx == NULL || !ctx->needsDraw) return;
 
-    char txt[16];
-    // %03d sorgt für die führenden Nullen (001, 002...)
-    sprintf(txt, "SOUND ID: %03d", ctx->currentID);
-    VDP_drawText(txt, 13, 12);
+    VDP_clearTextArea(7, 12, 26, 6);
+    VDP_drawText((ctx->mode == SOUND_TEST_MODE_SFX) ? ">" : " ", 7, 12);
+    VDP_drawText((ctx->mode == SOUND_TEST_MODE_MUSIC) ? ">" : " ", 7, 14);
 
-    // Flag zurücksetzen, damit wir nicht jeden Frame zeichnen
-    ctx->needsDraw = false;
+    sprintf(txt, "SFX ID: %03d", ctx->currentID);
+    VDP_drawText(txt, 9, 12);
+
+    sprintf(txt, "MUSIC ID: %02d/%02d", ctx->currentMusicID, SOUND_getMusicCount());
+    VDP_drawText(txt, 9, 14);
+
+    sprintf(txt, "TRACK: %-10s", SOUND_getMusicName(ctx->currentMusicID));
+    VDP_drawText(txt, 9, 16);
+
+    ctx->needsDraw = FALSE;
 }
 
 void sound_test_cleanup() {
-    // Nur Pointer lösen, kein MEM_free
+    SOUND_stopMusic();
     VDP_clearTextArea(0, 0, 40, 28);
     ctx = NULL;
 }

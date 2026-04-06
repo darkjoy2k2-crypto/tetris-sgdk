@@ -1,0 +1,95 @@
+{
+  "source": "F:\\Projekte\\tetris\\tetris-sgdk\\py\\sound\\vgz\\10 - Guile's Theme.vgz",
+  "output_dir": "F:\\Projekte\\tetris\\tetris-sgdk\\inst\\guile_theme",
+  "count": 8,
+  "instruments": [
+    {
+      "patch_id": 0,
+      "name": "guile_patch_00",
+      "label": "GUILE_00_GUILE_PATCH_00",
+      "file": "F:\\Projekte\\tetris\\tetris-sgdk\\inst\\guile_theme\\guile_00_guile_patch_00.dmp",
+      "first_channel": 2,
+      "alg": 4,
+      "fb": 4,
+      "fms": 0,
+      "ams": 0
+    },
+    {
+      "patch_id": 1,
+      "name": "guile_patch_01",
+      "label": "GUILE_01_GUILE_PATCH_01",
+      "file": "F:\\Projekte\\tetris\\tetris-sgdk\\inst\\guile_theme\\guile_01_guile_patch_01.dmp",
+      "first_channel": 1,
+      "alg": 4,
+      "fb": 0,
+      "fms": 0,
+      "ams": 0
+    },
+    {
+      "patch_id": 2,
+      "name": "guile_patch_02",
+      "label": "GUILE_02_GUILE_PATCH_02",
+      "file": "F:\\Projekte\\tetris\\tetris-sgdk\\inst\\guile_theme\\guile_02_guile_patch_02.dmp",
+      "first_channel": 1,
+      "alg": 4,
+      "fb": 7,
+      "fms": 0,
+      "ams": 0
+    },
+    {
+      "patch_id": 3,
+      "name": "guile_patch_03",
+      "label": "GUILE_03_GUILE_PATCH_03",
+      "file": "F:\\Projekte\\tetris\\tetris-sgdk\\inst\\guile_theme\\guile_03_guile_patch_03.dmp",
+      "first_channel": 0,
+      "alg": 5,
+      "fb": 7,
+      "fms": 0,
+      "ams": 0
+    },
+    {
+      "patch_id": 4,
+      "name": "guile_patch_04",
+      "label": "GUILE_04_GUILE_PATCH_04",
+      "file": "F:\\Projekte\\tetris\\tetris-sgdk\\inst\\guile_theme\\guile_04_guile_patch_04.dmp",
+      "first_channel": 3,
+      "alg": 0,
+      "fb": 4,
+      "fms": 0,
+      "ams": 0
+    },
+    {
+      "patch_id": 5,
+      "name": "guile_patch_05",
+      "label": "GUILE_05_GUILE_PATCH_05",
+      "file": "F:\\Projekte\\tetris\\tetris-sgdk\\inst\\guile_theme\\guile_05_guile_patch_05.dmp",
+      "first_channel": 2,
+      "alg": 0,
+      "fb": 0,
+      "fms": 0,
+      "ams": 0
+    },
+    {
+      "patch_id": 6,
+      "name": "guile_patch_06",
+      "label": "GUILE_06_GUILE_PATCH_06",
+      "file": "F:\\Projekte\\tetris\\tetris-sgdk\\inst\\guile_theme\\guile_06_guile_patch_06.dmp",
+      "first_channel": 1,
+      "alg": 6,
+      "fb": 7,
+      "fms": 0,
+      "ams": 0
+    },
+    {
+      "patch_id": 7,
+      "name": "guile_patch_07",
+      "label": "GUILE_07_GUILE_PATCH_07",
+      "file": "F:\\Projekte\\tetris\\tetris-sgdk\\inst\\guile_theme\\guile_07_guile_patch_07.dmp",
+      "first_channel": 0,
+      "alg": 1,
+      "fb": 7,
+      "fms": 0,
+      "ams": 0
+    }
+  ]
+}

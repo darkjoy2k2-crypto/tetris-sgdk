@@ -24,17 +24,45 @@ typedef enum {
 } SoundEvent;
 
 /**
- * Initialisiert den XGM2 Treiber
+ * @brief Initialisiert den XGM2-Treiber.
+ * @note Lädt den Z80-Treiber genau einmal.
  */
 void SOUND_init();
 
 /**
- * Spielt einen Sound basierend auf dem Event ab.
- * Nutzt intern den XGM2-Treiber für 4-Kanal-Mixing.
+ * @brief Spielt einen Soundeffekt anhand eines Event-IDs ab.
+ * @param event Die vordefinierte Sound-ID.
+ * @note Nutzt intern den XGM2-Treiber für PCM-Mixing.
  */
 void SOUND_play(SoundEvent event);
 
 /**
- * Startet die Hintergrundmusik (XGM/XGM2 Format)
+ * @brief Startet die Standard-Hintergrundmusik.
+ * @note Verwendet intern den aktuell bevorzugten XGM2-Track.
  */
 void SOUND_playMusic();
+
+/**
+ * @brief Startet einen Musik-Track per numerischer ID.
+ * @param id Musik-ID aus dem Sound-Test.
+ * @warning Stoppt einen bereits laufenden Track vor dem Neustart.
+ */
+void SOUND_playMusicById(u16 id);
+
+/**
+ * @brief Stoppt die aktuell laufende Musik.
+ */
+void SOUND_stopMusic();
+
+/**
+ * @brief Liefert die Anzahl eingebundener Musik-Tracks.
+ * @return Anzahl gültiger Musik-IDs.
+ */
+u16 SOUND_getMusicCount();
+
+/**
+ * @brief Liefert den Anzeigenamen einer Musik-ID.
+ * @param id Musik-ID.
+ * @return Kurzer Anzeigename für UI-Zwecke.
+ */
+const char* SOUND_getMusicName(u16 id);
